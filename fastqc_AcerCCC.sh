@@ -18,7 +18,7 @@ for SAMP in *.fastq.gz
 do
 
 module load java/1.8.0_60
-module load  \
+module load fastqc/0.10.1 \
 ${and}/$SAMP \
 --outdir ${and}/fastqc_results
 done
