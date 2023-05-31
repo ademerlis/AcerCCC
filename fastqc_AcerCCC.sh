@@ -12,15 +12,9 @@
 #BSUB -u allyson.demerlis@earth.miami.edu
 #BSUB -N
 
-and="/scratch/projects/and_transcriptomics/Allyson_CCC" 
+and="/scratch/projects/and_transcriptomics/Allyson_CCC"
 
 cd ${and}
-for SAMP in *.fastq.gz
+fastqc *.fastq.gz
+--outdir ${and}/fastqc/
 
-do
-
-module load java/1.8.0_60
-module load fastqc/0.10.1 \
-${and}/$SAMP \
---outdir ${and}/fastqc_results/
-done
