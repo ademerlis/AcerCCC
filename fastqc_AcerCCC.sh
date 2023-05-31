@@ -1,16 +1,16 @@
 #!/bin/bash
-#~/scratch/projects/and_transcriptomics/Allyson_stresshardening_RNAseq/scripts/fastqc/fastqc_stresshardening2022.job
-#/scratch/projects/and_transcriptomics/Allyson_stresshardening_RNAseq/scripts/fastqc/fastqc_stresshardening2022.job
+#~/scratch/projects/and_transcriptomics/Allyson_CCC/scripts/fastqc/fastqc_AcerCCC.job
+#/scratch/projects/and_transcriptomics/Allyson_CCC/scripts/fastqc/fastqc_AcerCCC.job
 #purpose: quality checking of raw RNAseq reads using FASTQC on Pegasus compute node
 
-#BSUB -J fastqc
+#BSUB -J AcerCCC_fastqc
 #BSUB -q general
 #BSUB -P and_transcriptomics
-#BSUB -o fastqc_stresshardening2022.out
-#BSUB -e fastqc_stresshardening2022.err
+#BSUB -o fastqc_AcerCCC.out
+#BSUB -e fastqc_AcerCCC.err
 #BSUB -n 8
 
-and="/scratch/projects/and_transcriptomics/Allyson_stresshardening_RNAseq/" 
+and="/scratch/projects/and_transcriptomics/Allyson_CCC/" 
 
 cd ${and}
 for SAMP in *.fastq.gz
