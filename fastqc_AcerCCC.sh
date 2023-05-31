@@ -10,7 +10,7 @@
 #BSUB -e fastqc_AcerCCC.err
 #BSUB -n 8
 
-and="/scratch/projects/and_transcriptomics/Allyson_CCC/" 
+and="/scratch/projects/and_transcriptomics/Allyson_CCC" 
 
 cd ${and}
 for SAMP in *.fastq.gz
