@@ -12,6 +12,8 @@
 #BSUB -u allyson.demerlis@earth.miami.edu
 #BSUB -N
 
+module load fastqc/0.10.1
+
 and="/scratch/projects/and_transcriptomics/Allyson_CCC"
 
 cd ${and}
