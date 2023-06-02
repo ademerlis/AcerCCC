@@ -12,16 +12,14 @@
 
 and="/scratch/projects/and_transcriptomics"
 
+module load gzip/1.5
 module load fastqc/0.10.1
 
 
 for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
 
 do \
-
-${and}/programs/TrimGalore-0.6.10/trim_galore ${sample}
---fastqc \
---fastqc_args "--outdir ${and}/Allyson_CCC/trimmed/" \
+${and}/programs/TrimGalore-0.6.10/trim_galore ${sample} \
 --illumina \
 --cores 4 \
 --three_prime_clip_R1 12 \
@@ -30,6 +28,3 @@ ${and}/programs/TrimGalore-0.6.10/trim_galore ${sample}
 -o ${and}/Allyson_CCC/trimmed/ ; \
 
 done
-
-multiqc ${and}/Allyson_CCC/trimmed/ \
---outdir ${and}/Allyson_CCC/trimmed/
