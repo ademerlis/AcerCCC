@@ -12,10 +12,11 @@
 
 and="/scratch/projects/and_transcriptomics"
 
+module load python/3.8.7 \
+
 for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
 
 do \
-module load python/3.8.7 \
 ${and}/programs/TrimGalore-0.6.10/trim_galore ${sample} \
 --gzip \
 --fastqc \
