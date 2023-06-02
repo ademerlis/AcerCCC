@@ -12,6 +12,9 @@
 
 and="/scratch/projects/and_transcriptomics"
 
+module load fastqc/0.10.1
+
+
 for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
 
 do \
