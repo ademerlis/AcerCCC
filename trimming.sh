@@ -12,8 +12,6 @@
 
 and="/scratch/projects/and_transcriptomics"
 
-module load python/3.8.7 \
-
 for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
 
 do \
