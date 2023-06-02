@@ -10,7 +10,7 @@
 #BSUB -u and128@miami.edu
 #BSUB -N
 
-and="scratch/projects/and_transcriptomics"
+and="/scratch/projects/and_transcriptomics"
 
 for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
 
