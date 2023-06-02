@@ -17,17 +17,16 @@ for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
 do \
 
 ${and}/programs/TrimGalore-0.6.10/trim_galore ${sample}
---gzip \
 --fastqc \
---fastqc_args "--outdir ${and}/Acer_CCC/trimmed/" \
+--fastqc_args "--outdir ${and}/Allyson_CCC/trimmed/" \
 --illumina \
 --cores 4 \
 --three_prime_clip_R1 12 \
 --nextseq 30 \
 --length 20 \
--o ${and}/Acer_CCC/trimmed/ ; \
+-o ${and}/Allyson_CCC/trimmed/ ; \
 
 done
 
-multiqc ${and}/Acer_CCC/trimmed/ \
---outdir ${and}/Acer_CCC/trimmed/
+multiqc ${and}/Allyson_CCC/trimmed/ \
+--outdir ${and}/Allyson_CCC/trimmed/
