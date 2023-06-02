@@ -15,8 +15,6 @@ and="/scratch/projects/and_transcriptomics"
 for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
 
 do \
-module load fastqc/0.10.1 \
-${and}/programs/pigz-2.7 \
 ${and}/programs/TrimGalore-0.6.10/trim_galore ${sample} \
 --gzip \
 --fastqc \
