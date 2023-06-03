@@ -10,12 +10,16 @@
 #BSUB -N
 
 and="/scratch/projects/and_transcriptomics"
+samples="1087.fastq.gz 1088.fastq.gz 1089.fastq.gz 1090.fastq.gz 1091.fastq.gz 1092.fastq.gz 1096.fastq.gz 1097.fastq.gz 1098.fastq.gz 1099.fastq.gz 1100.fastq.gz 2263.fastq.gz 2264.fastq.gz 2265.fastq.gz 2266.fastq.gz 2267.fastq.gz 2268.fastq.gz 2382.fastq.gz 2383.fastq.gz 2384.fastq.gz"
 
-for sample in ${and}/Allyson_CCC/fastq_files/*.gz ;
+cd ${and}/Allyson_CCC/fastq_rawreads/
+
+for sample in `cat {samples}` ;
 
 do
 echo '#!/bin/bash' > /scratch/projects/and_transcriptomics/Allyson_CCC/scripts/${sample}_trimming.job
 echo '#BSUB -q general' >> /scratch/projects/and_transcriptomics/Allyson_CCC/scripts/${sample}_trimming.job
+echo '#BSUB -P and_transcriptomics' >> /scratch/projects/and_transcriptomics/Allyson_CCC/scripts/${sample}_trimming.job
 echo '#BSUB -J '$sample'' >> /scratch/projects/and_transcriptomics/Allyson_CCC/scripts/${sample}_trimming.job
 echo '#BSUB -o /scratch/projects/and_transcriptomics/Allyson_CCC/scripts/'$sample'_error_trimming.txt' >> /scratch/projects/and_transcriptomics/Allyson_CCC/scripts/${sample}_trimming.job
 echo '#BSUB -e /scratch/projects/and_transcriptomics/Allyson_CCC/scripts/'$sample'_output_trimming.txt' >>
