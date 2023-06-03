@@ -10,7 +10,7 @@
 #BSUB -N
 
 and="/scratch/projects/and_transcriptomics"
-samples="1087.fastq.gz 1088.fastq.gz 1089.fastq.gz 1090.fastq.gz 1091.fastq.gz 1092.fastq.gz 1096.fastq.gz 1097.fastq.gz 1098.fastq.gz 1099.fastq.gz 1100.fastq.gz 2263.fastq.gz 2264.fastq.gz 2265.fastq.gz 2266.fastq.gz 2267.fastq.gz 2268.fastq.gz 2382.fastq.gz 2383.fastq.gz 2384.fastq.gz"
+samples=$
 
 cd ${and}/Allyson_CCC/fastq_rawreads/
 
