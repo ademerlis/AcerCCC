@@ -11,32 +11,28 @@
 
 and="/scratch/projects/and_transcriptomics"
 
-tworemainingsamples="2383"
-
-echo "These are the samples to be processed:"
-echo $tworemainingsamples
-
-for sample in ${and}/Allyson_CCC/fastq_rawreads/${tworemainingsamples[*]}.fastq.gz ;
+for sample in ${and}/Allyson_CCC/fastq_rawreads/*.gz ;
 
 do \
-cd ${and}/Allyson_CCC/fastq_rawreads/
 ${and}/programs/TrimGalore-0.6.10/trim_galore ${sample}
 --illumina \
 --cores 4 \
 --three_prime_clip_R1 12 \
 --nextseq 30 \
---length 20 \
---outdir ${and}/Allyson_CCC/trimmed/ ; \
+--length 20 \ ; \
 
 done
 
-cd ${and}/Allyson_CCC/trimmed/
+cd ${and}/Allyson_CCC/scripts
 
-mv *.fq.gz *.fastq.gz
+for f in *.fq.gz;
+do \
+mv -v -- "$f" "${f%.fq.gz}.fastq.gz"; \
+
+done
 
 module load fastqc/0.10.1
 
 fastqc *.fastq.gz
 
-multiqc ${and}/Allyson_CCC/trimmed/ \
---outdir ${and}/Allyson_CCC/trimmed/
+multiqc *
