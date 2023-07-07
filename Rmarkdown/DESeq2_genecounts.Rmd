@@ -1,0 +1,34 @@
+---
+title: "DESeq2_genecounts"
+author: "allyson_demerlis"
+date: "2023-07-07"
+output: html_document
+---
+
+Load libraries
+```{r}
+library(tidyverse)
+library(DESeq2)
+```
+
+Import data frames
+```{r}
+genecounts <- read.csv("../results/gene_count_acerv_matrix.csv")
+
+transcriptcounts <- read.csv("../results/transcript_count_matrix.csv")
+
+sample_metadata <- read.csv("../input_files/sample_metadata.csv")
+```
+
+Tidy gene counts matrix
+```{r}
+genecounts %>% column_to_rownames("gene_id") %>% 
+  colnames() %>% 
+  parse_number() -> new_column_names
+
+genecounts %>% column_to_rownames("gene_id") %>% set_names(new_column_names) -> genecounts
+
+colnames(genecounts) <- paste("ID_", colnames(genecounts), sep="")
+```
+
+
