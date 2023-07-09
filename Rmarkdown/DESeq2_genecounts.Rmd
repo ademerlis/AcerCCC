@@ -9,6 +9,8 @@ Load libraries
 ```{r}
 library(tidyverse)
 library(DESeq2)
+library(genefilter) #for filterfun and genefilter
+library(factoextra) #for PCA and eigenvectors
 ```
 
 Import data frames
@@ -17,7 +19,7 @@ genecounts <- read.csv("../results/gene_count_acerv_matrix.csv")
 
 transcriptcounts <- read.csv("../results/transcript_count_matrix.csv")
 
-sample_metadata <- read.csv("../input_files/sample_metadata.csv")
+sample_metadata <- read.csv("../input_files/sample_metadata.csv", row.names = as.character("Sample_ID"))
 ```
 
 Tidy gene counts matrix
@@ -29,6 +31,121 @@ genecounts %>% column_to_rownames("gene_id") %>%
 genecounts %>% column_to_rownames("gene_id") %>% set_names(new_column_names) -> genecounts
 
 colnames(genecounts) <- paste("ID_", colnames(genecounts), sep="")
+
+#remove ID 1096 because it is does not have any replicates
+genecounts <- genecounts %>% select(!ID_1096)
+
+dim(genecounts) #58542 x 16
 ```
 
+Note from [Jill](https://github.com/JillAshey/SedimentStress/blob/master/RAnalysis/acerv/acerv_sub_DESeq2.Rmd): Some gene names have "TU" and some have "model". But they are the same gene. So remove all the ones with "model" so it doesn't confound the results.
+
+```{r}
+genecounts <- genecounts[!grepl("model", rownames(genecounts)),]
+
+dim(genecounts) #55248 x 16
+```
+
+Subset sample metadata
+```{r}
+  for ( row in 1:nrow(sample_metadata)){
+    rownames(sample_metadata)[row]<- sub("_trimmed", "", rownames(sample_metadata)[row])
+  }
+
+ for ( row in 1:nrow(sample_metadata)){
+    rownames(sample_metadata)[row]<- paste("ID_", rownames(sample_metadata)[row], sep ="")
+ }
+  
+rownames.remove <- c("ID_1088", "ID_1100", "ID_2264", "ID_1096") #removing the ones that were low-quality and the staghorn hybrid sample
+
+sample_metadata <- sample_metadata[!(rownames(sample_metadata) %in% rownames.remove),]
+```
+
+Tidy sample metadata
+```{r}
+#change - to _ because the hyphen messes with DESeq2 somehow
+sample_metadata$Genotype <- gsub("-", "_", sample_metadata$Genotype)
+#also need to get rid of spaces I think
+sample_metadata$Genotype <- gsub(" ", "", sample_metadata$Genotype)
+```
+
+Filter reads by proportion of samples containing cutoff value
+```{r}
+filt <- filterfun(pOverA(0.85,5)) #this means keep 85% of samples that have a count >5
+
+tfil <- genefilter(genecounts, filt)
+
+keep <- genecounts[tfil,]
+
+gn.keep <- rownames(keep)
+
+genecounts_filt <- as.matrix(genecounts[which(rownames(genecounts) %in% gn.keep),])
+
+#write.csv(genecounts_filt, "~/Documents/GitHub/AcerCCC/results/genecounts_filtered.csv")
+```
+
+set location and genotype as factors
+```{r}
+sample_metadata$Location <- factor(sample_metadata$Location)
+sample_metadata$Genotype <- factor(sample_metadata$Genotype)
+```
+
+create matrix for DESeq
+```{r}
+data <- DESeqDataSetFromMatrix(countData = genecounts_filt, colData = sample_metadata, design = ~ Location + Genotype)
+```
+
+Expression visualization
+
+Text from Jill: "First we are going to log-transform the data using a variance stabilizing transforamtion (vst). This is only for visualization purposes. Essentially, this is roughly similar to putting the data on the log2 scale. It will deal with the sampling variability of low counts by calculating within-group variability (if blind=FALSE). Importantly, it does not use the design to remove variation in the data, and so can be used to examine if there may be any variability do to technical factors such as extraction batch effects. To do this we first need to calculate the size factors of our samples. This is a rough estimate of how many reads each sample contains compared to the others. In order to use VST (the faster log2 transforming process) to log-transform our data, the size factors need to be less than 4. Otherwise, there could be artefacts in our results."
+
+I have two samples with size factors between 4 and 5. When googling about whether this means I can't use VST, I found an answer from the creator of DESeq2 who said "I prefer VST when there are many samples. The rlog seemed to outperform (according to our simulations performed in the DESeq2 paper) when there were very large differences in size factor (e.g. spanning an order of magnitude from low to high seq depth)." (https://support.bioconductor.org/p/98473/) 
+
+My samples range from 0.02-4.88, so I'm good.
+```{r}
+SF.data <- estimateSizeFactors(data)
+SF.data
+print(sizeFactors(SF.data))
+#a couple size factors are greater than 4. 
+
+#Plot column sums according to size factor
+plot(sizeFactors(SF.data), colSums(counts(SF.data)))
+abline(lm(colSums(counts(SF.data)) ~ sizeFactors(SF.data) + 0))
+#this is showing differences in sequencing depth
+```
+
+Scree plots to see variance of PCs
+```{r}
+vst <- vst(data, blind = FALSE) #accounts for within group variability
+head(assay(vst), 3)
+pca <- prcomp(t(assay(vst)))
+fviz_eig(pca)
+plotPCA(vst, intgroup = c("Location"))
+plotPCA(vst, intgroup = c("Genotype"))
+
+vst_PCAdata <- plotPCA(vst, intgroup = c("Location", "Genotype"), returnData = TRUE)
+percentVar <- round(100*attr(vst_PCAdata, "percentVar")) #plot PCA of samples with all data
+acerv_PCAplot <- ggplot(vst_PCAdata, aes(PC1, PC2, color=Location, shape=Genotype)) + 
+   geom_point(size=3) +
+   geom_text(aes(label=name),hjust=0, vjust=0, position = position_dodge()) +
+   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+   ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+   ggtitle("A. cervicornis - all genes") +
+   theme_bw() + #Set background color
+   theme(panel.border = element_blank(), # Set border
+         #panel.grid.major = element_blank(), #Set major gridlines
+         #panel.grid.minor = element_blank(), #Set minor gridlines
+         axis.line = element_line(colour = "black"), #Set axes color
+         plot.background=element_blank()) #Set the plot background
+acerv_PCAplot
+```
+
+Run DESeq2
+```{r}
+DEG.int <- DESeq(data)
+DEG.int.res <- results(DEG.int, contrast = c("Location", "nursery", "CCC"), alpha = 0.05)
+summary(DEG.int.res)
+
+
+```
 
