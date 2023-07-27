@@ -5,6 +5,8 @@ date: "2023-07-07"
 output: html_document
 ---
 
+#Gene expression analysis for all samples with at least 4M of mapped reads
+
 Load libraries
 ```{r}
 library(tidyverse)
@@ -15,11 +17,17 @@ library(factoextra) #for PCA and eigenvectors
 
 Import data frames
 ```{r}
-genecounts <- read.csv("../results/gene_count_acerv_matrix.csv")
+countData_4M<- readRDS("countData_4M.rds")
 
-transcriptcounts <- read.csv("../results/transcript_count_matrix.csv")
+sample_metadata <- read_csv("../input_files/sample_metadata.csv")
+sample_metadata$Sample_ID <- paste("ID_", sample_metadata$Sample_ID, sep="")
+sample_metadata$Sample_ID <- gsub("_trimmed", "", sample_metadata$Sample_ID)
 
-sample_metadata <- read.csv("../input_files/sample_metadata.csv", row.names = as.character("Sample_ID"))
+colnames_countData_4M<- as.data.frame(colnames(countData_4M)) %>% rename('Sample_ID'='colnames(countData_4M)') %>% mutate(order = 1:17) 
+
+
+
+left_join(countData_4M, sample_metadata, )
 ```
 
 Tidy gene counts matrix
