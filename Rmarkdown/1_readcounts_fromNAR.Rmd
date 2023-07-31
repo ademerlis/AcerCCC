@@ -23,11 +23,11 @@ reads_mapped <- read.delim("../multiqc_reports/multiqc_general_stats_STARalign_t
 head(reads_mapped)
 
 reads_mapped<- reads_mapped %>% 
-           rename(percent_uniq = STAR_mqc.generalstats.star.uniquely_mapped_percent) %>%
+           dplyr::rename(percent_uniq = STAR_mqc.generalstats.star.uniquely_mapped_percent) %>%
   
-               rename(million_uniq = STAR_mqc.generalstats.star.uniquely_mapped) %>% 
+               dplyr::rename(million_uniq = STAR_mqc.generalstats.star.uniquely_mapped) %>% 
   
-               rename(Sample_ID = Sample)
+               dplyr::rename(Sample_ID = Sample)
 
 samples_selected_4M<- reads_mapped %>% filter(million_uniq > 4000000)
 list_sampleIDs <- samples_selected_4M %>% select(Sample_ID) %>% as.list()
@@ -71,7 +71,7 @@ str(countData_4M) #33715 x 18
 countData_4M = countData_4M[,c(2:ncol(countData_4M))] #this gets rid of the GeneID column but keeps GeneIDs as rownames 
 str(countData_4M) #33715 x 17
 
-write_rds(countData_4M, "countData_4M.rds")
+#write_rds(countData_4M, "countData_4M.rds")
 ```
 
 
@@ -88,6 +88,8 @@ sample_metadata_reads %>% filter(!Genotype=="stag hybrid") %>%
 sample_metadata_reads %>% filter(!Genotype=="stag hybrid") %>% 
   ggplot(.) + 
   geom_bar(aes(x=Sample_ID, y=million_uniq, fill=Genotype), stat = "identity", position = position_dodge()) + 
-  facet_wrap(~Location)
+  facet_wrap(~Location, scales = "free_x") +
+  theme_classic() +
+    theme(axis.text.x=element_text(angle=45,hjust=1))
 ```
 
