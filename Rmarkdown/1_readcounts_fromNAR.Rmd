@@ -19,7 +19,7 @@ library(tidyverse)
 ```{r}
 #Sorting samples with less than 4M and 5M reads mapped
 
-reads_mapped <- read.delim("../multiqc_reports/multiqc_general_stats_STARalign_trimmed_updatedgfftake3.txt", sep = "\t")
+reads_mapped <- read.delim("../bioinformatics/multiqc_reports/multiqc_general_stats_STARalign_trimmed_updatedgfftake3.txt", sep = "\t")
 head(reads_mapped)
 
 reads_mapped<- reads_mapped %>% 
