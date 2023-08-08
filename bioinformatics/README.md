@@ -6,7 +6,7 @@ Last updated: 20230808
 
 Note: the file/folder hierarchies and names may have changed since uploading this, as I seem to keep editing the hierarchy (even while scripts are running and then they fail!!).
 
-I followed the pipelines of [Dr. Natalia Andrade]() and [Jill Ashey](https://github.com/JillAshey/SedimentStress/blob/master/Bioinf/RNASeq_pipeline_FL.md?plain=1) for this analysis.
+I followed the pipelines of [Dr. Natalia Andrade](https://github.com/China2302/SCTLD_RRC/tree/main/hpc) and [Jill Ashey](https://github.com/JillAshey/SedimentStress/blob/master/Bioinf/RNASeq_pipeline_FL.md?plain=1) for this analysis.
 
 **Pipeline**: [FastQC](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#1-fastqc-raw-reads) -> [TrimGalore (adapters + low-quality bp)](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#2-trimgalore-part-1) -> [TrimGalore (polyA tail)](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#3-trimgalore-part-2) -> [FastQC](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#4-fastqc-trimmed-reads) -> [STAR](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#7-star-index-genome) -> [DESeq2]()
 
@@ -39,6 +39,13 @@ fastqc *.fastq.gz
 ```
 
 ## 2. TrimGalore part 1
+
+I installed TrimGalore locally:
+
+```{bash}
+curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz -o trim_galore.tar.gz
+tar xvzf trim_galore.tar.gz
+```
 
 ```{bash}
 #!/bin/bash
@@ -76,6 +83,8 @@ done
 ```
 
 ## 3. TrimGalore part 2
+
+For some reason it doesn't work if you add the --polyA flag into the script above, so you have to run it twice. Idk why.
 
 ```{bash}
 #!/bin/bash
@@ -145,6 +154,8 @@ Transcript file: `Acerv_assembly_v1.0.mRNA.fa`
 
 ## 6. Fix Acer .gff3 file
 
+See [this blog post](https://github.com/ademerlis/ademerlis.github.io/blob/master/_posts/2023-06-27_stringtiecode_andredoingSTARwithupdatedannotationfile.md) for a detailed description as to why this needs to be done.
+
 ```{r}
 # Title: A. cervicornis GFF adjustments
 # Project: Sedimentation RNA-Seq / Mcap 2020
@@ -188,6 +199,19 @@ write.table(Acerv.gff, file="~/Downloads/Acerv.GFFannotations.fixed_transcript_t
 ```
 
 ## 7. STAR Index Genome
+
+First install STAR locally.
+
+```{bash)
+# Get latest STAR source from releases
+#ran this all in login node 
+wget https://github.com/alexdobin/STAR/archive/2.7.10b.tar.gz
+tar -xzf 2.7.10b.tar.gz
+cd STAR-2.7.10b
+# Compile
+cd source
+make STAR
+```
 
 ```{bash}
 #!/bin/bash
