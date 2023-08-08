@@ -8,7 +8,9 @@ Note: the file/folder hierarchies and names may have changed since uploading thi
 
 I followed the pipelines of [Dr. Natalia Andrade]() and [Jill Ashey](https://github.com/JillAshey/SedimentStress/blob/master/Bioinf/RNASeq_pipeline_FL.md?plain=1) for this analysis.
 
-**Pipeline**: [FastQC]() -> [TrimGalore (adapters + low-quality bp)]() -> [TrimGalore (polyA tail)]() -> [FastQC]() -> [STAR]() -> [DESeq2]()
+**Pipeline**: [FastQC](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#1-fastqc-raw-reads) -> [TrimGalore (adapters + low-quality bp)](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#2-trimgalore-part-1) -> [TrimGalore (polyA tail)](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#3-trimgalore-part-2) -> [FastQC](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#4-fastqc-trimmed-reads) -> [STAR](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#7-star-index-genome) -> [DESeq2]()
+
+Some notes: I had to edit the .gff3 file from the Acer genome because it was missing the "Parent_ID=" and "Transcript_ID=" flags that STAR specifically looks for during alignment.
 
 ## 1. FastQC Raw Reads
 
