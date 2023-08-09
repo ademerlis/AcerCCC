@@ -47,6 +47,16 @@ curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz -o t
 tar xvzf trim_galore.tar.gz
 ```
 
+Then I ran this code, which first trims with specifications:
+
+1. `--illumina` flag indicates to TrimGalore to use the correct quality score offset for Illumina-encoded quality scores (Phred+64)
+2. `--cores 4`: This flag specifies the number of CPU cores to use for the trimming process.
+3. `--three_prime_clip_R1 12`: This flag indicates that a 3'-end (end of read) clipping of 12 bases should be applied to the first read (R1) in a paired-end dataset. This means that the last 12 bases of the R1 read will be removed during the trimming process.
+4. `--nextseq 30`:  specifies the Phred quality score threshold for trimming
+5. `--length 20`: the minimum read length to retain after trimming. Any read that becomes shorter than 20 bases after trimming will be discarded.
+
+Then, the second part of the code renames resulting trimmed files (.fq.gz) into .fastq.gz files so they can be read by FastQC. 
+
 ```{bash}
 #!/bin/bash
 #BSUB -J trim_CCC
@@ -84,7 +94,7 @@ done
 
 ## 3. TrimGalore part 2
 
-For some reason it doesn't work if you add the --polyA flag into the script above, so you have to run it twice. Idk why.
+For some reason it doesn't work if you add the `--polyA` flag into the script above, so you have to run it twice. Idk why.
 
 ```{bash}
 #!/bin/bash
@@ -213,6 +223,13 @@ cd source
 make STAR
 ```
 
+Then run this code to index the genome.
+
+The last three flags were added based on other people's codes:
+1. `--sjdbOverhang 100`: the length of the splice junction overhang. A larger overhang can help improve the accuracy of alignment across splice junctions.
+2. `--sjdbGTFtagExonParentTranscript Parent`: the "Parent" tag should be used to associate exons with their parent transcripts in the GTF file
+3. `--genomeSAindexNbases 13`:  This flag determines the length of the "seed" used during the construction of the suffix array index. The suffix array is a data structure used by STAR for rapid string matching and alignment. The "seed" is a short sequence of nucleotides that is used to quickly identify potential alignment locations. The value "13" specifies that a 13-base seed will be used.
+
 ```{bash}
 #!/bin/bash
 #BSUB -J Acer_star_index_fixedannotations_take3
@@ -276,6 +293,3 @@ do \
 
 done
 ```
-
-
-
