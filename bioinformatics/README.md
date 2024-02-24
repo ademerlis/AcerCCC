@@ -2,123 +2,79 @@
 
 Script written by: DeMerlis
 
-Last updated: 20230808
+Last updated: 20240224
 
-Note: the file/folder hierarchies and names may have changed since uploading this, as I seem to keep editing the hierarchy (even while scripts are running and then they fail!!).
+Following [Dr. Matz tag-based_RNAseq](https://github.com/z0on/tag-based_RNAseq) and [Dr. Studivan's annotated pipeline for tag-based RNAseq](https://github.com/mstudiva/tag-based_RNAseq/blob/master/tagSeq_processing_README.txt). 
 
-I followed the pipelines of [Dr. Natalia Andrade](https://github.com/China2302/SCTLD_RRC/tree/main/hpc) and [Jill Ashey](https://github.com/JillAshey/SedimentStress/blob/master/Bioinf/RNASeq_pipeline_FL.md?plain=1) for this analysis.
+Also added my own steps (FastQC and multiqc). 
 
-**Pipeline**: [FastQC](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#1-fastqc-raw-reads) -> [TrimGalore (adapters + low-quality bp)](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#2-trimgalore-part-1) -> [TrimGalore (polyA tail)](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#3-trimgalore-part-2) -> [FastQC](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#4-fastqc-trimmed-reads) -> [STAR](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics#7-star-index-genome) -> [DESeq2]()
+Note: I manually downloaded my sequence files from Illumina BaseSpace because I couldn't figure out how to use a script to do it.
 
-Some notes: I had to edit the .gff3 file from the Acer genome because it was missing the "Parent_ID=" and "Transcript_ID=" flags that STAR specifically looks for during alignment.
+**Pipeline**: FastQC -> [countreads.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/countreads.pl) -> trimming: [tagseq_clipper.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/tagseq_clipper.pl) + cutadapt -> [countreads_trim.pl](https://github.com/mstudiva/tag-based_RNAseq/blob/master/countreads_trim.pl) -> download and format reference genome or transcriptome -> bowtie2 for index and alignment -> 
 
 ## 1. FastQC Raw Reads
 
 ```{bash}
-#!/bin/bash
-#~/scripts/fastqc_AcerCCC.sh
-#/scratch/projects/and_transcriptomics/Allyson_CCC/scripts/fastqc_AcerCCC.sh
-#purpose: quality checking of raw RNAseq reads using FASTQC on Pegasus compute node
-
-#BSUB -J AcerCCC_fastqc
-#BSUB -q general
-#BSUB -P and_transcriptomics
-#BSUB -o fastqc_AcerCCC.out
-#BSUB -e fastqc_AcerCCC.err
-#BSUB -n 8
-#BSUB -u allyson.demerlis@earth.miami.edu
-#BSUB -N
-
 module load fastqc/0.10.1
-
-and="/scratch/projects/and_transcriptomics/Allyson_CCC"
-
-cd ${and}
 fastqc *.fastq.gz
 --outdir ${and}/fastqc/
+
+cd ${and}/fastqc/
+multiqc .
 ```
+This creates an html file that you can download from HPC and open in web browser. Download and view html files for this project [here](https://github.com/ademerlis/AcerCCC/tree/main/bioinformatics/multiqc_reports). 
 
-## 2. TrimGalore part 1
-
-I installed TrimGalore locally:
-
-```{bash}
-curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz -o trim_galore.tar.gz
-tar xvzf trim_galore.tar.gz
-```
-
-Then I ran this code, which first trims with specifications:
-
-1. `--illumina` flag indicates to TrimGalore to use the correct quality score offset for Illumina-encoded quality scores (Phred+64)
-2. `--cores 4`: This flag specifies the number of CPU cores to use for the trimming process.
-3. `--three_prime_clip_R1 12`: This flag indicates that a 3'-end (end of read) clipping of 12 bases should be applied to the first read (R1) in a paired-end dataset. This means that the last 12 bases of the R1 read will be removed during the trimming process.
-4. `--nextseq 30`:  specifies the Phred quality score threshold for trimming
-5. `--length 20`: the minimum read length to retain after trimming. Any read that becomes shorter than 20 bases after trimming will be discarded.
-
-Then, the second part of the code renames resulting trimmed files (.fq.gz) into .fastq.gz files so they can be read by FastQC. 
+## 2. Countreads.pl
 
 ```{bash}
 #!/bin/bash
-#BSUB -J trim_CCC
+#BSUB -J countrawreads
 #BSUB -q bigmem
 #BSUB -P and_transcriptomics
-#BSUB -n 16
+#BSUB -n 8
 #BSUB -W 120:00
-#BSUB -o trim_CCC.out
-#BSUB -e trim_CCC.err
+#BSUB -o countrawreads.out
+#BSUB -e countrawreads.err
 #BSUB -u and128@miami.edu
 #BSUB -N
 
-and="/scratch/projects/and_transcriptomics"
+#Purpose: counts the number of Illumina reads in a bunch of fastq files
 
-for sample in ${and}/Allyson_CCC/fastq_rawreads/*.gz ;
-
-do \
-${and}/programs/TrimGalore-0.6.10/trim_galore ${sample}
---illumina \
---cores 4 \
---three_prime_clip_R1 12 \
---nextseq 30 \
---length 20 \ ; \
-
-done
-
-cd ${and}/Allyson_CCC/scripts
-
-for f in *.fq.gz;
-do \
-mv -v -- "$f" "${f%.fq.gz}.fastq.gz"; \
-
-done
-```
-
-## 3. TrimGalore part 2
-
-For some reason it doesn't work if you add the `--polyA` flag into the script above, so you have to run it twice. Idk why.
-
-```{bash}
-#!/bin/bash
-#BSUB -J trim_polyA
-#BSUB -q bigmem
-#BSUB -P and_transcriptomics
-#BSUB -n 16
-#BSUB -W 120:00
-#BSUB -o trim_polyA.out
-#BSUB -e trim_polyA.err
-#BSUB -u and128@miami.edu
-#BSUB -N
+#specify variables and paths
 
 and="/scratch/projects/and_transcriptomics"
 
-for sample in ${and}/Allyson_CCC/trimmed/trimmed_fastq_files/*.gz ;
+cd "/scratch/projects/and_transcriptomics/Ch4_AcerCCC/1_fastq_rawreads"
 
-do \
+output_file="countreads_results.txt"
 
-${and}/programs/TrimGalore-0.6.10/trim_galore ${sample} \
---polyA ; \
+glob=".fastq.gz"
+if [ ! -z "$1" ]; then
+    glob="$1"
+fi
 
+fqs=(*$glob)
+for f in "${fqs[@]}"; do
+    gunzip -c "$f" > "temp.fastq"  # Decompress the file to a temporary file
+    nrd=$(cat "temp.fastq" | wc -l)
+    nrd=$((nrd / 4))
+    echo "$f    $nrd"
+    echo "$f    $nrd" >> "$output_file"  # Append the results to the output file
+    rm "temp.fastq"  # Remove the temporary file
 done
+
+echo "Results have been saved to $output_file"
 ```
+
+![Screen Shot 2024-02-24 at 1 35 07 PM](https://github.com/ademerlis/AcerCCC/assets/56000927/742688a5-b533-46b7-bd54-12b5df6f4fbc)
+
+
+## 3. Trimming
+
+
+
+
+
 
 ## 4. FastQC Trimmed Reads
 
