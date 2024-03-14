@@ -241,6 +241,8 @@ Locatelli_Shoguchi_concat
 
 ## 7. Run alignment with Bowtie2
 
+**Note:** the .bt2 files from the bowtie-build step need to be in the same directory as the trimmed sequences, and cannot be in a subfolder. Otherwise, the alignment code won't be able to identify them. Also, the .bt2 files all need to have the same name before the extensions (i.e. "Locatelli_Shoguchi_concat" in my example), and that is what you write in the alignment script for it to find the files.
+
 ```{bash}
 #! /usr/bin/env bash
 
@@ -276,4 +278,5 @@ bsub < ${projdir}/bowtie2align_LocatelliShoguchi/${samp}_bowtie2align_LocatelliS
 
 done
 ```
+
 
