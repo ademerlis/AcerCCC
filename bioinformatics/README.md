@@ -10,6 +10,12 @@ Also added my own steps (FastQC and multiqc).
 
 **Pipeline**: FastQC -> [countreads.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/countreads.pl) -> TrimGalore -> [countreads_trim.pl](https://github.com/mstudiva/tag-based_RNAseq/blob/master/countreads_trim.pl) -> FastQC -> download and format reference genome or transcriptome -> bowtie2 for index and alignment -> SAMtools for generating counts matrix -> DESeq2
 
+Programs I downloaded locally onto my HPC environment:
+- multiQC (version X)
+- TrimGalore (version X)
+- Bowtie2 (version X)
+- 
+
 ## 1. FastQC Raw Reads
 
 ```{bash}
@@ -279,4 +285,50 @@ bsub < ${projdir}/bowtie2align_LocatelliShoguchi/${samp}_bowtie2align_LocatelliS
 done
 ```
 
+## 8. Count aligned reads and alignment rates
+
+While Dr. Matz and Dr. Studivan have "countreads.pl" scripts that they used, I found that those codes did not result in accurate numbers for my aligned reads and rates. 
+
+If you look at the .err files from the *_bowtie2align_LocatelliShoguchi.job files from the previous step, you will see this information:
+
+![Screen Shot 2024-03-15 at 10 39 23 AM](https://github.com/ademerlis/AcerCCC/assets/56000927/27b6f885-6c52-467b-b137-9373f11318d1)
+
+This information is the correct alignment rates and counts.
+
+To extract this information from your .err files, run this script "alignment_extractinfo.sh" (be sure to run chmod +x to make it executable. Then, to run this script directly in your command line, run `./alignment_extractinfo.sh`)
+
+```{bash}
+#!/bin/bash
+
+# Define the output file
+output_file="summary.csv"
+
+# Write the header to the output file
+echo "Sample ID,Total Reads,Unpaired,Aligned 0 times,Aligned 1 time,Aligned >1 times,Overall Alignment Rate" > "$output_file"
+
+# Loop through .err files in the current directory
+for file in *.err
+do
+    # Extract the sample ID from the file name (assuming it's a number)
+    sample_id=$(echo "$file" | grep -o '[0-9]\+')
+
+    # Extract the necessary lines and format the output
+    awk -v id="$sample_id" '/reads; of these:/ { total_reads = $1 }
+         /were unpaired; of these:/ { unpaired = $1 }
+         /aligned 0 times/ { aligned_0 = $1 }
+         /aligned exactly 1 time/ { aligned_1 = $1 }
+         /aligned >1 times/ { aligned_more_1 = $1 }
+         /overall alignment rate/ { overall_rate = $1 }
+         END {
+            print id "," total_reads "," unpaired "," aligned_0 "," aligned_1 "," aligned_more_1 "," overall_rate
+         }' "$file" >> "$output_file"
+done
+
+# Output the result
+echo "Extraction complete. Data saved in $output_file"
+```
+
+
+
+## 9. 
 
