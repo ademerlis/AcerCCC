@@ -14,7 +14,10 @@ Programs I downloaded locally onto my HPC environment:
 - multiQC (version X)
 - TrimGalore (version X)
 - Bowtie2 (version X)
-- 
+
+Programs I loaded in Pegasus environment that were already installed:
+- fastQC (version X)
+- samtools (version X)
 
 ## 1. FastQC Raw Reads
 
@@ -328,7 +331,82 @@ done
 echo "Extraction complete. Data saved in $output_file"
 ```
 
+Then I copied this information into an excel spreadsheet for my records.
 
+## 9. Generating read counts per gene
 
-## 9. 
+First, you need to make a "two-column tab-delimited table transcriptome_seq2gene.tab giving correspondence between entries in the transcriptome fasta file and genes. In de novo transcriptomes, several fasta contigs may correspond to the same gene (e.g., splice isoforms, or assembly uncertainties)." (from [Dr. Matz](https://github.com/z0on/tag-based_RNAseq/blob/master/tagSeq_processing_README.txt))
 
+To generate these files for *A.cervicornis* and *S.fitt*, run this code on the fasta files:
+
+```{bash}
+# making seq2iso.tab files
+grep ">" Acropora_cervicornis.mrna-transcripts.fa | perl -pe 's/>FUN_(\d+)(\S+)\s.+/FUN_$1$2\t FUN_$1/'>Acervicornis_seq2iso.tab
+grep ">" syma_transcriptome_37.fasta | perl -pe 's/>comp(\d+)(\S+)\s.+/comp$1$2\t comp$1/'>Symbiodinium_seq2iso.tab
+
+# create combo file
+
+cat Acer/Locatelli_2023/Acer_Genome/Acervicornis_seq2iso.tab Symbiodinium/Symbiodinium_seq2iso.tab > Host_concat_seq2iso.tab
+```
+
+Next, download [samcount.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/samcount.pl).
+
+Then, run the following script to create .counts files:
+
+```{bash}
+#! /usr/bin/env bash
+
+#define variables for directories and files
+and="/scratch/projects/and_transcriptomics"
+project="and_transcriptomics"
+projdir="/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment"
+
+cd "/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment"
+
+data=($(ls *.sam))
+
+for samp in "${data[@]}" ; do \
+
+#build script
+echo "making sam_counts script for ${samp}..."
+echo "
+#! /usr/bin/env bash
+#BSUB -P ${project}
+#BSUB -J ${samp}_samcounts
+#BSUB -e ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.err
+#BSUB -o ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.out
+#BSUB -W 12:00
+#BSUB -n 8
+#BSUB -q general
+
+cd \"/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment\"
+
+module load samtools/1.3
+
+perl samcount.pl ${samp} /scratch/projects/and_transcriptomics/genomes/Host_concat_seq2iso.tab aligner=bowtie2 >${samp}.counts
+
+" > ${and}/Ch4_AcerCCC/3_bowtie2/alignment/${samp}_samcounts.job
+
+bsub < ${and}/Ch4_AcerCCC/3_bowtie2/alignment/${samp}_samcounts.job
+
+done
+```
+
+Then, run these lines of code directly in the command line:
+
+```{bash}
+perl expression_compiler.pl *.counts > allcounts.txt
+
+# let's remove those annoying chains of extensions from sample names
+cat allcounts.txt | perl -pe 's/\.trim\.sam\.counts//g'> counts.txt
+
+# i also need to remove sample name extensions "i.e. _S25_L001_R1_001"
+
+cat counts.txt | perl -pe 's/(_S\d+_L\d+_R\d+_\d+)//g' > count.txt
+
+#and rename FUN -> Acropora and comp -> symbiodinium
+sed -i 's/FUN/Acropora/g' count.txt
+sed -i 's/comp/Symbiodinium/g' count.txt
+```
+
+Then, use scp to move the count.txt file to your local drive.
