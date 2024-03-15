@@ -10,6 +10,15 @@ Also added my own steps (FastQC and multiqc).
 
 **Pipeline**: FastQC -> [countreads.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/countreads.pl) -> TrimGalore -> [countreads_trim.pl](https://github.com/mstudiva/tag-based_RNAseq/blob/master/countreads_trim.pl) -> FastQC -> download and format reference genome or transcriptome -> bowtie2 for index and alignment -> SAMtools for generating counts matrix -> DESeq2
 
+Programs I downloaded locally onto my HPC environment:
+- multiQC (version 1.14)
+- TrimGalore (version 0.6.10)
+- Bowtie2 (version 2.5.2)
+
+Programs I loaded in Pegasus environment that were already installed:
+- fastQC (version 0.10.1)
+- samtools (version 1.3)
+
 ## 1. FastQC Raw Reads
 
 ```{bash}
@@ -72,11 +81,14 @@ echo "Results have been saved to $output_file"
 Script 1: using TrimGalore to remove low-quality base pairs and adapters.
 
 Specific flags:
---illumina \
---cores 4 \
---three_prime_clip_R1 12 \
---nextseq 30 \
---length 20 
+
+- "--illumina": This option tells Trim Galore to remove Illumina universal adapters from the reads. Illumina sequencing platforms use a standard adapter sequence, and this flag ensures that any remnants of these adapters are trimmed off.
+- "--cores 4": This flag sets the number of processing cores to use for the task. By specifying 4, you are instructing Trim Galore to use four cores, which can speed up the processing if your computer has multiple cores available.
+- "--three_prime_clip_R1 12": This option instructs Trim Galore to trim 12 bases from the 3'-end of read 1. This is useful for removing any unwanted sequences or low-quality bases from the end of the reads.
+- "--nextseq 30": This flag is used for NextSeq 500/550 data, which has two-color chemistry and can produce specific types of quality issues. The 30 value tells Trim Galore to trim bases at the 3'-end of each read that have a quality score of 30 or below. This is a more aggressive quality trimming approach suitable for NextSeq data to ensure high-quality output.
+- "--length 20":  This option sets the minimum length of reads to keep after trimming. Reads that end up shorter than 20 bases after adapter and quality trimming will be discarded. This helps to ensure that only reads of sufficient length and quality are retained for subsequent analysis steps.
+
+(thx ChatGPT)
 
 ```{bash}
 #!/bin/bash
@@ -219,11 +231,16 @@ echo "Results have been saved to $output_file"
 ![Screen Shot 2024-03-14 at 10 53 15 AM](https://github.com/ademerlis/AcerCCC/assets/56000927/260f79f8-70d0-4d17-9070-359e8ea0b966)
 
 
-## 5. Download *Acropora cervicornis* genome files
+## 5. Download *Acropora cervicornis* and *Symbiodinium* genome files
 
 Obtained most recent Baums lab genome. (Locatelli et al. *in prep*).
 
-## 6. Build *Acropora cervicornis* + *Symbiodinium fitti* index with Bowtie2
+Downloaded *Symbiodinium* clade A3 from [Shoguchi et al. 2018](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-018-4857-9). 
+
+[Link to download page](https://marinegenomics.oist.jp/symb/viewer/download?project_id=37)
+"symatranscriptome_37.fasta.gz"
+
+## 6. Build *Acropora cervicornis* + *Symbiodinium* index with Bowtie2
 
 ```{bash}
 #!/usr/bin/env bash
@@ -279,4 +296,125 @@ bsub < ${projdir}/bowtie2align_LocatelliShoguchi/${samp}_bowtie2align_LocatelliS
 done
 ```
 
+## 8. Count aligned reads and alignment rates
 
+While Dr. Matz and Dr. Studivan have "countreads.pl" scripts that they used, I found that those codes did not result in accurate numbers for my aligned reads and rates. 
+
+If you look at the .err files from the *_bowtie2align_LocatelliShoguchi.job files from the previous step, you will see this information:
+
+![Screen Shot 2024-03-15 at 10 39 23 AM](https://github.com/ademerlis/AcerCCC/assets/56000927/27b6f885-6c52-467b-b137-9373f11318d1)
+
+This information is the correct alignment rates and counts.
+
+To extract this information from your .err files, run this script "alignment_extractinfo.sh" (be sure to run chmod +x to make it executable. Then, to run this script directly in your command line, run `./alignment_extractinfo.sh`)
+
+```{bash}
+#!/bin/bash
+
+# Define the output file
+output_file="summary.csv"
+
+# Write the header to the output file
+echo "Sample ID,Total Reads,Unpaired,Aligned 0 times,Aligned 1 time,Aligned >1 times,Overall Alignment Rate" > "$output_file"
+
+# Loop through .err files in the current directory
+for file in *.err
+do
+    # Extract the sample ID from the file name (assuming it's a number)
+    sample_id=$(echo "$file" | grep -o '[0-9]\+')
+
+    # Extract the necessary lines and format the output
+    awk -v id="$sample_id" '/reads; of these:/ { total_reads = $1 }
+         /were unpaired; of these:/ { unpaired = $1 }
+         /aligned 0 times/ { aligned_0 = $1 }
+         /aligned exactly 1 time/ { aligned_1 = $1 }
+         /aligned >1 times/ { aligned_more_1 = $1 }
+         /overall alignment rate/ { overall_rate = $1 }
+         END {
+            print id "," total_reads "," unpaired "," aligned_0 "," aligned_1 "," aligned_more_1 "," overall_rate
+         }' "$file" >> "$output_file"
+done
+
+# Output the result
+echo "Extraction complete. Data saved in $output_file"
+```
+
+Then I copied this information into an excel spreadsheet for my records.
+
+## 9. Generating read counts per gene
+
+First, you need to make a "two-column tab-delimited table transcriptome_seq2gene.tab giving correspondence between entries in the transcriptome fasta file and genes. In de novo transcriptomes, several fasta contigs may correspond to the same gene (e.g., splice isoforms, or assembly uncertainties)." (from [Dr. Matz](https://github.com/z0on/tag-based_RNAseq/blob/master/tagSeq_processing_README.txt))
+
+To generate these files for *A.cervicornis* and *S.fitt*, run this code on the fasta files:
+
+```{bash}
+# making seq2iso.tab files
+grep ">" Acropora_cervicornis.mrna-transcripts.fa | perl -pe 's/>FUN_(\d+)(\S+)\s.+/FUN_$1$2\t FUN_$1/'>Acervicornis_seq2iso.tab
+grep ">" syma_transcriptome_37.fasta | perl -pe 's/>comp(\d+)(\S+)\s.+/comp$1$2\t comp$1/'>Symbiodinium_seq2iso.tab
+
+# create combo file
+
+cat Acer/Locatelli_2023/Acer_Genome/Acervicornis_seq2iso.tab Symbiodinium/Symbiodinium_seq2iso.tab > Host_concat_seq2iso.tab
+```
+
+Next, download [samcount.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/samcount.pl).
+
+Then, run the following script to create .counts files:
+
+```{bash}
+#! /usr/bin/env bash
+
+#define variables for directories and files
+and="/scratch/projects/and_transcriptomics"
+project="and_transcriptomics"
+projdir="/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment"
+
+cd "/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment"
+
+data=($(ls *.sam))
+
+for samp in "${data[@]}" ; do \
+
+#build script
+echo "making sam_counts script for ${samp}..."
+echo "
+#! /usr/bin/env bash
+#BSUB -P ${project}
+#BSUB -J ${samp}_samcounts
+#BSUB -e ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.err
+#BSUB -o ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.out
+#BSUB -W 12:00
+#BSUB -n 8
+#BSUB -q general
+
+cd \"/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment\"
+
+module load samtools/1.3
+
+perl samcount.pl ${samp} /scratch/projects/and_transcriptomics/genomes/Host_concat_seq2iso.tab aligner=bowtie2 >${samp}.counts
+
+" > ${and}/Ch4_AcerCCC/3_bowtie2/alignment/${samp}_samcounts.job
+
+bsub < ${and}/Ch4_AcerCCC/3_bowtie2/alignment/${samp}_samcounts.job
+
+done
+```
+
+Then, run these lines of code directly in the command line:
+
+```{bash}
+perl expression_compiler.pl *.counts > allcounts.txt
+
+# let's remove those annoying chains of extensions from sample names
+cat allcounts.txt | perl -pe 's/\.trim\.sam\.counts//g'> counts.txt
+
+# i also need to remove sample name extensions "i.e. _S25_L001_R1_001"
+
+cat counts.txt | perl -pe 's/(_S\d+_L\d+_R\d+_\d+)//g' > count.txt
+
+#and rename FUN -> Acropora and comp -> symbiodinium
+sed -i 's/FUN/Acropora/g' count.txt
+sed -i 's/comp/Symbiodinium/g' count.txt
+```
+
+Then, use scp to move the count.txt file to your local drive.
