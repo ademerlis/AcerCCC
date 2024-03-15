@@ -81,11 +81,14 @@ echo "Results have been saved to $output_file"
 Script 1: using TrimGalore to remove low-quality base pairs and adapters.
 
 Specific flags:
---illumina \
---cores 4 \
---three_prime_clip_R1 12 \
---nextseq 30 \
---length 20 
+
+- "--illumina": This option tells Trim Galore to remove Illumina universal adapters from the reads. Illumina sequencing platforms use a standard adapter sequence, and this flag ensures that any remnants of these adapters are trimmed off.
+- "--cores 4": This flag sets the number of processing cores to use for the task. By specifying 4, you are instructing Trim Galore to use four cores, which can speed up the processing if your computer has multiple cores available.
+- "--three_prime_clip_R1 12": This option instructs Trim Galore to trim 12 bases from the 3'-end of read 1. This is useful for removing any unwanted sequences or low-quality bases from the end of the reads.
+- "--nextseq 30": This flag is used for NextSeq 500/550 data, which has two-color chemistry and can produce specific types of quality issues. The 30 value tells Trim Galore to trim bases at the 3'-end of each read that have a quality score of 30 or below. This is a more aggressive quality trimming approach suitable for NextSeq data to ensure high-quality output.
+- "--length 20":  This option sets the minimum length of reads to keep after trimming. Reads that end up shorter than 20 bases after adapter and quality trimming will be discarded. This helps to ensure that only reads of sufficient length and quality are retained for subsequent analysis steps.
+
+(thx ChatGPT)
 
 ```{bash}
 #!/bin/bash
