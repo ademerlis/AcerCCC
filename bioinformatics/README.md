@@ -11,13 +11,13 @@ Also added my own steps (FastQC and multiqc).
 **Pipeline**: FastQC -> [countreads.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/countreads.pl) -> TrimGalore -> [countreads_trim.pl](https://github.com/mstudiva/tag-based_RNAseq/blob/master/countreads_trim.pl) -> FastQC -> download and format reference genome or transcriptome -> bowtie2 for index and alignment -> SAMtools for generating counts matrix -> DESeq2
 
 Programs I downloaded locally onto my HPC environment:
-- multiQC (version X)
-- TrimGalore (version X)
-- Bowtie2 (version X)
+- multiQC (version 1.14)
+- TrimGalore (version 0.6.10)
+- Bowtie2 (version 2.5.2)
 
 Programs I loaded in Pegasus environment that were already installed:
-- fastQC (version X)
-- samtools (version X)
+- fastQC (version 0.10.1)
+- samtools (version 1.3)
 
 ## 1. FastQC Raw Reads
 
