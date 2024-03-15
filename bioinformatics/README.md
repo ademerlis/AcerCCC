@@ -406,15 +406,11 @@ Then, run these lines of code directly in the command line:
 perl expression_compiler.pl *.counts > allcounts.txt
 
 # let's remove those annoying chains of extensions from sample names
-cat allcounts.txt | perl -pe 's/\.trim\.sam\.counts//g'> counts.txt
-
-# i also need to remove sample name extensions "i.e. _S25_L001_R1_001"
-
-cat counts.txt | perl -pe 's/(_S\d+_L\d+_R\d+_\d+)//g' > count.txt
+cat allcounts.txt | perl -pe 's/\_trimmed\.fastq\.gz\.sam\.counts//g'> counts.txt
 
 #and rename FUN -> Acropora and comp -> symbiodinium
-sed -i 's/FUN/Acropora/g' count.txt
-sed -i 's/comp/Symbiodinium/g' count.txt
+sed -i 's/FUN/Acropora/g' counts.txt
+sed -i 's/comp/Symbiodinium/g' counts.txt
 ```
 
-Then, use scp to move the count.txt file to your local drive.
+Then, use scp to move the counts.txt file to your local drive.
