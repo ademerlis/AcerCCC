@@ -231,11 +231,13 @@ echo "Results have been saved to $output_file"
 ![Screen Shot 2024-03-14 at 10 53 15 AM](https://github.com/ademerlis/AcerCCC/assets/56000927/260f79f8-70d0-4d17-9070-359e8ea0b966)
 
 
-## 5. Download *Acropora cervicornis* genome files
+## 5. Download *Acropora cervicornis* and *Symbiodinium* genome files
 
 Obtained most recent Baums lab genome. (Locatelli et al. *in prep*).
 
-## 6. Build *Acropora cervicornis* + *Symbiodinium fitti* index with Bowtie2
+Downloaded *Symbiodinium* clade A3 from [Shoguchi et al. 2018](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-018-4857-9). 
+
+## 6. Build *Acropora cervicornis* + *Symbiodinium* index with Bowtie2
 
 ```{bash}
 #!/usr/bin/env bash
