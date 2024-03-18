@@ -186,6 +186,10 @@ resultsNames(dds)
 # Location_nursery_vs_CCC
 Location_nursery_vs_CCC=results(dds,contrast=c("Location","nursery","CCC"))
 summary(Location_nursery_vs_CCC, alpha = 0.05)
+
+Location_CCC_vs_nursery= results(dds,contrast=c("Location","CCC","nursery"))
+summary(Location_CCC_vs_nursery, alpha = 0.05)
+
 degs_Location_nursery_vs_CCC=row.names(Location_nursery_vs_CCC)[Location_nursery_vs_CCC$padj<0.05 & !(is.na(Location_nursery_vs_CCC$padj))]
 length(degs_Location_nursery_vs_CCC) #828
 
