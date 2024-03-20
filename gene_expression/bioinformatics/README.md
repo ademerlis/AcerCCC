@@ -358,7 +358,7 @@ So, when it comes to determining whether a read aligned to the Host genome or th
 The filtering of whether a read is a true Host or Symbiont read, and the discarding of reads that align to both "equally well" (and thus should not be counted as a read) actually occurs in the next step of the process using SAMtools. When generating the read counts per gene, you first create a concatenated file that has the sequence ID corresponding gene/isogroup ID for each species. Then, when you run [samcount.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/samcount.pl), there are some defaults that are specified in the code itself:
 
 - **Dup.reads:** You can specify whether you want to keep or remove exact sequence-duplicate reads mapping to the same position in the reference genome/transcriptome. By default, the setting is “keep” (as duplicates are supposed to have been removed during the trimming stage).
-- **Aligner:** “samcount.pl” by default assumes that you used Bowtie2 in -k mode for your alignment step. The other aligner you can specify for this code is “gmapper” from SHRiMP (http://compbio.cs.toronto.edu/shrimp/).
+- **Aligner:** “samcount.pl” by default assumes that you used Bowtie2 in -k mode for your alignment step. 
 - **Mult.iso:** By default, if reads map to multiple isogroups, then the read is disregarded. You can change this setting to “random” if you want an isogroup to be randomly selected and used to assign a count to.
 
 So, based on the "mult.iso" default, if a read maps to multiple isogroups (for example both a Host isogroup AND a symbiont isogroup), then that read is discarded. This is the step where we determine if a read is truly host or truly symbiont.
