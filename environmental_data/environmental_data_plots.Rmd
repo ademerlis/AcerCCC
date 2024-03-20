@@ -1,0 +1,693 @@
+---
+title: "environmental_data_plots"
+author: "allyson_demerlis"
+date: "2024-03-18"
+output: html_document
+---
+
+```{r}
+library(dbplyr)
+library(tidyverse)
+library(readr)
+library(stringr)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+library(Rmisc)
+library(doBy)
+library(devtools)
+#devtools::install_github("ricardo-bion/ggradar", dependencies = TRUE)
+library(ggradar)
+library(ggiraphExtra)
+library(tidyverse)
+library(scales)
+library(tidyr)
+library(readxl)
+library(zoo)
+```
+
+# Temperature
+
+## import files
+
+CURES frame
+```{r}
+cures_frame_tilt_temp <- read_excel("Oct2020_Jan2022_1901102_urban-2020-10_(0)_Temperature.xlsx", sheet = "1901102_urban-2020-10_(0)_Tempe")
+#logged every 15 min
+
+#edit cures frame time
+cures_frame_tilt_temp$Datetime <- as.POSIXct(cures_frame_tilt_temp$Datetime, tz="UTC")
+cures_frame_tilt_temp$Datetime_EST <- with_tz(cures_frame_tilt_temp$Datetime, "America/New_York")
+
+cures_frame_tilt_temp$Datetime_EST <- round_date(cures_frame_tilt_temp$Datetime_EST, unit = "2 hours") #to match HOBO loggers from KB nursery
+
+#add cures frame site
+cures_frame_tilt_temp %>% 
+  mutate(site = "CURES") %>% 
+  select(!Date:Datetime) %>% 
+  dplyr::rename(Temperature = `Temperature (C)`) -> cures_frame_tilt_temp
+
+#filter out first two days because it was logging very high (abnormal) numbers
+cures_frame_tilt_temp %>% 
+  filter(Datetime_EST >= "2020-10-13 14:00:00") -> cures_frame_tilt_temp
+
+cures_frame_tilt_temp %>% 
+  group_by(Datetime_EST) %>% 
+  dplyr::mutate(Temperature = mean(Temperature)) %>% 
+  distinct() -> cures_frame_tilt_temp
+
+#temps after this date start looking off and like the tiltmeter is mis-reading it
+cures_frame_tilt_temp %>% 
+  filter(as.Date(Datetime_EST) <= "2021-12-07")  -> cures_frame_tilt_temp
+
+str(cures_frame_tilt_temp)
+#Temperature
+#Datetime_EST (ymd_hms)
+#site
+
+# Define the window size (e.g., for a couple of days, window_size = 2)
+window_size <- 3
+
+# Calculate the rolling maximum temperature within the specified range
+cures_data<- cures_frame_tilt_temp %>%
+  drop_na(Temperature) %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Time = hms(Time)) %>% 
+  mutate(Time_of_day = case_when(Time >= "7 H" & Time <= "18 H" ~ "Day",
+                                 TRUE ~ "Night")) %>% 
+  dplyr::group_by(Date, Time_of_day) %>% 
+  dplyr::mutate(mean_temp_day = mean(Temperature)) %>% 
+  arrange(Date) %>%
+  mutate(RollingMax = rollmax(mean_temp_day, window_size, fill = NA, align = "right"),
+         RollingMin = rollapply(mean_temp_day, window_size, min, fill = NA, align = "right"),
+         MaxThreshold = RollingMax + 1,
+         MinThreshold = RollingMin - 1)
+
+# Filter out temperatures exceeding the threshold (+3 degrees from the rolling max)
+filtered_cures_data <- cures_data %>%
+  filter(Temperature <= MaxThreshold & Temperature >= MinThreshold)
+
+filtered_cures_data %>% 
+  ggplot(., aes(x=as.Date(Date), y=Temperature, color=site)) +
+  geom_point()
+  #ok this looks better
+
+filtered_cures_data$Date <- ymd(filtered_cures_data$Date)
+
+rows_to_replace <- grepl("0S", filtered_cures_data$Time) & !grepl("H|M", filtered_cures_data$Time)
+
+filtered_cures_data$Time <- as.character(filtered_cures_data$Time)
+
+filtered_cures_data$Time[rows_to_replace] <- gsub("0S", "00:00:00", filtered_cures_data$Time[rows_to_replace])
+
+filtered_cures_data %>% 
+  unite(Datetime_EST, Date, Time, sep = " ") %>% 
+  mutate(Datetime_EST = ymd_hms(Datetime_EST)) -> filtered_cures_data
+```
+
+KB Nursery
+```{r}
+#HOBO logs every two hours
+KB_01092018<-read_csv("KBNursery_2018_01_09.csv", skip = 1)
+convertFtoC <- function(F) {
+  C <- (F - 32) * 5/9
+  return(C)
+}
+KB_01092018  %>% 
+  select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °F (LGR S/N: 20194578, SEN S/N: 20194578)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20194578, SEN S/N: 20194578)`) %>% 
+  select(Temperature, Light, Datetime_EST) %>% 
+  mutate(Temperature=convertFtoC(Temperature)) -> KB_01092018
+
+KB_07092019<-read_csv("KBNursery_2019_07_09.csv", skip = 1)
+KB_07092019  %>% 
+  select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 10795158, SEN S/N: 10795158)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 10795158, SEN S/N: 10795158)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_07092019
+
+KB_10152019<-read_csv("KBNursery_2019_10_15.csv", skip = 1)
+KB_10152019 %>% 
+  select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20518526, SEN S/N: 20518526)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20518526, SEN S/N: 20518526)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_10152019
+
+KB_01162020<-read_csv("KBNursery_2020_01_16.csv", skip = 1)
+KB_01162020 %>% 
+  select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20473194, SEN S/N: 20473194)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20473194, SEN S/N: 20473194)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_01162020
+
+KB_03062020<-read_csv("KBNursery_2020_03_06.csv", skip = 1)
+KB_03062020 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20685544, SEN S/N: 20685544)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685544, SEN S/N: 20685544)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_03062020
+
+KB_05012020<-read_csv("KBNursery_2020_05_01.csv", skip = 1)
+KB_05012020 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20685559, SEN S/N: 20685559)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685559, SEN S/N: 20685559)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_05012020
+
+KB_09112020<-read_csv("KBNursery_2020_09_11.csv", skip = 1)
+
+KB_09112020 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_09112020
+
+KB_02102021 <- read_csv("KBNursery_2021_02_10.csv", skip = 1)
+KB_02102021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_02102021
+
+KB_05282021 <- read_csv("KBNursery_2021_05_28.csv", skip = 1)
+KB_05282021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21085862, SEN S/N: 21085862)`) %>% 
+  select(Temperature, Datetime_EST) %>% 
+  mutate(Light = NA) -> KB_05282021
+
+KB_08112021 <- read_csv("KBNursery_2021_08_11.csv", skip = 1)
+KB_08112021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_08112021
+
+KB_120821 <- read_csv("KBNursery_2021_12_08.csv", skip = 1)
+
+KB_120821%>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
+  select(Temperature, Light, Datetime_EST) -> KB_120821
+
+rbind(KB_01092018, KB_07092019, KB_10152019, KB_01162020, KB_03062020, KB_05012020, KB_09112020, KB_02102021, KB_05282021, KB_08112021, KB_120821) -> all_KB_data
+
+all_KB_data %>% 
+  mutate(site = "Nursery") -> all_KB_data
+
+all_KB_data$Temperature <- as.numeric(all_KB_data$Temperature)
+```
+
+plotting and cleaning data 
+```{r}
+#there are some outliers in the KB Nursery data that need to be filtered out
+all_KB_data %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  drop_na(Temperature) %>% 
+  dplyr::group_by(Date) %>% 
+  dplyr::mutate(mean_temp_day = mean(Temperature)) %>% 
+  pivot_longer(c("Temperature", "mean_temp_day"), names_to = "name", values_to = "temp") %>% 
+  ggplot(., aes(x=Date, y=temp, color=name)) +
+  geom_point()
+#lots of outliers
+
+# Define the window size (e.g., for a couple of days, window_size = 2)
+window_size <- 3
+
+# Calculate the rolling maximum temperature within the specified range
+data <- all_KB_data %>%
+  drop_na(Temperature) %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Time = hms(Time)) %>% 
+  mutate(Time_of_day = case_when(Time >= "7 H" & Time <= "18 H" ~ "Day",
+                                 TRUE ~ "Night")) %>% 
+  dplyr::group_by(Date, Time_of_day) %>% 
+  dplyr::mutate(mean_temp_day = mean(Temperature)) %>% 
+  arrange(Date) %>%
+  mutate(RollingMax = rollmax(mean_temp_day, window_size, fill = NA, align = "right"),
+         RollingMin = rollapply(mean_temp_day, window_size, min, fill = NA, align = "right"),
+         MaxThreshold = RollingMax + 1,
+         MinThreshold = RollingMin - 1)
+
+# Filter out temperatures exceeding the threshold (+3 degrees from the rolling max)
+filtered_data <- data %>%
+  filter(Temperature <= MaxThreshold & Temperature >= MinThreshold)
+
+filtered_data %>% 
+  ggplot(., aes(x=as.Date(Date), y=Temperature, color=site)) +
+  geom_point()
+  #ok this looks better
+
+filtered_data %>% 
+  filter(Date >= "2019-07-01") -> filtered_data
+
+rows_to_replace <- grepl("0S", filtered_data$Time) & !grepl("H|M", filtered_data$Time)
+
+filtered_data$Time <- as.character(filtered_data$Time)
+
+filtered_data$Time[rows_to_replace] <- gsub("0S", "00:00:00", filtered_data$Time[rows_to_replace])
+
+filtered_data %>% 
+  unite(Datetime_EST, Date, Time, sep = " ") %>% 
+  mutate(Datetime_EST = ymd_hms(Datetime_EST)) -> filtered_data
+```
+
+
+## plot temps 
+```{r}
+ggplot(filtered_data, aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_line()
+
+full_join(filtered_data, filtered_cures_data) %>% 
+  select(!Light) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x="Date", y = "Temp (ºC)") +
+  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
+#ggsave("CURES_nursery_temp_together.pdf")
+```
+zoom in on time period of study (June - Dec 2021)
+```{r}
+full_join(filtered_data, filtered_cures_data) %>% 
+  select(!Light) %>% 
+  filter(as.Date(Datetime_EST) > "2021-06-10" & as.Date(Datetime_EST) < "2021-12-07") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x="Date", y = "Temp (ºC)") +
+  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
+#ggsave("CURES_nursery_temp_junedec2021.pdf")
+```
+
+plot one day to see if timing makes sense
+```{r}
+full_join(filtered_data, filtered_cures_data) %>% 
+  select(!Light) %>% 
+  filter(as.Date(Datetime_EST) > "2021-10-10" & as.Date(Datetime_EST) < "2021-10-13") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x="Date", y = "Temp (ºC)") +
+  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
+```
+
+
+
+
+```{r}
+full_join(filtered_data, filtered_cures_data) %>% 
+  select(!Light) %>% 
+  drop_na(Temperature) -> all_temp_data
+
+# Summary statistics per year per season
+
+#2019 (nursery only: July-Dec)
+all_temp_data %>% 
+  filter(Datetime_EST < "2020-01-01 00:00:00")  %>% 
+  mutate(Season = case_when(Datetime_EST < "2019-05-01 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2019-05-01 00:00:00" ~ "Wet")) %>% 
+  dplyr::group_by(Time_of_day, site, Season) %>% 
+  dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature))
+  
+#2020
+all_temp_data %>% 
+  filter(Datetime_EST < "2021-01-01 00:00:00" & Datetime_EST > "2019-12-31 00:00:00") %>% 
+  mutate(Season = case_when(Datetime_EST < "2020-05-01 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2020-05-01 00:00:00" ~ "Wet")) %>% 
+  dplyr::group_by(Time_of_day, site, Season) %>%
+  dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature))
+
+#2021
+all_temp_data %>% 
+  filter(Datetime_EST < "2022-01-01 00:00:00" & Datetime_EST > "2020-12-31 00:00:00") %>% 
+  mutate(Season = case_when(Datetime_EST < "2021-05-01 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2021-05-01 00:00:00" ~ "Wet")) %>% 
+  dplyr::group_by(Time_of_day, site, Season) %>%
+  dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature)) 
+
+all_temp_data %>% 
+  filter(Datetime_EST < "2022-01-01 00:00:00" & Datetime_EST > "2020-12-31 00:00:00") %>% 
+  mutate(Season = case_when(Datetime_EST < "2021-05-01 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2021-05-01 00:00:00" ~ "Wet")) %>% 
+  dplyr::group_by(site, Season) %>% 
+  dplyr::group_by(site, Season) %>%
+  dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature)) %>% 
+  ggplot(., aes(x=Season,y=mean_temp,color=site)) +
+  geom_point(position = position_dodge(width = 0.3)) + 
+  geom_errorbar(aes(ymin=mean_temp-sd_temp, ymax=mean_temp+sd_temp, fill=site), width = 0.2,position = position_dodge(width = 0.3)) +
+  theme_classic() +
+  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
+```
+
+
+For radar plot
+
+Oct 13, 2020 -- Dec 7, 2021
+```{r}
+filtered_data %>% 
+  filter(Datetime_EST < "2021-12-08 00:00:00" & Datetime_EST > "2020-10-12 00:00:00") %>% 
+  full_join(., filtered_cures_data) %>% 
+  mutate(Season = case_when(Datetime_EST < "2021-05-01 00:00:00" & Datetime_EST > "2020-10-01 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2021-05-01 00:00:00" & Datetime_EST <= "2021-10-01 00:00:00" ~ "Wet",
+                            Datetime_EST > "2021-10-01 00:00:00" ~ "Dry")) %>% 
+  ungroup() %>% 
+  dplyr::select(Temperature, Datetime_EST, site, Season) -> alldata_2020_2021
+```
+
+
+```{r}
+temp.summary<- summaryBy(Temperature ~ site + Season, data = alldata_2020_2021,
+                         FUN = function(x) { c(max = max(x), min = min(x)) } )
+temp.summary$Temp.seasonal <- temp.summary$Temperature.max - temp.summary$Temperature.min
+
+alldata_2020_2021 %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") -> alldata_2020_2021_sep
+
+# Daily Range
+Daily.range <- summaryBy(Temperature ~ Date + site + Season, data=alldata_2020_2021_sep, FUN=c(max,min,mean,sd))
+
+Daily.range$temp.daily.range <- Daily.range$Temperature.max - Daily.range$Temperature.min
+
+temp.d.range <- summaryBy(temp.daily.range ~ site + Season, data = Daily.range,
+                          FUN = function(x) { c(mean = mean(x)) } )
+Daily.range %>% 
+  filter(Temperature.max > 30) %>% 
+  group_by(site, Season) %>% 
+  dplyr::summarise(d.above.30 = n()) -> temp.d.30
+
+full_join(temp.summary, temp.d.range) %>% 
+  full_join(., temp.d.30) -> temp_summary
+```
+
+
+```{r}
+scale_by_max <- function(x) {
+  x * 100 / max(x, na.rm = TRUE)
+}
+
+colnames(temp_summary) <- c("site", "Season", "Max", "Min", "Seasonal", "Daily", "30°C")
+
+temp_summary %>% 
+  filter(Season == "Dry") -> temp_summary_dry
+
+temp_summary_dry %>% 
+  column_to_rownames(var="site") %>% 
+  select(!Season) -> temp_summary_dry
+
+ temp_summary_dry %>%
+  dplyr::mutate(across(everything(), as.numeric)) %>%
+   select(!`30°C`) %>% 
+  dplyr::mutate(across(everything(), scale_by_max)) -> temp_summary_dry_percent
+
+# To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
+temp_summary_dry_percent <- rbind(rep(100,5), rep(0,5), temp_summary_dry_percent)
+
+# Color vector
+colors_border=c("orange", "darkblue")
+colors_in=c("orange", "darkblue")
+
+# Define colors with transparency using adjustcolor
+colors_border <- c(adjustcolor("orange", alpha = 0.9), adjustcolor("darkblue", alpha = 0.9))
+colors_in <- c(adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha = 0.4))
+
+library(fmsb)
+# plot with default options:
+pdf("radarchart_dryseason.pdf")
+radarchart(temp_summary_dry_percent, axistype=1 , 
+            #custom polygon
+            pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+            #custom the grid
+            cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.8,
+            #custom labels
+            vlcex=0.9
+)
+
+temp_summary %>% 
+  filter(Season == "Wet") -> temp_summary_wet
+
+temp_summary_wet %>% 
+  column_to_rownames(var="site") %>% 
+  select(!Season) -> temp_summary_wet
+
+ temp_summary_wet %>%
+  dplyr::mutate(across(everything(), as.numeric)) %>%
+  dplyr::mutate(across(everything(), scale_by_max)) -> temp_summary_wet_percent
+
+# To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
+temp_summary_wet_percent <- rbind(rep(100,5), rep(0,5), temp_summary_wet_percent)
+
+# Color vector
+colors_border=c("orange", "darkblue")
+colors_in=c("orange", "darkblue")
+
+# Define colors with transparency using adjustcolor
+colors_border <- c(adjustcolor("orange", alpha = 0.9), adjustcolor("darkblue", alpha = 0.9))
+colors_in <- c(adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha = 0.4))
+
+library(fmsb)
+# plot with default options:
+pdf("radarchart_wetseason.pdf")
+radarchart(temp_summary_wet_percent, axistype=1 , 
+            #custom polygon
+            pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+            #custom the grid
+            cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.8,
+            #custom labels
+            vlcex=0.9
+)
+dev.off()
+
+```
+
+
+no separation of seasons
+```{r}
+temp.summary<- summaryBy(Temperature ~ site, data = alldata_2020_2021,
+                         FUN = function(x) { c(max = max(x), min = min(x)) } )
+temp.summary$Temp.seasonal <- temp.summary$Temperature.max - temp.summary$Temperature.min
+
+alldata_2020_2021 %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") -> alldata_2020_2021_sep
+
+# Daily Range
+Daily.range <- summaryBy(Temperature ~ Date + site, data=alldata_2020_2021_sep, FUN=c(max,min,mean,sd))
+
+Daily.range$temp.daily.range <- Daily.range$Temperature.max - Daily.range$Temperature.min
+
+temp.d.range <- summaryBy(temp.daily.range ~ site, data = Daily.range,
+                          FUN = function(x) { c(mean = mean(x)) } )
+Daily.range %>% 
+  filter(Temperature.max > 30) %>% 
+  group_by(site) %>% 
+  dplyr::summarise(d.above.30 = n()) -> temp.d.30
+
+full_join(temp.summary, temp.d.range) %>% 
+  full_join(., temp.d.30) -> temp_summary
+
+
+scale_by_max <- function(x) {
+  x * 100 / max(x, na.rm = TRUE)
+}
+
+colnames(temp_summary) <- c("site", "Max", "Min", "Seasonal", "Daily", "30°C")
+
+temp_summary %>% 
+  column_to_rownames(var="site") -> temp_summary
+
+ temp_summary %>%
+  dplyr::mutate(across(everything(), as.numeric)) %>%
+  dplyr::mutate(across(everything(), scale_by_max)) -> temp_summary_percent
+
+# To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
+temp_summary_percent <- rbind(rep(100,5), rep(0,5), temp_summary_percent)
+
+# Color vector
+colors_border=c("orange", "darkblue")
+colors_in=c("orange", "darkblue")
+
+# Define colors with transparency using adjustcolor
+colors_border <- c(adjustcolor("orange", alpha = 0.9), adjustcolor("darkblue", alpha = 0.9))
+colors_in <- c(adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha = 0.4))
+
+library(fmsb)
+# plot with default options:
+pdf("radarchart_alldata.pdf")
+radarchart(temp_summary_percent, axistype=1 , 
+            #custom polygon
+            pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+            #custom the grid
+            cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.8,
+            #custom labels
+            vlcex=0.9
+)
+```
+
+
+# old code
+
+## calculating maximum monthly mean temperature over experiment time period for each reef
+```{r}
+str_all %>% 
+  filter(Date >= "2022-12-06") %>% 
+  full_join(ctd_emerald_temp_sept9) -> temp_data
+ 
+temp_data %>% 
+  select(!Date) %>% 
+  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Date = ymd(Date)) %>% 
+  group_by(Date, reef) %>% 
+  summarise(max_temp = max(Temperature)) %>% 
+  mutate(year_month = paste(year(Date), month(Date), sep = "-")) %>% 
+  mutate(year_month = ym(year_month)) %>% 
+  group_by(year_month, reef) %>% 
+  summarise(mean_max_temp = mean(max_temp)) %>% 
+  group_by(reef) %>% 
+  summarise(MMM = mean(mean_max_temp))
+```
+
+## calculate the maximum summertime mean
+```{r}
+temp_data %>% 
+  select(!Date) %>% 
+  filter(as.Date(`Datetime (EST)`) >= "2023-06-01" & as.Date(`Datetime (EST)`) <= "2023-09-01") %>% 
+  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Date = ymd(Date)) %>% 
+  group_by(Date, reef) %>% 
+  summarise(max_temp = max(Temperature)) %>% 
+  mutate(year_month = paste(year(Date), month(Date), sep = "-")) %>% 
+  mutate(year_month = ym(year_month)) %>% 
+  group_by(year_month, reef) %>% 
+  summarise(mean_max_temp = mean(max_temp)) %>% 
+  group_by(reef) %>% 
+  summarise(MMM = mean(mean_max_temp)) #mean summertime temp
+```
+
+
+## calculate DHW (weeks spent above the mean maximum summertime temp)
+```{r}
+temp_data %>% 
+  filter(reef == "Emerald") %>% 
+  filter(Temperature > 30.16728) %>% 
+  distinct(Date) #89 days above?? That is 12.7 weeks
+
+temp_data %>% 
+  filter(reef == "Emerald") %>% 
+  filter(Temperature > 31) 
+```
+
+## graph focusing on summertime
+```{r}
+str_all %>% 
+  full_join(ctd_emerald_temp_sept9) %>% 
+  filter(as.Date(`Datetime (EST)`) <= "2023-10-01" & as.Date(`Datetime (EST)`) >= "2023-05-31") %>% 
+ggplot(., aes(x=`Datetime (EST)`, y=Temperature, color = reef)) +
+  geom_line() +
+  theme_classic() +
+  labs(x="Day", y = "Temperature (ºC)") +
+  scale_color_manual(values = c("#edb9c3", "#5370c9")) +
+  geom_hline(yintercept = 31, linetype = "dashed", color = "black") +
+  annotate("text", x = as.POSIXct("2023-10-01"), y = 31, label = "31ºC", vjust = -1) +
+  annotate("text", x = as.POSIXct("2023-09-30"), y = 33, label= "Days Above 31ºC:\nEmerald=44\nMacNorth=85", colour = "black", hjust=1) 
+
+# Display the plot
+
+temp_data %>% 
+  select(!Date) %>% 
+  filter(as.Date(`Datetime (EST)`) >= "2023-06-01" & as.Date(`Datetime (EST)`) <= "2023-10-01") %>% 
+  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Date = ymd(Date)) %>% 
+  group_by(Date, reef) %>% 
+  summarise(max_temp = max(Temperature)) %>% 
+  filter(max_temp > 31) %>% 
+  group_by(reef) %>% 
+  summarise(count = n())
+```
+
+## daily variability experienced
+```{r}
+temp_data %>% 
+  select(!Date) %>% 
+  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Date = ymd(Date)) %>% 
+  group_by(Date, reef) %>% 
+  summarise(daily_min = min(Temperature), daily_max=max(Temperature)) %>% 
+  mutate(daily_range=daily_max - daily_min) %>% 
+  ungroup() %>% 
+  ggplot(., aes(x=Date, y=daily_range, color = reef)) +
+  geom_point() +
+  geom_line() +
+  labs(x="Day", y = "Daily range (ºC)") +
+  scale_color_manual(values = c("#edb9c3", "#5370c9")) + 
+  theme_classic()
+
+temp_data %>% 
+  select(!Date) %>% 
+  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Date = ymd(Date)) %>% 
+  group_by(Date, reef) %>% 
+  summarise(daily_min = min(Temperature), daily_max=max(Temperature)) %>% 
+  mutate(daily_range=daily_max - daily_min) %>% 
+  ungroup() %>% 
+  ggplot(., aes(x=Date, y=daily_range, color = reef)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x="Day", y = "Daily range (ºC)") +
+  scale_color_manual(values = c("#edb9c3", "#5370c9")) + 
+  theme_classic() +
+  theme(text = element_text(size = 15))
+#ggsave("dailyrangetemp.pdf")
+```
+
+
+## Separating by season and summarizing temp data
+
+```{r}
+temp_data %>% 
+  select(!Date) %>% 
+  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Date = ymd(Date)) %>% 
+  mutate(Season = case_when(Date < "2023-05-01" ~ "Dry",
+                            Date >= "2023-05-01" ~ "Wet")) %>% 
+  ggplot(., aes(x=Season, y=Temperature, fill = reef)) +
+  geom_boxplot() +
+  labs(x="Season", y = "Temp (ºC)") +
+  scale_fill_manual(values = c("#edb9c3", "#5370c9")) + 
+  theme_classic()
+ggsave("boxplot_temp_byseason.pdf")
+```
+
+
+```{r}
+temp_data %>% 
+  select(!Date) %>% 
+  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
+  mutate(Date = ymd(Date)) %>% 
+  mutate(Season = case_when(Date < "2023-05-01" ~ "Dry",
+                            Date >= "2023-05-01" ~ "Wet")) %>% 
+  group_by(Season, reef) %>% 
+  summarise(count=n(), mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp= max(Temperature), range_temp = max_temp-min_temp) %>% 
+  write_csv("season_reef_tempsummary.csv")
+```
+
+
+
+

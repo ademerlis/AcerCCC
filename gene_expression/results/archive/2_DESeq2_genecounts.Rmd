@@ -1,0 +1,278 @@
+---
+title: "DESeq2_genecounts"
+author: "allyson_demerlis"
+date: "2023-07-07"
+output: html_document
+---
+
+#Gene expression analysis for all samples with at least 4M of mapped reads
+
+Load libraries
+```{r}
+library(tidyverse)
+library(DESeq2)
+library(genefilter) #for filterfun and genefilter
+library(factoextra) #for PCA and eigenvectors
+library(vegan)
+library(pheatmap)
+```
+
+Import data frames
+```{r}
+countData_4M<- readRDS("countData_4M.rds")
+#remove ID 1096 because it is does not have any replicates
+countData_4M %>% select(!ID_1096) -> countData_4M
+dim(countData_4M) #33715 x 16
+
+sample_metadata <- read_csv("../input_files/sample_metadata.csv")
+sample_metadata$Sample_ID <- paste("ID_", sample_metadata$Sample_ID, sep="")
+sample_metadata$Sample_ID <- gsub("_trimmed", "", sample_metadata$Sample_ID)
+
+colnames_countData_4M<- as.data.frame(colnames(countData_4M)) %>% dplyr::rename('Sample_ID'='colnames(countData_4M)') %>% mutate(order = 1:16) 
+
+#removing samples from metadata that did not meet the 4M cutoff
+sample_metadata_4M <- left_join(colnames_countData_4M, sample_metadata, by = "Sample_ID") 
+
+# Make row names to be SampleID 
+rownames(sample_metadata_4M) <- sample_metadata_4M$Sample_ID
+
+#change - to _ because the hyphen messes with DESeq2 somehow
+sample_metadata_4M$Genotype <- gsub("-", "_", sample_metadata_4M$Genotype)
+#also need to get rid of spaces I think
+sample_metadata_4M$Genotype <- gsub(" ", "", sample_metadata_4M$Genotype)
+```
+
+Check that there are no genes with 0 counts across all samples
+```{r}
+nrow(countData_4M)
+countData_4M_filt <-countData_4M %>%
+    mutate(Total = rowSums(.[, 1:16]))%>%
+    filter(!Total==0)%>%
+    dplyr::select(!Total)
+nrow(countData_4M_filt)
+
+#went from 33715 to 19819 genes
+```
+
+Filter reads by proportion of samples containing cutoff value
+```{r}
+filt <- filterfun(pOverA(0.85,5)) #this means keep 85% of samples that have a count >5
+
+tfil <- genefilter(countData_4M_filt, filt)
+
+keep <- countData_4M_filt[tfil,]
+
+gn.keep <- rownames(keep)
+
+genecounts_filt <- as.data.frame(countData_4M_filt[which(rownames(countData_4M_filt) %in% gn.keep),])
+
+#write.csv(genecounts_filt, "../results/genecounts_filtered.csv")
+```
+
+
+Quality check of datasets to make sure row and column names match
+```{r}
+all(rownames(sample_metadata_4M$Sample_ID) %in% colnames(genecounts_filt))
+all(rownames(sample_metadata_4M$Sample_ID) == colnames(genecounts_filt))
+#both return as TRUE
+```
+
+Display order of metadata and gene count matrix
+```{r}
+sample_metadata_4M$Sample_ID
+colnames(genecounts_filt)
+```
+
+set location and genotype as factors
+```{r}
+sample_metadata_4M$Location <- factor(sample_metadata_4M$Location)
+sample_metadata_4M$Genotype <- factor(sample_metadata_4M$Genotype)
+```
+
+## DESeq accounting for both location and genotype
+
+create matrix for DESeq
+```{r}
+data <- DESeqDataSetFromMatrix(countData = genecounts_filt, colData = sample_metadata_4M, design = ~ Location + Genotype)
+```
+
+Expression visualization
+
+Text from Jill: "First we are going to log-transform the data using a variance stabilizing transforamtion (vst). This is only for visualization purposes. Essentially, this is roughly similar to putting the data on the log2 scale. It will deal with the sampling variability of low counts by calculating within-group variability (if blind=FALSE). Importantly, it does not use the design to remove variation in the data, and so can be used to examine if there may be any variability do to technical factors such as extraction batch effects. To do this we first need to calculate the size factors of our samples. This is a rough estimate of how many reads each sample contains compared to the others. In order to use VST (the faster log2 transforming process) to log-transform our data, the size factors need to be less than 4. Otherwise, there could be artefacts in our results."
+
+My samples are all less than 4, so I'm good.
+```{r}
+SF.data <- estimateSizeFactors(data)
+SF.data
+print(sizeFactors(SF.data)) 
+
+#Plot column sums according to size factor
+plot(sizeFactors(SF.data), colSums(counts(SF.data)))
+abline(lm(colSums(counts(SF.data)) ~ sizeFactors(SF.data) + 0))
+#this is showing differences in sequencing depth
+```
+Apply variance stabilizing transformation to minimize effects of small counts and normalize wrt library size
+```{r}
+vst <- vst(data, blind = FALSE, fitType = 'local') #accounts for within group variability
+head(assay(vst), 3)
+```
+
+1. Heatmap of sample-to-sample distances
+```{r}
+gsampleDists <- dist(t(assay(vst))) #calculate distance matix
+gsampleDistMatrix <- as.matrix(gsampleDists) #distance matrix
+rownames(gsampleDistMatrix) <- colnames(vst) #assign row names
+colnames(gsampleDistMatrix) <- NULL #assign col names
+
+pheatmap(gsampleDistMatrix, #plot matrix
+         clustering_distance_rows=gsampleDists, #cluster rows
+         clustering_distance_cols=gsampleDists) #cluster columns
+```
+
+2. Scree plot
+```{r}
+pca <- prcomp(t(assay(vst)))
+fviz_eig(pca)
+```
+
+3. PCA
+```{r}
+plotPCA(vst, intgroup = c("Location"))
+plotPCA(vst, intgroup = c("Genotype"))
+
+vst_PCAdata <- plotPCA(vst, intgroup = c("Location", "Genotype"), returnData = TRUE)
+percentVar <- round(100*attr(vst_PCAdata, "percentVar")) #plot PCA of samples with all data
+
+pca.centroids <- vst_PCAdata %>% 
+  dplyr::select(Location, Genotype, PC1, PC2)%>%
+  dplyr::group_by(Location, Genotype)%>%
+  dplyr::summarise(PC1.mean = mean(PC1),
+                   PC2.mean = mean(PC2))
+find_hull <- function(vst_PCAdata) vst_PCAdata[chull(vst_PCAdata$PC1, vst_PCAdata$PC2), ]
+hulls <- plyr::ddply(vst_PCAdata, "group", find_hull)
+
+acerv_PCAplot <- ggplot(vst_PCAdata, aes(PC1, PC2, color=Location, shape=Genotype)) + 
+   geom_point(size=3) +
+   geom_text(aes(label=name),hjust=0, vjust=0) +
+   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+   ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+   ggtitle("A. cervicornis - all genes") +
+   theme_bw() + #Set background color
+   theme(panel.border = element_blank(), # Set border
+         #panel.grid.major = element_blank(), #Set major gridlines
+         #panel.grid.minor = element_blank(), #Set minor gridlines
+         axis.line = element_line(colour = "black"), #Set axes color
+         plot.background=element_blank()) #Set the plot background
+acerv_PCAplot
+
+
+#add centroids
+acerv_PCAplot + geom_polygon(data=hulls, alpha = 0.2, aes(color = Location, fill = Location, lty = Genotype)) +
+  geom_point(aes(x=PC1.mean, y=PC2.mean,color=Location, shape = Genotype), data=pca.centroids, size=4, show.legend=FALSE) + 
+  scale_linetype_manual(values = c("solid", "dashed", "dotted"))
+  # scale_shape_manual(values=c(15, 17, 19)) +
+  # theme(legend.text = element_text(size=8), 
+  #       legend.position=c(0.95,0.85),
+  #       plot.background = element_blank(),
+  #       legend.title = element_text(size=10), 
+  #       plot.margin = margin(1, 1, 1, 1, "cm"),
+  #       axis.text = element_text(size=18), 
+  #       title = element_text(size=25, face="bold"), 
+  #       axis.title = element_text(size=18))
+```
+
+Conduct PERMANOVA
+```{r}
+test<-t(assay(vst))
+test<-as.data.frame(test)
+
+test$Sample_ID <-rownames(test)
+test$Location <- sample_metadata_4M$Location[match(test$Sample_ID, sample_metadata_4M$Sample_ID)]
+test$Genotype <- sample_metadata_4M$Genotype[match(test$Sample_ID, sample_metadata_4M$Sample_ID)]
+```
+
+Build PERMANOVA model
+```{r}
+dim(test)
+scaled_test <-prcomp(test[c(1:1304)], scale=TRUE, center=TRUE)
+fviz_eig(scaled_test)
+vegan <- scale(test[c(1:1304)])
+
+permanova<-adonis2(vegan ~ Location*Genotype, data = test, method = 'eu')
+```
+
+Run DESeq2
+```{r}
+DEG_locgen <- DESeq(data, fitType = 'local')
+DEG_locgen_res <- results(DEG_locgen, alpha = 0.05)
+summary(DEG_locgen_res)
+
+resultsNames(DEG_locgen)
+
+DEG_Nursery_vs_CCC <- results(DEG_locgen, contrast = c("Location", "nursery", "CCC"), alpha = 0.05)
+summary(DEG_Nursery_vs_CCC)
+
+```
+Compare Nursery vs. CCC
+```{r}
+DEG_Nursery_vs_CCC <- as.data.frame(DEG_Nursery_vs_CCC)
+DEG_Nursery_vs_CCC["Location_Compare"] <- "NurseryvsCCC"
+#write.csv(DEG_Nursery_vs_CCC, file = "Nursery_vs_CCC_allgenes_201230728.csv")
+
+DEG_Nursery_vs_CCC.sig.num <- sum(DEG_Nursery_vs_CCC$padj<0.05, na.rm=T)
+#455 DEGs
+
+#get a list of just those genes
+DEG_Nursery_vs_CCC.sig <- subset(DEG_Nursery_vs_CCC, padj <0.05) # identify and subset significant pvalues
+DEG_Nursery_vs_CCC.sig["Location_Compare"] <- "NurseryvsCCC" # adding treatment comparison column
+DEG_Nursery_vs_CCC.sig.list <- data[which(rownames(data) %in% rownames(DEG_Nursery_vs_CCC.sig)),] # subset list of significant genes from original count data 
+DEG_Nursery_vs_CCC.sig.list <- as.data.frame(counts(DEG_Nursery_vs_CCC.sig.list)) # make list of sig gene counts into a df
+DEG_Nursery_vs_CCC.sig.list_full <- cbind(DEG_Nursery_vs_CCC.sig, DEG_Nursery_vs_CCC.sig.list) # bind results with gene counts for DEGs
+#write.csv(DEG_Nursery_vs_CCC.sig.list_full, file = "DEG_Nursery_vs_CCC.sig.list_full_20230728.csv") # write out csv
+```
+
+
+Variance stabilized transformation for just DEGs
+```{r}
+DEG_Nursery_vs_CCC.sig.list <- data[which(rownames(data) %in% rownames(DEG_Nursery_vs_CCC.sig.list)),] 
+# turn back into formal class DESeqTransform or else vst will not run
+
+SFtest <- estimateSizeFactors(DEG_Nursery_vs_CCC.sig.list)
+print(sizeFactors(SFtest)) #everything is less than 4 so we can do vst
+
+DEG_Nursery_vs_CCC.sig.vst <- varianceStabilizingTransformation(DEG_Nursery_vs_CCC.sig.list, blind = FALSE, fitType = 'local') # apply a regularized log transformation to minimize effects of small counts and normalize wrt library 
+```
+PCA plot of DEGs
+```{r}
+acerv_sub_DEG_PCA <- plotPCA(DEG_Nursery_vs_CCC.sig.vst, intgroup = c("Location"), returnData=TRUE)
+percentVar_pca_acerv_sub <- round(100*attr(acerv_sub_DEG_PCA, "percentVar")) #plot PCA of samples with all data
+
+acerv_sub_DEG_PCA_plot <- ggplot(acerv_sub_DEG_PCA, aes(PC1, PC2, color = Location)) +
+  geom_point(size=6) +
+  xlab(paste0("PC1: ",percentVar_pca_acerv_sub[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar_pca_acerv_sub[2],"% variance")) +
+  #coord_fixed() +
+  ggtitle(label = "A. cervicornis") +
+  theme_bw() + #Set background color
+  theme(legend.text = element_text(size=8), 
+        #legend.position="none",
+        plot.background = element_blank(),
+        #legend.title = element_text(size=18, face="bold"), 
+        legend.title=element_blank(),
+        axis.text = element_text(size=8), 
+        axis.title = element_text(size=10,  face="bold"), 
+        axis.title.y = element_text(vjust=-1.5),
+        plot.title = element_text(size = 15, face = "italic", hjust = 0.5))
+acerv_sub_DEG_PCA_plot # PCA plot is of differentially expressed genes only
+```
+
+2. Dispersion Plot
+```{r}
+plotDispEsts(DEG_locgen, main="Dispersion plot")
+```
+
+3. Cook's Distance
+```{r}
+boxplot(log10(assays(DEG_locgen)[["cooks"]]), range=0, las=0, main="Cook's distance")
+```
+
