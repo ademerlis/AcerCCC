@@ -341,6 +341,29 @@ echo "Extraction complete. Data saved in $output_file"
 
 Then I copied this information into an excel spreadsheet for my records.
 
+A bit about Bowtie2 and aligning to a contatenated Host-Symbiont genome (for my own sanity's sake):
+
+"By default, Bowtie 2 performs end-to-end read alignment. That is, it searches for alignments involving all of the read characters. This is also called an "untrimmed" or "unclipped" alignment. When the **--local option** is specified, Bowtie 2 performs local read alignment. In this mode, Bowtie 2 might "trim" or "clip" some read characters from one or both ends of the alignment if doing so maximizes the alignment score." 
+
+"For an alignment to be considered "valid" (i.e. "good enough") by Bowtie 2, it must have an alignment score no less than the minimum score threshold." 
+"In local alignment mode, the default minimum score threshold is 20 + 8.0 * ln(L), where L is the read length."
+"When we say that a read has multiple alignments, we mean that it has multiple alignments that are valid and distinct from one another."
+"By default, Bowtie 2 searches for distinct, valid alignments for each read. When it finds a valid alignment, it generally will continue to look for alignments that are nearly as good or better. It will eventually stop looking, either because it exceeded a limit placed on search effort (see -D and -R) or because it already knows all it needs to know to report an alignment. Information from the best alignments are used to estimate mapping quality (the MAPQ SAM field) and to set SAM optional fields, such as AS:i and XS:i. Bowtie 2 does not guarantee that the alignment reported is the best possible in terms of alignment score."
+"In -k mode, Bowtie 2 searches for up to N distinct, valid alignments for each read, where N equals the integer specified with the -k parameter. That is, if -k 2 is specified, Bowtie 2 will search for at most 2 distinct alignments. It reports all alignments found, in descending order by alignment score."
+"This mode [-k mode] can be effective and fast in situations where the user cares more about whether a read aligns (or aligns a certain number of times) than where exactly it originated."
+
+[Source](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-aligner)
+
+So, when it comes to determining whether a read aligned to the Host genome or the Symbiont genome, this is actually not "filtered out" in the bowtie2 alignment step. Since -k is set to 5 in the below code, this means that a read can align to the concatenated Host-Symbiont genome up to 5 times successfully (which means that a read could align to both the Host and the Symbiont genome). When looking at percent alignment rates, the rates that are usually reported are actually the combined rates of aligning 1 time and aligning multiple times (see screenshot below). This is because the assumption is that aligning multiple times does not equal duplicated reads -- de-duplication should have occurred in the trimming step (if necessary -- depends on the type of sequencing performed). 
+
+The filtering of whether a read is a true Host or Symbiont read, and the discarding of reads that align to both "equally well" (and thus should not be counted as a read) actually occurs in the next step of the process using SAMtools. When generating the read counts per gene, you first create a concatenated file that has the sequence ID corresponding gene/isogroup ID for each species. Then, when you run [samcount.pl](https://github.com/z0on/tag-based_RNAseq/blob/master/samcount.pl), there are some defaults that are specified in the code itself:
+
+**Dup.reads:** You can specify whether you want to keep or remove exact sequence-duplicate reads mapping to the same position in the reference genome/transcriptome. By default, the setting is “keep” (as duplicates are supposed to have been removed during the trimming stage).
+**Aligner:** “samcount.pl” by default assumes that you used Bowtie2 in -k mode for your alignment step. The other aligner you can specify for this code is “gmapper” from SHRiMP (http://compbio.cs.toronto.edu/shrimp/). 
+**Mult.iso:** By default, if reads map to multiple isogroups, then the read is disregarded. You can change this setting to “random” if you want an isogroup to be randomly selected and used to assign a count to.
+
+So, based on the "mult.iso" default, if a read maps to multiple isogroups (for example both a Host isogroup AND a symbiont isogroup), then that read is discarded. This is the step where we determine if a read is truly host or truly symbiont.
+
 ## 9. Generating read counts per gene
 
 First, you need to make a "two-column tab-delimited table transcriptome_seq2gene.tab giving correspondence between entries in the transcriptome fasta file and genes. In de novo transcriptomes, several fasta contigs may correspond to the same gene (e.g., splice isoforms, or assembly uncertainties)." (from [Dr. Matz](https://github.com/z0on/tag-based_RNAseq/blob/master/tagSeq_processing_README.txt))
