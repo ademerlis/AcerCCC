@@ -27,9 +27,8 @@ library(readxl)
 library(zoo)
 ```
 
-# Temperature
 
-## import files
+# import files
 
 CURES frame
 ```{r}
@@ -271,31 +270,33 @@ filtered_data %>%
 ```
 
 
-## plot temps 
+# plot temps 
 ```{r}
 ggplot(filtered_data, aes(x=Datetime_EST, y=Temperature, color = site)) +
   geom_line()
 
 full_join(filtered_data, filtered_cures_data) %>% 
+  filter(Datetime_EST <= "2021-12-07 00:00:00") %>% 
   select(!Light) %>% 
   ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
   geom_line() +
   theme_minimal() +
   labs(x="Date", y = "Temp (ºC)") +
   scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
-#ggsave("CURES_nursery_temp_together.pdf")
+#ggsave("CURES_nursery_temp_together_with_env_history.pdf")
 ```
+
 zoom in on time period of study (June - Dec 2021)
 ```{r}
 full_join(filtered_data, filtered_cures_data) %>% 
   select(!Light) %>% 
-  filter(as.Date(Datetime_EST) > "2021-06-10" & as.Date(Datetime_EST) < "2021-12-07") %>% 
+  filter(Datetime_EST > "2021-06-10 00:00:00" & Datetime_EST < "2021-12-07 00:00:00") %>% 
   ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
   geom_line() +
   theme_minimal() +
   labs(x="Date", y = "Temp (ºC)") +
   scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
-#ggsave("CURES_nursery_temp_junedec2021.pdf")
+ggsave("CURES_nursery_temp_junedec2021.pdf")
 ```
 
 plot one day to see if timing makes sense
@@ -358,8 +359,7 @@ all_temp_data %>%
   scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
 ```
 
-
-For radar plot
+# Radar plot
 
 Oct 13, 2020 -- Dec 7, 2021
 ```{r}
@@ -373,6 +373,7 @@ filtered_data %>%
   dplyr::select(Temperature, Datetime_EST, site, Season) -> alldata_2020_2021
 ```
 
+## temp summary
 
 ```{r}
 temp.summary<- summaryBy(Temperature ~ site + Season, data = alldata_2020_2021,
@@ -478,6 +479,7 @@ dev.off()
 
 ```
 
+## radar plot for figure
 
 no separation of seasons
 ```{r}
@@ -542,6 +544,9 @@ radarchart(temp_summary_percent, axistype=1 ,
 ```
 
 
+
+
+
 # old code
 
 ## calculating maximum monthly mean temperature over experiment time period for each reef
@@ -593,101 +598,6 @@ temp_data %>%
   filter(reef == "Emerald") %>% 
   filter(Temperature > 31) 
 ```
-
-## graph focusing on summertime
-```{r}
-str_all %>% 
-  full_join(ctd_emerald_temp_sept9) %>% 
-  filter(as.Date(`Datetime (EST)`) <= "2023-10-01" & as.Date(`Datetime (EST)`) >= "2023-05-31") %>% 
-ggplot(., aes(x=`Datetime (EST)`, y=Temperature, color = reef)) +
-  geom_line() +
-  theme_classic() +
-  labs(x="Day", y = "Temperature (ºC)") +
-  scale_color_manual(values = c("#edb9c3", "#5370c9")) +
-  geom_hline(yintercept = 31, linetype = "dashed", color = "black") +
-  annotate("text", x = as.POSIXct("2023-10-01"), y = 31, label = "31ºC", vjust = -1) +
-  annotate("text", x = as.POSIXct("2023-09-30"), y = 33, label= "Days Above 31ºC:\nEmerald=44\nMacNorth=85", colour = "black", hjust=1) 
-
-# Display the plot
-
-temp_data %>% 
-  select(!Date) %>% 
-  filter(as.Date(`Datetime (EST)`) >= "2023-06-01" & as.Date(`Datetime (EST)`) <= "2023-10-01") %>% 
-  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date)) %>% 
-  group_by(Date, reef) %>% 
-  summarise(max_temp = max(Temperature)) %>% 
-  filter(max_temp > 31) %>% 
-  group_by(reef) %>% 
-  summarise(count = n())
-```
-
-## daily variability experienced
-```{r}
-temp_data %>% 
-  select(!Date) %>% 
-  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date)) %>% 
-  group_by(Date, reef) %>% 
-  summarise(daily_min = min(Temperature), daily_max=max(Temperature)) %>% 
-  mutate(daily_range=daily_max - daily_min) %>% 
-  ungroup() %>% 
-  ggplot(., aes(x=Date, y=daily_range, color = reef)) +
-  geom_point() +
-  geom_line() +
-  labs(x="Day", y = "Daily range (ºC)") +
-  scale_color_manual(values = c("#edb9c3", "#5370c9")) + 
-  theme_classic()
-
-temp_data %>% 
-  select(!Date) %>% 
-  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date)) %>% 
-  group_by(Date, reef) %>% 
-  summarise(daily_min = min(Temperature), daily_max=max(Temperature)) %>% 
-  mutate(daily_range=daily_max - daily_min) %>% 
-  ungroup() %>% 
-  ggplot(., aes(x=Date, y=daily_range, color = reef)) +
-  geom_point() +
-  geom_smooth() +
-  labs(x="Day", y = "Daily range (ºC)") +
-  scale_color_manual(values = c("#edb9c3", "#5370c9")) + 
-  theme_classic() +
-  theme(text = element_text(size = 15))
-#ggsave("dailyrangetemp.pdf")
-```
-
-
-## Separating by season and summarizing temp data
-
-```{r}
-temp_data %>% 
-  select(!Date) %>% 
-  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date)) %>% 
-  mutate(Season = case_when(Date < "2023-05-01" ~ "Dry",
-                            Date >= "2023-05-01" ~ "Wet")) %>% 
-  ggplot(., aes(x=Season, y=Temperature, fill = reef)) +
-  geom_boxplot() +
-  labs(x="Season", y = "Temp (ºC)") +
-  scale_fill_manual(values = c("#edb9c3", "#5370c9")) + 
-  theme_classic()
-ggsave("boxplot_temp_byseason.pdf")
-```
-
-
-```{r}
-temp_data %>% 
-  select(!Date) %>% 
-  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date)) %>% 
-  mutate(Season = case_when(Date < "2023-05-01" ~ "Dry",
-                            Date >= "2023-05-01" ~ "Wet")) %>% 
-  group_by(Season, reef) %>% 
-  summarise(count=n(), mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp= max(Temperature), range_temp = max_temp-min_temp) %>% 
-  write_csv("season_reef_tempsummary.csv")
-```
-
 
 
 

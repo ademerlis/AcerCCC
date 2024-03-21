@@ -13,7 +13,7 @@ library(cowplot)
 library(limma)
 library(ggforce)
 
-load("RData_files/initial_fullddsdesigncountsVsdcountsWGCNA.RData")
+load("RData_files/initial_fullddsdesigncountsVsdcounts.RData")
 ```
 
 # all data
@@ -41,8 +41,8 @@ ggplot(vst_PCAdata, aes(PC1, PC2, color=Location, shape=Genotype)) +
    theme_classic() + #Set background color
    theme(panel.border = element_blank(), # Set border
          axis.line = element_line(colour = "black"), #Set axes color
-         plot.background=element_blank())  +
-  scale_color_manual(values=c("CCC"="red", "nursery"="navy"))
+         plot.background=element_blank())   +
+  scale_color_manual(values = c("CCC" = "orange", "nursery" = "darkblue"))
 #ggsave("PCA_allgenets.pdf")
 ```
 

@@ -17,7 +17,7 @@ load("Rdata_files/pvals.RData")
 
 
 ```{r}
-Location_nursery_vs_CCC_annotated <- as.data.frame(Location_nursery_vs_CCC) %>%
+resLFC_Location_CCC_vs_nursery_annotated <- as.data.frame(resLFC) %>%
   rownames_to_column(var="gene") %>% 
   left_join(read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
                        sep = "\t",
@@ -25,27 +25,36 @@ Location_nursery_vs_CCC_annotated <- as.data.frame(Location_nursery_vs_CCC) %>%
               mutate(gene = V1,
                      annot = V2) %>%
               dplyr::select(-V1, -V2), by = c("gene" = "gene"))
-str(Location_nursery_vs_CCC_annotated) #21814 x 8
+str(resLFC_Location_CCC_vs_nursery_annotated) #21814 x 7
 
   keyvals <- ifelse(
-    Location_nursery_vs_CCC_annotated$log2FoldChange < 0 & Location_nursery_vs_CCC_annotated$padj < 0.05, 'royalblue',
-      ifelse(Location_nursery_vs_CCC_annotated$log2FoldChange > 0 & Location_nursery_vs_CCC_annotated$padj < 0.05, 'red',
+    resLFC_Location_CCC_vs_nursery_annotated$log2FoldChange < -1 & resLFC_Location_CCC_vs_nursery_annotated$padj < 0.05, 'royalblue',
+      ifelse(resLFC_Location_CCC_vs_nursery_annotated$log2FoldChange > 1 & resLFC_Location_CCC_vs_nursery_annotated$padj < 0.05, 'red',
         'grey'))
   keyvals[is.na(keyvals)] <- 'grey'
-  names(keyvals)[keyvals == 'red'] <- 'significantly high (padj < 0.05 and L2FC > 0)'
+  names(keyvals)[keyvals == 'red'] <- 'significantly high (padj < 0.05 and L2FC > 1)'
   names(keyvals)[keyvals == 'grey'] <- 'L2FC=0 and padj > 0.05'
-  names(keyvals)[keyvals == 'royalblue'] <- 'significantly low (padj < 0.05 and L2FC < 0)'
+  names(keyvals)[keyvals == 'royalblue'] <- 'significantly low (padj < 0.05 and L2FC < 1)'
+  
+    keyvals <- ifelse(
+    resLFC_Location_CCC_vs_nursery_annotated$log2FoldChange < -1 & resLFC_Location_CCC_vs_nursery_annotated$padj < 0.05, 'darkblue',
+      ifelse(resLFC_Location_CCC_vs_nursery_annotated$log2FoldChange > 1 & resLFC_Location_CCC_vs_nursery_annotated$padj < 0.05, 'orange',
+        'grey'))
+  keyvals[is.na(keyvals)] <- 'grey'
+  names(keyvals)[keyvals == 'orange'] <- 'upregulated in CCC (Lf2C>1,padj<0.05)'
+  names(keyvals)[keyvals == 'grey'] <- 'L2FC=0 and padj > 0.05'
+  names(keyvals)[keyvals == 'darkblue'] <- 'upregulated in Nursery (Lf2C<-1,padj<0.05)'
 
-pdf(file="volcanoplot.pdf", width = 12, height = 6)  
-  EnhancedVolcano(Location_nursery_vs_CCC_annotated,
+pdf(file="volcanoplot_colorcoded.pdf", width = 12, height = 6)  
+  EnhancedVolcano(resLFC_Location_CCC_vs_nursery_annotated,
     lab = NA,
-    title = "Nursery vs. CCC",
+    title = "CCC vs. Nursery",
     x = 'log2FoldChange',
     y = 'padj',
     ylab = bquote(~-Log[10]~ 'FDR P-adjusted'),
     legendPosition = 'right',
     pCutoff = 10e-2,
-    FCcutoff = 0.25,
+    FCcutoff = 1,
     legendIconSize = 5.0,
     labSize = 6.0,
     colCustom = keyvals,

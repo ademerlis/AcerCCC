@@ -54,7 +54,7 @@ nrow(Acer_counts) #24,453
 ncol(Acer_counts) #15 samples
 
 # filtering out low-count genes
-keep <- rowSums(Acer_counts) >= 10
+keep <- rowSums(Acer_counts) >= 10 # you don't want to do too much pre-filtering because DESeq2 needs low-count genes for dispersion estimates
 countData <- Acer_counts[keep,]
 nrow(countData) #21814
 ncol(countData) #15
@@ -72,11 +72,19 @@ design %>%
 column_to_rownames(design, var="Sample_ID") -> design
 design$Genotype <- as.factor(design$Genotype)
 design$Genotype <- factor(gsub("-", "_", design$Genotype)) #DESeq2 does not like hyphens in factor names
-design$Location <- as.factor(design$Location)
 design$Genotype <- factor(gsub("'", "", design$Genotype)) #DESeq2 does not like hyphens in factor names
 design$Genotype <- factor(gsub(" ", "", design$Genotype)) #DESeq2 does not like hyphens in factor names
 
+design$Location <- as.factor(design$Location)
+
+str(design) #default is alphabetical order, so CCC is the "baseline"
+
+design$Location <- factor(design$Location, levels = c("nursery","CCC")) #make the contrast so nursery is the baseline 
+
 str(design)
+
+colnames(countData)
+rownames(design)
 
 #### FULL MODEL DESIGN (Genotype + Location) and OUTLIERS ####
 
@@ -113,14 +121,13 @@ arrayQualityMetrics(e,intgroup=c("Location", "Genotype"),force=T)
 outs=c(5,6,8) #these numbers were taken from the index.html report from arrayQualityMetrics Figure 2 "Outlier detection"
 countData=countData[,-outs]
 Vsd=Vsd[,-outs]
-counts4wgcna=counts4wgcna[,-outs]
 design=design[-outs,]
 
 # remaking model with outliers removed from dataset
 dds = DESeqDataSetFromMatrix(countData=countData, colData=design, design=~ Genotype + Location)
 
 # save all these dataframes as an Rdata package so you don't need to rerun each time
-save(dds,design,countData,Vsd,counts4wgcna,file="initial_fullddsdesigncountsVsdcountsWGCNA.RData")
+save(dds,design,countData,Vsd,file="initial_fullddsdesigncountsVsdcounts.RData")
 
 # generating normalized variance-stabilized data for PCoA, heatmaps, etc
 vsd=assay(Vsd)
@@ -138,7 +145,7 @@ save(vsd,design,file="vsd.RData")
 #### DESEQ ####
 
 # with multi-factor, multi-level design
-load("Rdata_files/initial_fullddsdesigncountsVsdcountsWGCNA.RData")
+load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
 library(DESeq2)
 library(BiocParallel)
 
@@ -146,10 +153,10 @@ library(BiocParallel)
 #dds = DESeqDataSetFromMatrix(countData=countData, colData=design, design=~ Genotype + Location)
 rownames(design)
 colnames(countData)
-dds=DESeq(dds, parallel=TRUE)
 
-dds$sizeFactor
-assays(dds)[["cooks"]]
+str(design) # nursery is first, then CCC. this is what we want 
+
+dds=DESeq(dds, parallel=TRUE)
 
 SF.data <- estimateSizeFactors(dds)
 print(sizeFactors(SF.data)) # everything is less than 4, so I can use vst
@@ -170,19 +177,35 @@ read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
          annot = V2) -> iso2geneName
 
 resultsNames(dds)
-#primary ones of interest: "Location_nursery_vs_CCC"....
 
-# Location_nursery_vs_CCC
-Location_nursery_vs_CCC=results(dds,contrast=c("Location","nursery","CCC"))
-summary(Location_nursery_vs_CCC, alpha = 0.05)
+results(dds, alpha = 0.05) # location CCC vs. nursery
+summary(results(dds, alpha = 0.05))
+#681 upregulated, 138 downregulated
 
+# Location_CCC_vs_Nursery (we want "nursery" to be the baseline or control, and CCC to be the comparative variable or "treatment" group)
 Location_CCC_vs_nursery= results(dds,contrast=c("Location","CCC","nursery"))
 summary(Location_CCC_vs_nursery, alpha = 0.05)
+#681 upregulated in CCC, 138 downregulated in CCC
 
-degs_Location_nursery_vs_CCC=row.names(Location_nursery_vs_CCC)[Location_nursery_vs_CCC$padj<0.05 & !(is.na(Location_nursery_vs_CCC$padj))]
-length(degs_Location_nursery_vs_CCC) #828
+dev.off()
+plotMA(Location_CCC_vs_nursery, ylim=c(-20,20)) 
+#there are some insane L2FC of 15 or more... need to use lfc shrinkage of effect size (LFC estimates) for visualization ane ranking of genes 
+#(see https://www.bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#log-fold-change-shrinkage-for-visualization-and-ranking)
 
-save(Location_nursery_vs_CCC, degs_Location_nursery_vs_CCC, file="pvals.RData")
+resLFC <- lfcShrink(dds, coef="Location_CCC_vs_nursery", type="apeglm")
+summary(resLFC, alpha = 0.05)
+
+plotMA(resLFC, ylim=c(-20,20))
+#now the max is 11
+
+#create data frames for DGEs 
+degs_Location_CCC_vs_nursery_lfcshrink=row.names(resLFC)[resLFC$padj<0.05 & !(is.na(resLFC$padj))]
+length(degs_Location_CCC_vs_nursery_lfcshrink) #819
+
+degs_Location_CCC_vs_nursery=row.names(Location_CCC_vs_nursery)[Location_CCC_vs_nursery$padj<0.05 & !(is.na(Location_CCC_vs_nursery$padj))]
+length(degs_Location_CCC_vs_nursery) #819
+
+save(Location_CCC_vs_nursery, resLFC, degs_Location_CCC_vs_nursery, degs_Location_CCC_vs_nursery_lfcshrink, file="pvals.RData")
 
 Location_CCC_vs_nursery %>% 
   as.data.frame() %>% 
@@ -192,41 +215,52 @@ Location_CCC_vs_nursery %>%
   full_join(., iso2geneName, by = "gene") %>% 
   drop_na(baseMean) %>% 
   select(gene, annot, baseMean:padj) %>% 
-  write_csv("Location_CCC_vs_nursery_annotDGEs.csv")
+  write_csv("Location_CCC_vs_nursery_annotDGEs_padj05.csv")
+
+resLFC %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "gene") %>% 
+  drop_na(padj) %>% 
+  filter(padj<0.05) %>% 
+  full_join(., iso2geneName, by = "gene") %>% 
+  drop_na(baseMean) %>% 
+  select(gene, annot, baseMean:padj) %>% 
+  write_csv("resLFCLocation_CCC_vs_nursery_annotDGEs_padj05.csv")
 
 
 #### GO/KOG EXPORT ####
 
 load("RData_files/realModels_Acer.RData")
+load("RData_files/pvals.RData")
 
 # fold change (fc) can only be used for binary factors, such as control/treatment, or specific contrasts comparing two factor levels
 # log p value (lpv) is for multi-level factors, including binary factors
 
-# Untreated vs Initial
 # log2 fold changes:
-source=Location_nursery_vs_CCC[!is.na(Location_nursery_vs_CCC$padj),]
-Location_nursery_vs_CCC.fc=data.frame("gene"=row.names(source))
-Location_nursery_vs_CCC.fc$lfc=source[,"log2FoldChange"]
-head(Location_nursery_vs_CCC.fc)
-write.csv(Location_nursery_vs_CCC.fc,file="nursery_vs_CCC_fc.csv",row.names=F,quote=F)
-save(Location_nursery_vs_CCC.fc,file="Rdata_files/nursery_vs_CCC_fc.RData")
+#use shrunk ones 
+source=resLFC[!is.na(resLFC$padj),]
+Location_CCC_vs_nursery.fc=data.frame("gene"=row.names(source))
+Location_CCC_vs_nursery.fc$lfc=source[,"log2FoldChange"]
+head(Location_CCC_vs_nursery.fc)
+write.csv(Location_CCC_vs_nursery.fc,file="CCC_vs_nursery_fc_lfcshrink.csv",row.names=F,quote=F)
+save(Location_CCC_vs_nursery.fc,file="Rdata_files/Location_CCC_vs_nursery_fc_lfcshrink.RData")
 
 # signed log FDR-adjusted p-values: -log(p-adj)* direction:
-nursery_vs_CCC.p=data.frame("gene"=row.names(source))
-nursery_vs_CCC.p$lpv=-log(source[,"padj"],10)
-nursery_vs_CCC.p$lpv[source$stat<0]=nursery_vs_CCC.p$lpv[source$stat<0]*-1
-head(nursery_vs_CCC.p)
-write.csv(nursery_vs_CCC.p,file="nursery_vs_CCC_lpv.csv",row.names=F,quote=F)
-save(nursery_vs_CCC.p,file="Rdata_files/nursery_vs_CCC_lpv.RData")
+CCC_vs_nursery.p=data.frame("gene"=row.names(source))
+CCC_vs_nursery.p$lpv=-log(source[,"padj"],10)
+CCC_vs_nursery.p$lpv[source$stat<0]=CCC_vs_nursery.p$lpv[source$stat<0]*-1
+head(CCC_vs_nursery.p)
+write.csv(CCC_vs_nursery.p,file="CCC_vs_nursery_lpv.csv",row.names=F,quote=F)
+save(CCC_vs_nursery.p,file="Rdata_files/CCC_vs_nursery_lpv.RData")
 
 
 #### ANNOTATING DGES ####
 load("RData_files/realModels_Acer.RData")
+load("RData_files/pvals.RData")
 
 library(tidyverse)
 
-#Untreated vs. Initial
-Location_nursery_vs_CCC %>% 
+Location_CCC_vs_nursery %>% 
   as.data.frame() %>% 
   rownames_to_column(var="gene") %>% 
   mutate(lpv = -log(padj, base = 10)) %>%
@@ -237,9 +271,9 @@ Location_nursery_vs_CCC %>%
                        quote="", fill=FALSE) %>%
               mutate(gene = V1,
                      annot = V2) %>%
-              dplyr::select(-V1, -V2), by = c("gene" = "gene")) %>% write_csv("Location_nursery_vs_CCC_annotatedDGEs.csv") %>% str()
-#830 genes 
-
+              dplyr::select(-V1, -V2), by = c("gene" = "gene")) %>% str() #830 genes 
+  
+  write_csv("Location_CCC_vs_nursery_annotatedDGEs_lpv.csv") 
 
 #### PCOA and PERMANOVA ####
 
@@ -247,8 +281,6 @@ Location_nursery_vs_CCC %>%
 load("Rdata_files/vsd.RData")
 library(pheatmap)
 # similarity among samples
-pdf(file="heatmap_fullmodel.pdf", width=15, height=15)
-head(vsd)
 pheatmap(cor(vsd))
 dev.off()
 
@@ -281,21 +313,21 @@ dev.off()
 
 # plotting PCoA by treatment and Genotype (axes 1 and 2)
 par(mfrow=c(1,2))
-plot(scores[,1], scores[,2],col=c("red","blue")[as.numeric(as.factor(conditions$Location))],pch=c(15,17,25)[as.numeric((as.factor(conditions$Genotype)))], xlab="Coordinate 1", ylab="Coordinate 2", main="Location")
-ordispider(scores, conditions$Location, label=F, col=c("red","blue"))
-legend("topright", legend=c("CCC", "Nursery"), fill = c("red","blue"), bty="n")
+plot(scores[,1], scores[,2],col=c("orange","darkblue")[as.numeric(as.factor(conditions$Location))],pch=c(15,17,25)[as.numeric((as.factor(conditions$Genotype)))], xlab="Coordinate 1", ylab="Coordinate 2", main="Location")
+ordispider(scores, conditions$Location, label=F, col=c("orange","darkblue"))
+legend("topright", legend=c("CCC", "Nursery"), fill = c("orange","darkblue"), bty="n")
 legend("topleft", legend=c("Cheetos_B", "MiamiBeach_C", "SunnyIsles_E"), pch=c(15,17,25), bty="n")
 plot(scores[,1], scores[,2],col=c("orange","lightblue", "pink")[as.numeric(as.factor(conditions$Genotype))],pch=c(15,17,25)[as.numeric((as.factor(conditions$Location)))], xlab="Coordinate 1", ylab="Coordinate 2", main="Genotype")
-ordispider(scores, conditions$Genotype, label=F, col=c("orange","darkblue", "magenta"))
-legend("topleft", legend=c("Cheetos_B", "MiamiBeach_C", "SunnyIsles_E"), fill = c("orange","darkblue", "magenta"), bty="n")
+ordispider(scores, conditions$Genotype, label=F, col=c("orange","lightblue", "pink"))
+legend("topleft", legend=c("Cheetos_B", "MiamiBeach_C", "SunnyIsles_E"), fill = c("orange","lightblue", "pink"), bty="n")
 legend("topright", legend=c("CCC", "Nursery"), pch=c(15,17,25), bty="n")
 dev.off()
 #manually save as pdf
 
 # plotting PCoA by location
-plot(scores[,1], scores[,2],col=c("red","blue")[as.numeric(as.factor(conditions$Location))], xlab="Coordinate 1", ylab="Coordinate 2", main="Location")
-ordispider(scores, conditions$Location, label=F, col=c("red","blue"))
-legend("topleft", legend=c("CCC", "Nursery"), fill = c("red","blue"), bty="n")
+plot(scores[,1], scores[,2],col=c("orange","darkblue")[as.numeric(as.factor(conditions$Location))], xlab="Coordinate 1", ylab="Coordinate 2", main="Location")
+ordispider(scores, conditions$Location, label=F, col=c("orange","darkblue"))
+legend("topright", legend=c("CCC", "Nursery"), fill = c("orange","darkblue"), bty="n")
 dev.off()
 #manually save as pdf
 

@@ -1,0 +1,146 @@
+---
+title: "specific_gene_expression"
+author: "allyson_demerlis"
+date: "2024-03-06"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(DESeq2)
+library(cowplot)
+
+Location_CCC_vs_Nursery_lfcshrink <- read_csv("results/resLFCLocation_CCC_vs_nursery_annotDGEs_padj05.csv")
+
+load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
+load("Rdata_files/realModels_Acer.RData")
+```
+
+
+```{r}
+Location_CCC_vs_Nursery_lfcshrink %>% 
+  arrange(desc(log2FoldChange)) 
+
+#Acropora_003744 = TNF associated factor
+# Acropora_008410 = heat shock-mediated polytene chromosome puffing	
+#Acropora_017542 = Belongs to the small heat shock protein (HSP20) family	
+# Acropora_015083 = unfolded protein binding
+#Acropora_011526 = T cell activation via T cell receptor contact with antigen bound to MHC molecule on antigen presenting cell	
+
+Location_CCC_vs_Nursery_lfcshrink %>% 
+  arrange(log2FoldChange)
+#nothing sticks out to me 
+``` 
+# normalize gene counts
+```{r}
+dds <- estimateSizeFactors(dds)
+normalized_counts <- counts(dds, normalized=TRUE)
+
+# Subset normalized counts based on a criterion, e.g., adjusted p-value less than 0.05
+# First, identify which genes meet the criterion
+significant_genes <- rownames(results[!is.na(results$padj) & results$padj < 0.05, ])
+
+# Then, subset the normalized counts based on these genes
+significant_counts <- normalized_counts[significant_genes, ]
+```
+
+
+# boxplot Acropora_003744 = TNF associated factor
+```{r}
+Acropora_003744_counts <- significant_counts["Acropora_003744",]
+
+df_Acropora_003744 <- data.frame(expression_level = Acropora_003744_counts)
+
+df_Acropora_003744 %>% 
+  rownames_to_column(var="Sample") -> df_Acropora_003744
+
+design %>% 
+  rownames_to_column(var="Sample") -> design
+  
+p1<-full_join(design, df_Acropora_003744) %>% 
+  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
+  geom_boxplot() +
+  theme_classic() +
+  labs(y = "Normalized Expression Level", title = "Acropora_003744 = TNF associated factor") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
+
+# boxplot of Acropora_008410 = heat shock-mediated polytene chromosome puffing	
+```{r}
+Acropora_008410_counts <- normalized_counts["Acropora_008410",]
+
+df_Acropora_008410 <- data.frame(expression_level = Acropora_008410_counts)
+
+df_Acropora_008410 %>% 
+  rownames_to_column(var="Sample") -> df_Acropora_008410
+ 
+p2<-full_join(design, df_Acropora_008410) %>% 
+  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
+  geom_boxplot() +
+  theme_classic() +
+  labs(y = "Normalized Expression Level", title = "Acropora_008410 = heat shock-mediated polytene chromosome puffing	") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
+
+#Acropora_017542 = Belongs to the small heat shock protein (HSP20) family	
+```{r}
+Acropora_017542_counts <- normalized_counts["Acropora_017542",]
+
+df_Acropora_017542 <- data.frame(expression_level = Acropora_017542_counts)
+
+df_Acropora_017542 %>% 
+  rownames_to_column(var="Sample") -> df_Acropora_017542
+ 
+p3<-full_join(design, df_Acropora_017542) %>% 
+  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
+  geom_boxplot() +
+  theme_classic() +
+  labs(y = "Normalized Expression Level", title = "Acropora_017542 = Belongs to the small heat shock protein (HSP20) family") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
+
+# Acropora_015083 = unfolded protein binding
+```{r}
+Acropora_015083_counts <- normalized_counts["Acropora_015083",]
+
+df_Acropora_015083 <- data.frame(expression_level = Acropora_015083_counts)
+
+df_Acropora_015083 %>% 
+  rownames_to_column(var="Sample") -> df_Acropora_015083
+ 
+p4<-full_join(design, df_Acropora_015083) %>% 
+  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
+  geom_boxplot() +
+  theme_classic() +
+  labs(y = "Normalized Expression Level", title = "Acropora_015083 = unfolded protein binding") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
+
+# Acropora_011526 = T cell activation via T cell receptor contact with antigen bound to MHC molecule on antigen presenting cell	
+```{r}
+Acropora_011526_counts <- normalized_counts["Acropora_011526",]
+
+df_Acropora_011526 <- data.frame(expression_level = Acropora_011526_counts)
+
+df_Acropora_011526 %>% 
+  rownames_to_column(var="Sample") -> df_Acropora_011526
+ 
+p5<-full_join(design, df_Acropora_011526) %>% 
+  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
+  geom_boxplot() +
+  theme_classic() +
+  labs(y = "Normalized Expression Level", title = "Acropora_011526 = T cell activation ") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
+
+
+```{r}
+cowplot::plot_grid(p1, p2, p3, p4, p5, ncol = 3)
+ggsave("specificgeneexpression.pdf", width = 12, height = 7)
+```
+
