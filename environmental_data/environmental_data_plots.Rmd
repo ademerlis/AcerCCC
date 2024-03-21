@@ -277,12 +277,14 @@ ggplot(filtered_data, aes(x=Datetime_EST, y=Temperature, color = site)) +
 
 full_join(filtered_data, filtered_cures_data) %>% 
   filter(Datetime_EST <= "2021-12-07 00:00:00") %>% 
-  select(!Light) %>% 
+  dplyr::select(!Light) %>% 
   ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
   geom_line() +
   theme_minimal() +
   labs(x="Date", y = "Temp (ºC)") +
-  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
+  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) +
+  geom_hline(yintercept = 29.54, linetype = "dashed", color = "darkgrey") + 
+  geom_hline(yintercept = 30.54, linetype = "dashed", color = "darkgrey") 
 #ggsave("CURES_nursery_temp_together_with_env_history.pdf")
 ```
 
@@ -316,7 +318,7 @@ full_join(filtered_data, filtered_cures_data) %>%
 
 ```{r}
 full_join(filtered_data, filtered_cures_data) %>% 
-  select(!Light) %>% 
+  dplyr::select(!Light) %>% 
   drop_na(Temperature) -> all_temp_data
 
 # Summary statistics per year per season
@@ -375,6 +377,7 @@ filtered_data %>%
 
 ## temp summary
 
+Site and Season
 ```{r}
 temp.summary<- summaryBy(Temperature ~ site + Season, data = alldata_2020_2021,
                          FUN = function(x) { c(max = max(x), min = min(x)) } )
@@ -391,12 +394,12 @@ Daily.range$temp.daily.range <- Daily.range$Temperature.max - Daily.range$Temper
 temp.d.range <- summaryBy(temp.daily.range ~ site + Season, data = Daily.range,
                           FUN = function(x) { c(mean = mean(x)) } )
 Daily.range %>% 
-  filter(Temperature.max > 30) %>% 
+  filter(Temperature.max > 30.5) %>% 
   group_by(site, Season) %>% 
-  dplyr::summarise(d.above.30 = n()) -> temp.d.30
+  dplyr::summarise(d.above.30.5 = n()) -> temp.d.30.5
 
 full_join(temp.summary, temp.d.range) %>% 
-  full_join(., temp.d.30) -> temp_summary
+  full_join(., temp.d.30.5) -> temp_summary
 ```
 
 
@@ -481,7 +484,7 @@ dev.off()
 
 ## radar plot for figure
 
-no separation of seasons
+Site only 
 ```{r}
 temp.summary<- summaryBy(Temperature ~ site, data = alldata_2020_2021,
                          FUN = function(x) { c(max = max(x), min = min(x)) } )
@@ -498,19 +501,19 @@ Daily.range$temp.daily.range <- Daily.range$Temperature.max - Daily.range$Temper
 temp.d.range <- summaryBy(temp.daily.range ~ site, data = Daily.range,
                           FUN = function(x) { c(mean = mean(x)) } )
 Daily.range %>% 
-  filter(Temperature.max > 30) %>% 
+  filter(Temperature.max > 30.5) %>% 
   group_by(site) %>% 
-  dplyr::summarise(d.above.30 = n()) -> temp.d.30
+  dplyr::summarise(d.above.30.5 = n()) -> temp.d.30.5
 
 full_join(temp.summary, temp.d.range) %>% 
-  full_join(., temp.d.30) -> temp_summary
+  full_join(., temp.d.30.5) -> temp_summary
 
 
 scale_by_max <- function(x) {
   x * 100 / max(x, na.rm = TRUE)
 }
 
-colnames(temp_summary) <- c("site", "Max", "Min", "Seasonal", "Daily", "30°C")
+colnames(temp_summary) <- c("site", "Max", "Min", "Seasonal", "Daily", "30.5°C")
 
 temp_summary %>% 
   column_to_rownames(var="site") -> temp_summary
@@ -532,7 +535,7 @@ colors_in <- c(adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha
 
 library(fmsb)
 # plot with default options:
-pdf("radarchart_alldata.pdf")
+#pdf("radarchart_alldata_30_5.pdf")
 radarchart(temp_summary_percent, axistype=1 , 
             #custom polygon
             pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
@@ -544,60 +547,65 @@ radarchart(temp_summary_percent, axistype=1 ,
 ```
 
 
+# Extract MMM from CRW
+
+```{r Extract_OISST_data, cache=TRUE}
+ library(raster)
+  library(parallel)
+library(ncdf4)
 
 
+  # Read climatology file
+  Climatology_MMM <- "ct5km_climatology_v3.1.nc"
+  MMM.data <- brick(Climatology_MMM) 
+  #MMM.data
+  
+  # KB Nursery
+  lat_KB <- (25.6763)
+  lon_KB <- (-80.0987)
+  extract.pts_KB <- cbind(lon_KB,lat_KB)
+  
+  #CCC 
+  lat.CCC <- (25.766626)
+  lon.CCC <- (-80.144812)
+  extract_CCC <- cbind(lon.CCC, lat.CCC)
+  
+  
+  
+  #MMM <- raster::extract(MMM.data, extract.pts,method="bilinear")
+  MMM <- raster::extract(MMM.data, extract.pts_KB,method="simple")
+  MMM_CCC <- raster::extract(MMM.data, extract_CCC,method="simple")
 
-# old code
+  write.csv(MMM, "KB_CRW_MMM_1985-2012.csv", row.names=FALSE)
 
-## calculating maximum monthly mean temperature over experiment time period for each reef
-```{r}
-str_all %>% 
-  filter(Date >= "2022-12-06") %>% 
-  full_join(ctd_emerald_temp_sept9) -> temp_data
- 
-temp_data %>% 
-  select(!Date) %>% 
-  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date)) %>% 
-  group_by(Date, reef) %>% 
-  summarise(max_temp = max(Temperature)) %>% 
-  mutate(year_month = paste(year(Date), month(Date), sep = "-")) %>% 
-  mutate(year_month = ym(year_month)) %>% 
-  group_by(year_month, reef) %>% 
-  summarise(mean_max_temp = mean(max_temp)) %>% 
-  group_by(reef) %>% 
-  summarise(MMM = mean(mean_max_temp))
-```
-
-## calculate the maximum summertime mean
-```{r}
-temp_data %>% 
-  select(!Date) %>% 
-  filter(as.Date(`Datetime (EST)`) >= "2023-06-01" & as.Date(`Datetime (EST)`) <= "2023-09-01") %>% 
-  separate(`Datetime (EST)`, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date)) %>% 
-  group_by(Date, reef) %>% 
-  summarise(max_temp = max(Temperature)) %>% 
-  mutate(year_month = paste(year(Date), month(Date), sep = "-")) %>% 
-  mutate(year_month = ym(year_month)) %>% 
-  group_by(year_month, reef) %>% 
-  summarise(mean_max_temp = mean(max_temp)) %>% 
-  group_by(reef) %>% 
-  summarise(MMM = mean(mean_max_temp)) #mean summertime temp
+  write.csv(MMM_CCC, "CCC_CRW_MMM_1985-2012.csv", row.names=FALSE)
+  
+# MMM for both sites (they're within 5 km of each other) is 29.54
 ```
 
 
-## calculate DHW (weeks spent above the mean maximum summertime temp)
+# Stats
+
 ```{r}
-temp_data %>% 
-  filter(reef == "Emerald") %>% 
-  filter(Temperature > 30.16728) %>% 
-  distinct(Date) #89 days above?? That is 12.7 weeks
+library(rstatix)
+# Ensure 'site' and 'season' are factors
+alldata_2020_2021$site <- as.factor(alldata_2020_2021$site)
+alldata_2020_2021$Season <- as.factor(alldata_2020_2021$Season)
 
-temp_data %>% 
-  filter(reef == "Emerald") %>% 
-  filter(Temperature > 31) 
+treat_model <- lm(Temperature ~ site*Season, data = alldata_2020_2021)
+treat_model_metrics <- augment(treat_model)
+plot(treat_model) #sufficiently normal
+
+# Run the two-way ANOVA
+result <- aov(Temperature ~ site * Season, data = alldata_2020_2021)
+
+
+# Display the summary of the ANOVA
+summary(result)
+
+capture.output(summary(result), file = "temp_anova.csv")
+
+TukeyHSD(aov(Temperature ~ site * Season, data = alldata_2020_2021))
+capture.output(TukeyHSD(aov(Temperature ~ site * Season, data = alldata_2020_2021)), file = "temp_anova_tukey.csv")
 ```
-
-
 
