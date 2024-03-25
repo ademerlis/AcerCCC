@@ -32,107 +32,53 @@ right_join(Acer_stresshardening_TvU_annotDGEs, CCC_vs_nursery_annotatedDGEs)
 Acer_stresshardening_TvU_annotDGEs %>% 
   rownames_to_column(var = "gene") -> Acer_stresshardening_TvU_annotDGEs
 
-str(Acer_stresshardening_TvU_annotDGEs)
-
-Acer_stresshardening_TvU_annotDGEs %>% 
-  rename(baseMean_SH = baseMean)
-
 CCC_vs_nursery_annotatedDGEs %>% 
   rownames_to_column(var = "gene") -> CCC_vs_nursery_annotatedDGEs
+
+Acer_stresshardening_TvU_annotDGEs %>% 
+  select(gene, annot, log2FoldChange, padj) %>% 
+  rename(log2FoldChange_SH = log2FoldChange, padj_SH = padj) -> Acer_stresshardening_TvU_annotDGEs
+
+CCC_vs_nursery_annotatedDGEs %>% 
+  select(gene, annot, log2FoldChange, padj) %>% 
+  rename(log2FoldChange_CCCN = log2FoldChange, padj_CCCN = padj) -> CCC_vs_nursery_annotatedDGEs
+
+commongenes<-inner_join(Acer_stresshardening_TvU_annotDGEs, CCC_vs_nursery_annotatedDGEs)
+#write_csv("common_genes.csv")
+
+
+negative_rows_both <- sum(commongenes$log2FoldChange_SH < 0 & commongenes$log2FoldChange_CCCN < 0)
+# 8 genes where both are downregulated
+
+positive_rows_both <- sum(commongenes$log2FoldChange_SH > 0 & commongenes$log2FoldChange_CCCN > 0)
+#19 genes where both are upregulated
+
+negative_rows_SH <- sum(commongenes$log2FoldChange_SH < 0)
+# 44 genes
+positive_rows_SH <- sum(commongenes$log2FoldChange_SH > 0)
+# 30 genes
+
+negative_rows_CCCN <- sum(commongenes$log2FoldChange_CCCN < 0)
+# 19 genes
+positive_rows_CCCN <- sum(commongenes$log2FoldChange_CCCN > 0)
+# 55 genes
+
+common_lfc<-readxl::read_xlsx("common_genes_LFC.xlsx")
+
+ggplot(data = common_lfc, aes(x = Experiment, y = genes, fill= Regulation))+
+  geom_col()+
+  theme_classic()
+ggsave("common_lfc_barplot.pdf")
   
 # what about genes unique to each treatment?
 
-unique_Untreated_vs_Initial <- anti_join(Untreated_vs_Initial_sig, Treated_vs_Initial_sig)
-unique_Untreated_vs_Initial <- anti_join(unique_Untreated_vs_Initial, Treated_vs_Untreated_sig)
-unique_Untreated_vs_Initial %>% 
-  as.data.frame() %>% 
- left_join(read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
-                     sep = "\t",
-                     quote="", fill=FALSE) %>%
-            mutate(gene = V1,
-                   annot = V2) %>%
-            dplyr::select(-V1, -V2), by = "gene") -> unique_Untreated_vs_Initial_annotated
+Acer_stresshardening_TvU_annotDGEs %>% 
+  select(gene, annot) -> Acer_stresshardening_TvU_annotDGEs
 
-str(unique_Untreated_vs_Initial_annotated) #2435
+CCC_vs_nursery_annotatedDGEs %>% 
+  select(gene, annot) -> CCC_vs_nursery_annotatedDGEs
 
-load("RData_files/realModels_Acer.RData")
-
-Treatment_Untreated_vs_Initial=results(dds,contrast=c("Treatment","Untreated","Initial"))
-
-Treatment_Untreated_vs_Initial %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var = "gene") %>% 
-  drop_na(padj) %>% 
-  dplyr::filter(padj<0.05) %>% 
-  right_join(., unique_Untreated_vs_Initial_annotated, by = "gene") %>%
-  left_join(read.table(file = "bioinformatics/Acervicornis_iso2kogClass.tab",
-                       sep = "\t",
-                       quote="", fill=FALSE) %>%
-              mutate(gene = V1,
-                     KOG = V2) %>%
-              dplyr::select(-V1, -V2), by = "gene") %>% view()
-  write_csv("unique_Untreated_vs_Initial_annotated_KOG.csv")
-
-write_csv(unique_Untreated_vs_Initial_annotated, "unique_Untreated_vs_Initial_annotated.csv")
-
-unique_Treated_vs_Initial <- anti_join(Treated_vs_Initial_sig, Untreated_vs_Initial_sig)
-unique_Treated_vs_Initial <- anti_join(unique_Treated_vs_Initial, Treated_vs_Untreated_sig)
-unique_Treated_vs_Initial %>% 
-  as.data.frame() %>% 
-  left_join(read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
-                       sep = "\t",
-                       quote="", fill=FALSE) %>%
-              mutate(gene = V1,
-                     annot = V2) %>%
-              dplyr::select(-V1, -V2), by = "gene") -> unique_Treated_vs_Initial_annotated
-
-str(unique_Treated_vs_Initial_annotated) #1429
-
-Treatment_Treated_vs_Initial=results(dds,contrast=c("Treatment","Treated","Initial"))
-
-Treatment_Treated_vs_Initial %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var = "gene") %>% 
-  drop_na(padj) %>% 
-  dplyr::filter(padj<0.05) %>% 
-  right_join(., unique_Treated_vs_Initial_annotated, by = "gene") %>%
-  left_join(read.table(file = "bioinformatics/Acervicornis_iso2kogClass.tab",
-                       sep = "\t",
-                       quote="", fill=FALSE) %>%
-              mutate(gene = V1,
-                     KOG = V2) %>%
-              dplyr::select(-V1, -V2), by = "gene") %>% view()
-  write_csv("unique_Treated_vs_Initial_annotated_KOG.csv")
-
-write_csv(unique_Treated_vs_Initial_annotated, "unique_Treated_vs_Initial_annotated.csv")
-
-unique_Treated_vs_Untreated <- anti_join(Treated_vs_Untreated_sig, Untreated_vs_Initial_sig)
-unique_Treated_vs_Untreated <- anti_join(unique_Treated_vs_Untreated, Treated_vs_Initial_sig)
-unique_Treated_vs_Untreated %>% 
-  as.data.frame() %>% 
-  left_join(read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
-                       sep = "\t",
-                       quote="", fill=FALSE) %>%
-              mutate(gene = V1,
-                     annot = V2) %>%
-              dplyr::select(-V1, -V2), by = "gene") -> unique_Treated_vs_Untreated_annotated
-
-str(unique_Treated_vs_Untreated_annotated) #116 
-
-write_csv(unique_Treated_vs_Untreated_annotated, "unique_Treated_vs_Untreated_annotated.csv")
-
-Treatment_Treated_vs_Untreated=results(dds,contrast=c("Treatment","Treated","Untreated"))
-
-Treatment_Treated_vs_Untreated %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var = "gene") %>% 
-  drop_na(padj) %>% 
-  dplyr::filter(padj<0.05) %>% 
-  right_join(., unique_Treated_vs_Untreated_annotated, by = "gene") %>%
-  left_join(read.table(file = "bioinformatics/Acervicornis_iso2kogClass.tab",
-                       sep = "\t",
-                       quote="", fill=FALSE) %>%
-              mutate(gene = V1,
-                     KOG = V2) %>%
-              dplyr::select(-V1, -V2), by = "gene") %>% 
-  write_csv("unique_Treated_vs_Untreated_annotated_KOG.csv")
+unique_CCCN <- anti_join(CCC_vs_nursery_annotatedDGEs, Acer_stresshardening_TvU_annotDGEs)
+write_csv(unique_CCCN, "unique_CCCvsNursery.csv")
+unique_SH <- anti_join(Acer_stresshardening_TvU_annotDGEs, CCC_vs_nursery_annotatedDGEs)
+write_csv(unique_SH, "unique_stresshardening.csv")
