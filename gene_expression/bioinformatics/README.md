@@ -1,4 +1,4 @@
-## Bioinformatics pipeline for *A.cervicornis* Coral City Camera vs. Emerald Reef Samples
+## Bioinformatics pipeline for *A.cervicornis* Coral City Camera vs. Key Biscayne Nursery Samples
 
 Script written by: DeMerlis
 
@@ -366,7 +366,7 @@ So, based on the "mult.iso" default, if a read maps to multiple isogroups (for e
 
 First, you need to make a "two-column tab-delimited table transcriptome_seq2gene.tab giving correspondence between entries in the transcriptome fasta file and genes. In de novo transcriptomes, several fasta contigs may correspond to the same gene (e.g., splice isoforms, or assembly uncertainties)." (from [Dr. Matz](https://github.com/z0on/tag-based_RNAseq/blob/master/tagSeq_processing_README.txt))
 
-To generate these files for *A.cervicornis* and *S.fitt*, run this code on the fasta files:
+To generate these files for *A.cervicornis* and *S.fitti*, run this code on the fasta files:
 
 ```{bash}
 # making seq2iso.tab files
