@@ -234,7 +234,7 @@ echo "Results have been saved to $output_file"
 
 Obtained most recent Baums lab genome. (Locatelli et al. *in prep*).
 
-Downloaded *Symbiodinium* clade A3 from [Shoguchi et al. 2018](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-018-4857-9). 
+Downloaded *Symbiodinium* clade A3 from [Shoguchi et al. 2021](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-018-4857-9). 
 
 [Link to download page](https://marinegenomics.oist.jp/symb/viewer/download?project_id=37)
 "symatranscriptome_37.fasta.gz"
