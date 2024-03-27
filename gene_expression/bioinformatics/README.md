@@ -162,7 +162,6 @@ done
 #BSUB -P and_transcriptomics
 #BSUB -o fastqc_trimmed_polyA.out
 #BSUB -e fastqc_trimmed_polyA.err
-#BSUB -n 8
 #BSUB -u allyson.demerlis@earth.miami.edu
 #BSUB -N
 
@@ -406,7 +405,6 @@ echo "
 #BSUB -e ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.err
 #BSUB -o ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.out
 #BSUB -W 12:00
-#BSUB -n 8
 #BSUB -q general
 
 cd \"/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment\"
