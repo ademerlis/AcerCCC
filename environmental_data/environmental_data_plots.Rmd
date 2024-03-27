@@ -25,6 +25,7 @@ library(scales)
 library(tidyr)
 library(readxl)
 library(zoo)
+library(ggpubr)
 ```
 
 
@@ -408,7 +409,7 @@ scale_by_max <- function(x) {
   x * 100 / max(x, na.rm = TRUE)
 }
 
-colnames(temp_summary) <- c("site", "Season", "Max", "Min", "Seasonal", "Daily", "30°C")
+colnames(temp_summary) <- c("site", "Season", "Max", "Min", "Seasonal", "Daily", "30.5°C")
 
 temp_summary %>% 
   filter(Season == "Dry") -> temp_summary_dry
@@ -419,7 +420,7 @@ temp_summary_dry %>%
 
  temp_summary_dry %>%
   dplyr::mutate(across(everything(), as.numeric)) %>%
-   select(!`30°C`) %>% 
+   select(!`30.5°C`) %>% 
   dplyr::mutate(across(everything(), scale_by_max)) -> temp_summary_dry_percent
 
 # To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
@@ -547,6 +548,22 @@ radarchart(temp_summary_percent, axistype=1 ,
 ```
 
 
+```{r}
+temp_summary %>% 
+  rownames_to_column(var = "Location") -> temp_summary
+
+temp_summary %>% 
+  pivot_longer(Max:`30.5°C`, names_to = "Field", values_to = "value") -> temp_summary
+
+ggdotchart(
+  temp_summary, x = "Field", y = "value", 
+  group = "Location", color = "Location", palette = "jco",
+  add = "segment", position = position_dodge(0.3),
+  sorting = "descending"
+  )
+```
+
+
 # Extract MMM from CRW
 
 ```{r Extract_OISST_data, cache=TRUE}
@@ -580,8 +597,27 @@ library(ncdf4)
 
   write.csv(MMM_CCC, "CCC_CRW_MMM_1985-2012.csv", row.names=FALSE)
   
-# MMM for both sites (they're within 5 km of each other) is 29.54
+# MMM for KB is 29.54
+# MMM for CCC is 29.53
 ```
+
+
+# calculate DHW
+```{r}
+alldata_2020_2021_sep %>% 
+  mutate(HotSpot = case_when(site == "Nursery" ~ (Temperature - 29.53),
+                             site == "CURES" ~ (Temperature - 29.54))) -> alldata_2020_2021_sep
+
+alldata_2020_2021_sep$HotSpot<-ifelse(alldata_2020_2021_sep$HotSpot>=0,
+                              alldata_2020_2021_sep$HotSpot, 0)# REMOVE NEGATIVE ANOMALIES
+
+alldata_2020_2021_sep$Stress<-ifelse(alldata_2020_2021_sep$HotSpot>=1,
+                              alldata_2020_2021_sep$HotSpot, 0) # REMOVE HotSpot lower than 1
+
+alldata_2020_2021_sep$W_Stress<-(alldata_2020_2021_sep$Stress/7) # DHDays to DHWeeks
+      alldata_2020_2021_sep$DHW<-rollapplyr(alldata_2020_2021_sep$W_Stress,list(-(83:0)),sum,fill=NA)# Add 12 weeks of heat stress data 
+```
+
 
 
 # Stats
