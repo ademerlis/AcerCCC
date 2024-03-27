@@ -21,7 +21,5 @@ Total RNA was extracted using the Zymo MagBead DNA/RNA extraction kit, then prep
 
 **3. Bioinformatics**
 
-Pipeline: FastQC -> TrimGalore (adapters + low-quality bp) -> TrimGalore (polyA tail) -> FastQC -> STAR -> DESeq2
-
 See [this README](https://github.com/ademerlis/AcerCCC/blob/main/gene_expression/bioinformatics/README.md) for in-depth scripts of pipeline.
 
