@@ -10,18 +10,18 @@ library(dbplyr)
 library(tidyverse)
 library(readr)
 library(stringr)
-library(gridExtra)
-library(grid)
+# library(gridExtra)
+# library(grid)
 library(ggplot2)
-library(lattice)
-library(Rmisc)
-library(doBy)
+# library(lattice)
+# library(Rmisc)
+# library(doBy)
 library(devtools)
 #devtools::install_github("ricardo-bion/ggradar", dependencies = TRUE)
 library(ggradar)
-library(ggiraphExtra)
+#library(ggiraphExtra)
 library(tidyverse)
-library(scales)
+#library(scales)
 library(tidyr)
 library(readxl)
 library(zoo)
@@ -299,7 +299,7 @@ full_join(filtered_data, filtered_cures_data) %>%
   theme_minimal() +
   labs(x="Date", y = "Temp (ºC)") +
   scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
-ggsave("CURES_nursery_temp_junedec2021.pdf")
+#ggsave("CURES_nursery_temp_junedec2021.pdf")
 ```
 
 plot one day to see if timing makes sense
@@ -378,7 +378,7 @@ filtered_data %>%
 
 ## temp summary
 
-Site and Season
+### Site and Season
 ```{r}
 temp.summary<- summaryBy(Temperature ~ site + Season, data = alldata_2020_2021,
                          FUN = function(x) { c(max = max(x), min = min(x)) } )
@@ -485,7 +485,7 @@ dev.off()
 
 ## radar plot for figure
 
-Site only 
+### Site only 
 ```{r}
 temp.summary<- summaryBy(Temperature ~ site, data = alldata_2020_2021,
                          FUN = function(x) { c(max = max(x), min = min(x)) } )
@@ -593,9 +593,9 @@ library(ncdf4)
   MMM <- raster::extract(MMM.data, extract.pts_KB,method="simple")
   MMM_CCC <- raster::extract(MMM.data, extract_CCC,method="simple")
 
-  write.csv(MMM, "KB_CRW_MMM_1985-2012.csv", row.names=FALSE)
+  #write.csv(MMM, "KB_CRW_MMM_1985-2012.csv", row.names=FALSE)
 
-  write.csv(MMM_CCC, "CCC_CRW_MMM_1985-2012.csv", row.names=FALSE)
+  #write.csv(MMM_CCC, "CCC_CRW_MMM_1985-2012.csv", row.names=FALSE)
   
 # MMM for KB is 29.54
 # MMM for CCC is 29.53
@@ -603,19 +603,91 @@ library(ncdf4)
 
 
 # calculate DHW
+
+from https://github.com/anampc/DHW_Uva/blob/master/A.Temperature_DHW.Rmd
 ```{r}
 alldata_2020_2021_sep %>% 
-  mutate(HotSpot = case_when(site == "Nursery" ~ (Temperature - 29.53),
-                             site == "CURES" ~ (Temperature - 29.54))) -> alldata_2020_2021_sep
+  select(!c(Time, Season)) %>% 
+  dplyr::group_by(Date, site) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  select(!Temperature) %>% 
+  distinct() %>% 
+  mutate(HotSpot = case_when(site == "Nursery" ~ (mean_daily_temp - 29.53),
+                             site == "CURES" ~ (mean_daily_temp - 29.54))) %>% 
+  mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
+  mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
+  mutate(Weeks_Stress = Stress/7) %>% 
+  mutate(
+    # Create a continuous week count across years
+    continuous_week = year(Date) * 52 + week(Date),
+    # Group into 12-week periods
+    week_group = ceiling(continuous_week / 12)
+  ) %>% 
+  group_by(week_group, site) %>%
+  mutate(DHW = sum(Weeks_Stress)) -> Long.data.DHW
 
-alldata_2020_2021_sep$HotSpot<-ifelse(alldata_2020_2021_sep$HotSpot>=0,
-                              alldata_2020_2021_sep$HotSpot, 0)# REMOVE NEGATIVE ANOMALIES
+# Plot data
+ggplot(Long.data.DHW, aes(x=ymd(Date))) + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed")+
+    geom_line(aes(y = DHW, color = site)) +
+    ylab("DWH (C-week)  /  Temperature (C)") +
+    xlab("Date") +
+    theme_classic() +
+  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue"))
+#ggsave("DHW_linegraph.pdf")
 
-alldata_2020_2021_sep$Stress<-ifelse(alldata_2020_2021_sep$HotSpot>=1,
-                              alldata_2020_2021_sep$HotSpot, 0) # REMOVE HotSpot lower than 1
+# Highest DWH per year
+    MaxDHW<-as.data.frame(Long.data.DHW %>%
+          group_by(site, year(Date)) %>%
+          summarize(max = max(DHW, na.rm = TRUE)))
 
-alldata_2020_2021_sep$W_Stress<-(alldata_2020_2021_sep$Stress/7) # DHDays to DHWeeks
-      alldata_2020_2021_sep$DHW<-rollapplyr(alldata_2020_2021_sep$W_Stress,list(-(83:0)),sum,fill=NA)# Add 12 weeks of heat stress data 
+    MaxDHW %>% 
+      filter(`year(Date)` == "2021") %>% 
+      rename(DHW = max) -> MaxDHW
+```
+
+
+# make a new radar plot with DHW
+
+```{r}
+cbind(temp_summary, MaxDHW) %>% 
+  select(!c(`year(Date)`,site)) -> temp_DHW_summary
+
+#write_csv(temp_DHW_summary, "temp_DHW_summary.csv")
+
+
+scale_by_max <- function(x) {
+  x * 100 / max(x, na.rm = TRUE)
+}
+
+
+ temp_DHW_summary %>%
+  dplyr::mutate(across(everything(), as.numeric)) %>%
+  dplyr::mutate(across(everything(), scale_by_max)) -> temp_DHW_summary_percent
+
+# To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
+temp_DHW_summary_percent <- rbind(rep(100,5), rep(0,5), temp_DHW_summary_percent)
+
+# Color vector
+colors_border=c("orange", "darkblue")
+colors_in=c("orange", "darkblue")
+
+# Define colors with transparency using adjustcolor
+colors_border <- c(adjustcolor("orange", alpha = 0.9), adjustcolor("darkblue", alpha = 0.9))
+colors_in <- c(adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha = 0.4))
+
+library(fmsb)
+# plot with default options:
+#pdf("radarchart_withDHW.pdf")
+radarchart(temp_DHW_summary_percent, axistype=1 , 
+            #custom polygon
+            pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+            #custom the grid
+            cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.8,
+            #custom labels
+            vlcex=0.9
+)
 ```
 
 

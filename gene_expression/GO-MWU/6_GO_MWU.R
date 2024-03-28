@@ -33,7 +33,7 @@ goAnnotations="Acropora_iso2go.tab" # two-column, tab-delimited, one line per ge
 # Edit these to match your data file names: 
 
 input="CCC_vs_nursery_fc.csv" 
-# BP  
+# BP  13 terms
 # MF #2 terms
 # CC 20 terms
 
@@ -91,7 +91,7 @@ results=gomwuPlot(input,goAnnotations,goDivision,
 
 # text representation of results, with actual adjusted p-values
 results
-write.csv(results, file = "CC_fc_05.csv")
+write.csv(results, file = "BP_fc_05.csv")
 
 
 #### Fisher exact test ####

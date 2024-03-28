@@ -60,6 +60,12 @@ nrow(countData) #21814
 ncol(countData) #15
 #write.csv(countData, file = "Acer_countdata.csv")
 
+# for WCGNA: removing all genes with counts of <10 in more than 90 % of samples
+counts4wgcna = Acer_counts[apply(Acer_counts,1,function(x) sum(x<10))<ncol(Acer_counts)*0.9,]
+nrow(counts4wgcna) #18192
+ncol(counts4wgcna) #15
+write.csv(counts4wgcna, file="Acer_counts4wgcna.csv")
+
 # importing a design .csv file
 design = readxl::read_xlsx("sample_metadata.xlsx")
 
@@ -120,8 +126,11 @@ arrayQualityMetrics(e,intgroup=c("Location", "Genotype"),force=T)
 # if there were outliers:
 outs=c(5,6,8) #these numbers were taken from the index.html report from arrayQualityMetrics Figure 2 "Outlier detection"
 countData=countData[,-outs]
+counts4wgcna=counts4wgcna[,-outs]
 Vsd=Vsd[,-outs]
 design=design[-outs,]
+
+str(counts4wgcna) #12 samples now
 
 # remaking model with outliers removed from dataset
 dds = DESeqDataSetFromMatrix(countData=countData, colData=design, design=~ Genotype + Location)
@@ -140,6 +149,22 @@ snames #i.e.
 colnames(vsd)=snames
 
 save(vsd,design,file="vsd.RData")
+
+load("Rdata_files/vsd.RData")
+
+str(design)
+
+# more reduced stabilized dataset for WGCNA
+wg = DESeqDataSetFromMatrix(countData=counts4wgcna, colData=design, design=~ Genotype + Location)
+vsd.wg=assay(varianceStabilizingTransformation(wg), blind=FALSE) #blind=TRUE is the default, and it is a fully unsupervised transformation. However, the creator of DESeq2,
+#Michael Love, recommends using blind=FALSE for downstream analyses because when transforming data, the full use of the design information should be made. If many genes have
+#large differences in counts due to experimental design, then blind=FALSE will account for that.
+
+head(vsd.wg)
+colnames(vsd.wg)=snames
+colnames(vsd.wg)
+colnames(vsd)
+save(vsd.wg,design,file="data4wgcna.RData")
 
 
 #### DESEQ ####
