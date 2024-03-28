@@ -1,4 +1,4 @@
-## Bioinformatics pipeline for *A.cervicornis* Coral City Camera vs. Emerald Reef Samples
+## Bioinformatics pipeline for *A.cervicornis* Coral City Camera vs. Key Biscayne Nursery Samples
 
 Script written by: DeMerlis
 
@@ -162,7 +162,6 @@ done
 #BSUB -P and_transcriptomics
 #BSUB -o fastqc_trimmed_polyA.out
 #BSUB -e fastqc_trimmed_polyA.err
-#BSUB -n 8
 #BSUB -u allyson.demerlis@earth.miami.edu
 #BSUB -N
 
@@ -235,7 +234,7 @@ echo "Results have been saved to $output_file"
 
 Obtained most recent Baums lab genome. (Locatelli et al. *in prep*).
 
-Downloaded *Symbiodinium* clade A3 from [Shoguchi et al. 2018](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-018-4857-9). 
+Downloaded *Symbiodinium* clade A3 from [Shoguchi et al. 2021](https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-018-4857-9). 
 
 [Link to download page](https://marinegenomics.oist.jp/symb/viewer/download?project_id=37)
 "symatranscriptome_37.fasta.gz"
@@ -367,7 +366,7 @@ So, based on the "mult.iso" default, if a read maps to multiple isogroups (for e
 
 First, you need to make a "two-column tab-delimited table transcriptome_seq2gene.tab giving correspondence between entries in the transcriptome fasta file and genes. In de novo transcriptomes, several fasta contigs may correspond to the same gene (e.g., splice isoforms, or assembly uncertainties)." (from [Dr. Matz](https://github.com/z0on/tag-based_RNAseq/blob/master/tagSeq_processing_README.txt))
 
-To generate these files for *A.cervicornis* and *S.fitt*, run this code on the fasta files:
+To generate these files for *A.cervicornis* and *S.fitti*, run this code on the fasta files:
 
 ```{bash}
 # making seq2iso.tab files
@@ -406,7 +405,6 @@ echo "
 #BSUB -e ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.err
 #BSUB -o ${and}/Ch4_AcerCCC/3_bowtie2/alignment/logs/${samp}_samcounts.out
 #BSUB -W 12:00
-#BSUB -n 8
 #BSUB -q general
 
 cd \"/scratch/projects/and_transcriptomics/Ch4_AcerCCC/3_bowtie2/alignment\"
