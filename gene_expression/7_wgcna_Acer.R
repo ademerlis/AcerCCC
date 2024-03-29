@@ -475,8 +475,8 @@ MEs %>%
 
 # eigengene-heatmap plot (sanity check - is the whole module driven by just one crazy sample?)
 # note: this part does not make much sense for unsigned modules
-load(file = "RData_files/networkdata_signed.RData")
-load(file = "RData_files/wgcnaData.RData");
+load(file = "Rdata_files/networkdata_signed.RData")
+load(file = "Rdata_files/wgcnaData.RData");
 
 # run for each of these statements individually
 which.module="brown2"
@@ -496,9 +496,17 @@ par(mar=c(5, 4.2, 0, 0.7))
 barplot(ME, col=which.module, main="", cex.main=2,
 ylab="eigengene expression",xlab="sample")
 
-length(datExpr[1,moduleColors==which.module ]) # number of genes in chosen module
+length(datExpr[1,moduleColors==which.module ]) # brown2 = 482 genes
 
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("brown2_genelist.csv")
 
+length(datExpr[1,moduleColors==which.module ]) # magenta3 = 735 genes
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("magenta3_genelist.csv")
 
 # If individual samples appear to be driving expression of significant modules, they are likely outliers
 

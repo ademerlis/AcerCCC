@@ -322,3 +322,128 @@ pv_path <- pathview(
 ```
 
 
+# Brown2 WGCNA module - Nursery vs CCC DGEs with log-2-fold change list
+
+Creating a dataframe containing the KO terms and log2fold change values for a sample. this can also be a matrix with multiple sample.
+```{r}
+load("RData_files/Location_CCC_vs_nursery_fc_lfcshrink.RData") 
+brown2_genes <- read_csv("WGCNA/brown2_genelist.csv") #482 genes 
+
+Location_CCC_vs_nursery.fc %>% right_join(kegg.list, by = "gene") %>% 
+  right_join(., brown2_genes, by = "gene") %>%  #narrow down to only the DGEs
+  select(lfc, KO) %>% 
+  na.omit() %>% #246 genes
+  distinct(KO, .keep_all = TRUE) %>% #228 distinct KEGG terms
+  column_to_rownames(var = "KO") -> brown2_KEGG
+```
+
+```{r}
+KEGG_enrich_brown2 <- enrichKEGG(
+                      gene = rownames(brown2_KEGG),
+                      organism = "ko",
+                      keyType = "kegg",
+                      pvalueCutoff = 0.05,
+                      pAdjustMethod = "fdr",
+                      universe = kegg.list$KO
+                      )
+
+dotplot(KEGG_enrich_brown2) #1 kegg term: neuroactive ligand-receptor interaction
+```
+
+```{r}
+length(unique(KEGG_enrich_brown2@result$Description)) #245 unique KEGG terms
+
+KEGG_enrich_brown2@result$geneID
+pathway_ids <- rownames(KEGG_enrich_brown2@result)
+
+# Retrieve information for each pathway
+pathway_info <- lapply(pathway_ids, keggGet)
+
+# Extract pathway names and categories
+pathway_details <- sapply(pathway_info, function(x) {
+  pathway_name <- x[[1]]$NAME
+  pathway_category <- x[[1]]$CLASS
+  return(c(Name = pathway_name, Category = pathway_category))
+})
+
+# Display the pathway names and categories
+print(pathway_details)
+
+pathway_categories_df <- tibble(
+  Pathway_ID = names(pathway_details),
+  Details = pathway_details
+)
+
+pathway_categories_df <- pathway_categories_df %>%
+  mutate(Description = sapply(Details, function(x) x[1]),
+         Category = sapply(Details, function(x) x[2])) %>%
+  select(-Details) 
+
+KEGG_enrich_brown2_categories <- left_join(KEGG_enrich_brown2@result, pathway_categories_df, by = "Description")
+
+length(unique(KEGG_enrich_brown2_categories$Category)) #43 unique categories
+```
+
+```{r}
+KEGG_enrich_brown2_categories %>% 
+  filter(p.adjust<0.1) # map04080	Neuroactive ligand-receptor interaction
+
+# Define a color ramp from blue to red
+blue_to_red <- colorRampPalette(c("blue", "red"))
+
+# Generate n colors from this palette
+n_colors <- blue_to_red(2) 
+
+map_id <- "04080" #Neuroactive ligand-receptor interaction
+
+# run pathview on a specific path
+pv_path <- pathview(
+  gene.data = brown2_KEGG,
+  pathway.id = map_id,
+  species = "ko",
+  out.suffix = "Neuroactive ligand-receptor interaction",
+  limit = list(
+    gene = c(-1, 1), # upper and lower range of log2foldchange values
+    cpd = c(-4, 4)),
+  discrete = list(
+    gene = FALSE, # set this to true when working with discrete data
+    cpd = FALSE), 
+  low = n_colors[1],
+  mid = n_colors[4],
+  high = n_colors[2],
+  kegg.native = T # T: outputs a traditional KEGG pathway map, F: outputs a different map style
+)
+
+#this doesn't look useful or interesting
+```
+
+# magenta3 WGCNA module - Nursery vs CCC DGEs with log-2-fold change list
+
+Creating a dataframe containing the KO terms and log2fold change values for a sample. this can also be a matrix with multiple sample.
+```{r}
+load("RData_files/Location_CCC_vs_nursery_fc_lfcshrink.RData") 
+magenta3_genes <- read_csv("WGCNA/magenta3_genelist.csv") #735 genes 
+
+Location_CCC_vs_nursery.fc %>% right_join(kegg.list, by = "gene") %>% 
+  right_join(., magenta3_genes, by = "gene") %>%  #narrow down to only the DGEs
+  select(lfc, KO) %>% 
+  na.omit() %>% #290 genes
+  distinct(KO, .keep_all = TRUE) %>% #263 distinct KEGG terms
+  column_to_rownames(var = "KO") -> magenta3_KEGG
+```
+
+```{r}
+KEGG_enrich_magenta3 <- enrichKEGG(
+                      gene = rownames(magenta3_KEGG),
+                      organism = "ko",
+                      keyType = "kegg",
+                      pvalueCutoff = 0.05,
+                      pAdjustMethod = "fdr",
+                      universe = kegg.list$KO
+                      )
+
+dotplot(KEGG_enrich_magenta3) #1 kegg term: neuroactive ligand-receptor interaction
+
+#dead end
+```
+
