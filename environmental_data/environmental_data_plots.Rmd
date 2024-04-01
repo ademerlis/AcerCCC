@@ -45,7 +45,7 @@ cures_frame_tilt_temp$Datetime_EST <- round_date(cures_frame_tilt_temp$Datetime_
 #add cures frame site
 cures_frame_tilt_temp %>% 
   mutate(site = "CURES") %>% 
-  select(!Date:Datetime) %>% 
+  dplyr::select(!Date:Datetime) %>% 
   dplyr::rename(Temperature = `Temperature (C)`) -> cures_frame_tilt_temp
 
 #filter out first two days because it was logging very high (abnormal) numbers
@@ -115,40 +115,40 @@ convertFtoC <- function(F) {
   return(C)
 }
 KB_01092018  %>% 
-  select(!`#`) %>% 
+  dplyr::select(!`#`) %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °F (LGR S/N: 20194578, SEN S/N: 20194578)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20194578, SEN S/N: 20194578)`) %>% 
-  select(Temperature, Light, Datetime_EST) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) %>% 
   mutate(Temperature=convertFtoC(Temperature)) -> KB_01092018
 
 KB_07092019<-read_csv("KBNursery_2019_07_09.csv", skip = 1)
 KB_07092019  %>% 
-  select(!`#`) %>% 
+  dplyr::select(!`#`) %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 10795158, SEN S/N: 10795158)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 10795158, SEN S/N: 10795158)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_07092019
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_07092019
 
 KB_10152019<-read_csv("KBNursery_2019_10_15.csv", skip = 1)
 KB_10152019 %>% 
-  select(!`#`) %>% 
+  dplyr::select(!`#`) %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20518526, SEN S/N: 20518526)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20518526, SEN S/N: 20518526)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_10152019
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_10152019
 
 KB_01162020<-read_csv("KBNursery_2020_01_16.csv", skip = 1)
 KB_01162020 %>% 
-  select(!`#`) %>% 
+  dplyr::select(!`#`) %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20473194, SEN S/N: 20473194)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20473194, SEN S/N: 20473194)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_01162020
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_01162020
 
 KB_03062020<-read_csv("KBNursery_2020_03_06.csv", skip = 1)
 KB_03062020 %>% 
@@ -156,7 +156,7 @@ KB_03062020 %>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20685544, SEN S/N: 20685544)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685544, SEN S/N: 20685544)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_03062020
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_03062020
 
 KB_05012020<-read_csv("KBNursery_2020_05_01.csv", skip = 1)
 KB_05012020 %>% 
@@ -164,7 +164,7 @@ KB_05012020 %>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20685559, SEN S/N: 20685559)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685559, SEN S/N: 20685559)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_05012020
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_05012020
 
 KB_09112020<-read_csv("KBNursery_2020_09_11.csv", skip = 1)
 
@@ -173,7 +173,7 @@ KB_09112020 %>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_09112020
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_09112020
 
 KB_02102021 <- read_csv("KBNursery_2021_02_10.csv", skip = 1)
 KB_02102021 %>% 
@@ -181,14 +181,14 @@ KB_02102021 %>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_02102021
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_02102021
 
 KB_05282021 <- read_csv("KBNursery_2021_05_28.csv", skip = 1)
 KB_05282021 %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21085862, SEN S/N: 21085862)`) %>% 
-  select(Temperature, Datetime_EST) %>% 
+  dplyr::select(Temperature, Datetime_EST) %>% 
   mutate(Light = NA) -> KB_05282021
 
 KB_08112021 <- read_csv("KBNursery_2021_08_11.csv", skip = 1)
@@ -197,7 +197,7 @@ KB_08112021 %>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_08112021
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_08112021
 
 KB_120821 <- read_csv("KBNursery_2021_12_08.csv", skip = 1)
 
@@ -206,7 +206,7 @@ KB_120821%>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
-  select(Temperature, Light, Datetime_EST) -> KB_120821
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_120821
 
 rbind(KB_01092018, KB_07092019, KB_10152019, KB_01162020, KB_03062020, KB_05012020, KB_09112020, KB_02102021, KB_05282021, KB_08112021, KB_120821) -> all_KB_data
 
@@ -607,27 +607,24 @@ library(ncdf4)
 from https://github.com/anampc/DHW_Uva/blob/master/A.Temperature_DHW.Rmd
 ```{r}
 alldata_2020_2021_sep %>% 
-  select(!c(Time, Season)) %>% 
+  dplyr::select(!c(Time, Season)) %>% 
   dplyr::group_by(Date, site) %>% 
   mutate(mean_daily_temp = mean(Temperature)) %>% 
-  select(!Temperature) %>% 
+  dplyr::select(!Temperature) %>% 
   distinct() %>% 
   mutate(HotSpot = case_when(site == "Nursery" ~ (mean_daily_temp - 29.53),
                              site == "CURES" ~ (mean_daily_temp - 29.54))) %>% 
   mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
   mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
-  mutate(Weeks_Stress = Stress/7) %>% 
-  mutate(
-    # Create a continuous week count across years
-    continuous_week = year(Date) * 52 + week(Date),
-    # Group into 12-week periods
-    week_group = ceiling(continuous_week / 12)
-  ) %>% 
-  group_by(week_group, site) %>%
-  mutate(DHW = sum(Weeks_Stress)) -> Long.data.DHW
+  mutate(Weeks_Stress = Stress/7)  -> Long.data.DHW
+
+Long.data.DHW$DHW<-rollapplyr(Long.data.DHW$Weeks_Stress,list(-(83:0)),sum,fill=NA)
+
 
 # Plot data
-ggplot(Long.data.DHW, aes(x=ymd(Date))) + 
+Long.data.DHW %>% 
+  filter(ymd(Date) >= "2021-01-01") %>% 
+ggplot(., aes(x=ymd(Date))) + 
     geom_hline(yintercept=8, linetype="dashed")+
     geom_hline(yintercept=4, linetype="dashed")+
     geom_line(aes(y = DHW, color = site)) +
