@@ -5,18 +5,18 @@ Fit: aov(formula = Temperature ~ site * Season, data = alldata_2020_2021)
 
 $site
                    diff       lwr       upr p adj
-Nursery-CURES 0.4250962 0.3548347 0.4953577     0
+Nursery-CURES 0.4163177 0.3365937 0.4960418     0
 
 $Season
             diff      lwr      upr p adj
-Wet-Dry 3.784838 3.711054 3.858622     0
+Wet-Dry 4.143888 4.058729 4.229047     0
 
 $`site:Season`
-                              diff        lwr        upr     p adj
-Nursery:Dry-CURES:Dry    0.9175230  0.8035847 1.03146132 0.0000000
-CURES:Wet-CURES:Dry      4.2786381  4.1449385 4.41233763 0.0000000
-Nursery:Wet-CURES:Dry    4.1702459  4.0297486 4.31074326 0.0000000
-CURES:Wet-Nursery:Dry    3.3611151  3.2276271 3.49460296 0.0000000
-Nursery:Wet-Nursery:Dry  3.2527229  3.1124269 3.39301885 0.0000000
-Nursery:Wet-CURES:Wet   -0.1083922 -0.2651614 0.04837707 0.2846914
+                              diff        lwr       upr     p adj
+Nursery:Dry-CURES:Dry   0.82302483  0.6959699 0.9500798 0.0000000
+CURES:Wet-CURES:Dry     4.53164302  4.3777073 4.6855787 0.0000000
+Nursery:Wet-CURES:Dry   4.54801550  4.3855845 4.7104465 0.0000000
+CURES:Wet-Nursery:Dry   3.70861819  3.5547536 3.8624828 0.0000000
+Nursery:Wet-Nursery:Dry 3.72499067  3.5626271 3.8873542 0.0000000
+Nursery:Wet-CURES:Wet   0.01637248 -0.1677882 0.2005332 0.9957998
 

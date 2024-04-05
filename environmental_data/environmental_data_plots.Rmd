@@ -15,7 +15,7 @@ library(stringr)
 library(ggplot2)
 # library(lattice)
 # library(Rmisc)
-# library(doBy)
+library(doBy)
 library(devtools)
 #devtools::install_github("ricardo-bion/ggradar", dependencies = TRUE)
 library(ggradar)
@@ -33,7 +33,7 @@ library(ggpubr)
 
 CURES frame
 ```{r}
-cures_frame_tilt_temp <- read_excel("Oct2020_Jan2022_1901102_urban-2020-10_(0)_Temperature.xlsx", sheet = "1901102_urban-2020-10_(0)_Tempe")
+cures_frame_tilt_temp <- read_excel("raw_data/Oct2020_Jan2022_1901102_urban-2020-10_(0)_Temperature.xlsx", sheet = "1901102_urban-2020-10_(0)_Tempe")
 #logged every 15 min
 
 #edit cures frame time
@@ -109,7 +109,7 @@ filtered_cures_data %>%
 KB Nursery
 ```{r}
 #HOBO logs every two hours
-KB_01092018<-read_csv("KBNursery_2018_01_09.csv", skip = 1)
+KB_01092018<-read_csv("raw_data/KBNursery_2018_01_09.csv", skip = 1)
 convertFtoC <- function(F) {
   C <- (F - 32) * 5/9
   return(C)
@@ -123,7 +123,7 @@ KB_01092018  %>%
   dplyr::select(Temperature, Light, Datetime_EST) %>% 
   mutate(Temperature=convertFtoC(Temperature)) -> KB_01092018
 
-KB_07092019<-read_csv("KBNursery_2019_07_09.csv", skip = 1)
+KB_07092019<-read_csv("raw_data/KBNursery_2019_07_09.csv", skip = 1)
 KB_07092019  %>% 
   dplyr::select(!`#`) %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
@@ -132,7 +132,7 @@ KB_07092019  %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 10795158, SEN S/N: 10795158)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_07092019
 
-KB_10152019<-read_csv("KBNursery_2019_10_15.csv", skip = 1)
+KB_10152019<-read_csv("raw_data/KBNursery_2019_10_15.csv", skip = 1)
 KB_10152019 %>% 
   dplyr::select(!`#`) %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
@@ -141,7 +141,7 @@ KB_10152019 %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20518526, SEN S/N: 20518526)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_10152019
 
-KB_01162020<-read_csv("KBNursery_2020_01_16.csv", skip = 1)
+KB_01162020<-read_csv("raw_data/KBNursery_2020_01_16.csv", skip = 1)
 KB_01162020 %>% 
   dplyr::select(!`#`) %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
@@ -150,7 +150,7 @@ KB_01162020 %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20473194, SEN S/N: 20473194)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_01162020
 
-KB_03062020<-read_csv("KBNursery_2020_03_06.csv", skip = 1)
+KB_03062020<-read_csv("raw_data/KBNursery_2020_03_06.csv", skip = 1)
 KB_03062020 %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
@@ -158,7 +158,7 @@ KB_03062020 %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685544, SEN S/N: 20685544)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_03062020
 
-KB_05012020<-read_csv("KBNursery_2020_05_01.csv", skip = 1)
+KB_05012020<-read_csv("raw_data/KBNursery_2020_05_01.csv", skip = 1)
 KB_05012020 %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
@@ -166,7 +166,7 @@ KB_05012020 %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685559, SEN S/N: 20685559)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_05012020
 
-KB_09112020<-read_csv("KBNursery_2020_09_11.csv", skip = 1)
+KB_09112020<-read_csv("raw_data/KBNursery_2020_09_11.csv", skip = 1)
 
 KB_09112020 %>% 
   mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
@@ -175,7 +175,7 @@ KB_09112020 %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_09112020
 
-KB_02102021 <- read_csv("KBNursery_2021_02_10.csv", skip = 1)
+KB_02102021 <- read_csv("raw_data/KBNursery_2021_02_10.csv", skip = 1)
 KB_02102021 %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
@@ -183,7 +183,7 @@ KB_02102021 %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_02102021
 
-KB_05282021 <- read_csv("KBNursery_2021_05_28.csv", skip = 1)
+KB_05282021 <- read_csv("raw_data/KBNursery_2021_05_28.csv", skip = 1)
 KB_05282021 %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
@@ -191,7 +191,7 @@ KB_05282021 %>%
   dplyr::select(Temperature, Datetime_EST) %>% 
   mutate(Light = NA) -> KB_05282021
 
-KB_08112021 <- read_csv("KBNursery_2021_08_11.csv", skip = 1)
+KB_08112021 <- read_csv("raw_data/KBNursery_2021_08_11.csv", skip = 1)
 KB_08112021 %>% 
   mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
@@ -199,7 +199,7 @@ KB_08112021 %>%
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_08112021
 
-KB_120821 <- read_csv("KBNursery_2021_12_08.csv", skip = 1)
+KB_120821 <- read_csv("raw_data/KBNursery_2021_12_08.csv", skip = 1)
 
 KB_120821%>% 
   mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
@@ -302,21 +302,6 @@ full_join(filtered_data, filtered_cures_data) %>%
 #ggsave("CURES_nursery_temp_junedec2021.pdf")
 ```
 
-plot one day to see if timing makes sense
-```{r}
-full_join(filtered_data, filtered_cures_data) %>% 
-  select(!Light) %>% 
-  filter(as.Date(Datetime_EST) > "2021-10-10" & as.Date(Datetime_EST) < "2021-10-13") %>% 
-  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
-  geom_point() +
-  theme_minimal() +
-  labs(x="Date", y = "Temp (ºC)") +
-  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue")) 
-```
-
-
-
-
 ```{r}
 full_join(filtered_data, filtered_cures_data) %>% 
   dplyr::select(!Light) %>% 
@@ -327,31 +312,31 @@ full_join(filtered_data, filtered_cures_data) %>%
 #2019 (nursery only: July-Dec)
 all_temp_data %>% 
   filter(Datetime_EST < "2020-01-01 00:00:00")  %>% 
-  mutate(Season = case_when(Datetime_EST < "2019-05-01 00:00:00" ~ "Dry",
-                            Datetime_EST >= "2019-05-01 00:00:00" ~ "Wet")) %>% 
+  mutate(Season = case_when(Datetime_EST < "2019-05-15 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2019-05-15 00:00:00" ~ "Wet")) %>% 
   dplyr::group_by(Time_of_day, site, Season) %>% 
   dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature))
   
 #2020
 all_temp_data %>% 
   filter(Datetime_EST < "2021-01-01 00:00:00" & Datetime_EST > "2019-12-31 00:00:00") %>% 
-  mutate(Season = case_when(Datetime_EST < "2020-05-01 00:00:00" ~ "Dry",
-                            Datetime_EST >= "2020-05-01 00:00:00" ~ "Wet")) %>% 
+  mutate(Season = case_when(Datetime_EST < "2020-05-15 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2020-05-15 00:00:00" ~ "Wet")) %>% 
   dplyr::group_by(Time_of_day, site, Season) %>%
   dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature))
 
 #2021
 all_temp_data %>% 
   filter(Datetime_EST < "2022-01-01 00:00:00" & Datetime_EST > "2020-12-31 00:00:00") %>% 
-  mutate(Season = case_when(Datetime_EST < "2021-05-01 00:00:00" ~ "Dry",
-                            Datetime_EST >= "2021-05-01 00:00:00" ~ "Wet")) %>% 
+  mutate(Season = case_when(Datetime_EST < "2021-05-15 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2021-05-15 00:00:00" ~ "Wet")) %>% 
   dplyr::group_by(Time_of_day, site, Season) %>%
   dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature)) 
 
 all_temp_data %>% 
   filter(Datetime_EST < "2022-01-01 00:00:00" & Datetime_EST > "2020-12-31 00:00:00") %>% 
-  mutate(Season = case_when(Datetime_EST < "2021-05-01 00:00:00" ~ "Dry",
-                            Datetime_EST >= "2021-05-01 00:00:00" ~ "Wet")) %>% 
+  mutate(Season = case_when(Datetime_EST < "2021-05-15 00:00:00" ~ "Dry",
+                            Datetime_EST >= "2021-05-15 00:00:00" ~ "Wet")) %>% 
   dplyr::group_by(site, Season) %>% 
   dplyr::group_by(site, Season) %>%
   dplyr::summarise(mean_temp = mean(Temperature), sd_temp = sd(Temperature), min_temp = min(Temperature), max_temp = max(Temperature)) %>% 
@@ -366,12 +351,15 @@ all_temp_data %>%
 
 Oct 13, 2020 -- Dec 7, 2021
 ```{r}
+#ian's code for season: phDataRaw$rDateTime[i]>"2020-5-26" && phDataRaw$rDateTime[i]<"2020-10-15"){phDataRaw$precipitation[i] = "wet"}
+
 filtered_data %>% 
-  filter(Datetime_EST < "2021-12-08 00:00:00" & Datetime_EST > "2020-10-12 00:00:00") %>% 
+  filter(Datetime_EST < "2021-12-08 00:00:00" & Datetime_EST >= "2020-10-13 00:00:00") %>% 
   full_join(., filtered_cures_data) %>% 
-  mutate(Season = case_when(Datetime_EST < "2021-05-01 00:00:00" & Datetime_EST > "2020-10-01 00:00:00" ~ "Dry",
-                            Datetime_EST >= "2021-05-01 00:00:00" & Datetime_EST <= "2021-10-01 00:00:00" ~ "Wet",
-                            Datetime_EST > "2021-10-01 00:00:00" ~ "Dry")) %>% 
+  mutate(Season = case_when(Datetime_EST < "2020-10-15 00:00:00" ~ "Wet", 
+                            Datetime_EST <= "2021-05-26 00:00:00" & Datetime_EST >= "2020-10-15 00:00:00" ~ "Dry",
+                            Datetime_EST > "2021-05-26 00:00:00" & Datetime_EST < "2021-10-15 00:00:00" ~ "Wet",
+                            Datetime_EST >= "2021-10-15 00:00:00" ~ "Dry")) %>% 
   ungroup() %>% 
   dplyr::select(Temperature, Datetime_EST, site, Season) -> alldata_2020_2021
 ```
@@ -416,11 +404,11 @@ temp_summary %>%
 
 temp_summary_dry %>% 
   column_to_rownames(var="site") %>% 
-  select(!Season) -> temp_summary_dry
+  dplyr::select(!Season) -> temp_summary_dry
 
  temp_summary_dry %>%
   dplyr::mutate(across(everything(), as.numeric)) %>%
-   select(!`30.5°C`) %>% 
+  dplyr::select(!`30.5°C`) %>% 
   dplyr::mutate(across(everything(), scale_by_max)) -> temp_summary_dry_percent
 
 # To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
@@ -451,7 +439,7 @@ temp_summary %>%
 
 temp_summary_wet %>% 
   column_to_rownames(var="site") %>% 
-  select(!Season) -> temp_summary_wet
+  dplyr::select(!Season) -> temp_summary_wet
 
  temp_summary_wet %>%
   dplyr::mutate(across(everything(), as.numeric)) %>%
@@ -548,22 +536,6 @@ radarchart(temp_summary_percent, axistype=1 ,
 ```
 
 
-```{r}
-temp_summary %>% 
-  rownames_to_column(var = "Location") -> temp_summary
-
-temp_summary %>% 
-  pivot_longer(Max:`30.5°C`, names_to = "Field", values_to = "value") -> temp_summary
-
-ggdotchart(
-  temp_summary, x = "Field", y = "value", 
-  group = "Location", color = "Location", palette = "jco",
-  add = "segment", position = position_dodge(0.3),
-  sorting = "descending"
-  )
-```
-
-
 # Extract MMM from CRW
 
 ```{r Extract_OISST_data, cache=TRUE}
@@ -573,7 +545,7 @@ library(ncdf4)
 
 
   # Read climatology file
-  Climatology_MMM <- "ct5km_climatology_v3.1.nc"
+  Climatology_MMM <- "raw_data/ct5km_climatology_v3.1.nc"
   MMM.data <- brick(Climatology_MMM) 
   #MMM.data
   
@@ -590,15 +562,12 @@ library(ncdf4)
   
   
   #MMM <- raster::extract(MMM.data, extract.pts,method="bilinear")
-  MMM <- raster::extract(MMM.data, extract.pts_KB,method="simple")
-  MMM_CCC <- raster::extract(MMM.data, extract_CCC,method="simple")
+  MMM <- raster::extract(MMM.data, extract.pts_KB,method="simple") # MMM for KB is 29.53
+  MMM_CCC <- raster::extract(MMM.data, extract_CCC,method="simple") # MMM for CCC is 29.54
 
   #write.csv(MMM, "KB_CRW_MMM_1985-2012.csv", row.names=FALSE)
 
   #write.csv(MMM_CCC, "CCC_CRW_MMM_1985-2012.csv", row.names=FALSE)
-  
-# MMM for KB is 29.54
-# MMM for CCC is 29.53
 ```
 
 
@@ -649,7 +618,7 @@ ggplot(., aes(x=ymd(Date))) +
 
 ```{r}
 cbind(temp_summary, MaxDHW) %>% 
-  select(!c(`year(Date)`,site)) -> temp_DHW_summary
+  dplyr::select(!c(`year(Date)`,site)) -> temp_DHW_summary
 
 #write_csv(temp_DHW_summary, "temp_DHW_summary.csv")
 
@@ -676,7 +645,7 @@ colors_in <- c(adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha
 
 library(fmsb)
 # plot with default options:
-#pdf("radarchart_withDHW.pdf")
+pdf("radarchart_withDHW.pdf")
 radarchart(temp_DHW_summary_percent, axistype=1 , 
             #custom polygon
             pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,

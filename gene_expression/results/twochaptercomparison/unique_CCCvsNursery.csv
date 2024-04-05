@@ -1,0 +1,746 @@
+gene,annot
+Acropora_000050,NA
+Acropora_000052,NA
+Acropora_000100,NA
+Acropora_000125,NA
+Acropora_000157,NA
+Acropora_000223,NA
+Acropora_000227,endopeptidase inhibitor activity
+Acropora_000261,zinc finger
+Acropora_000264,Belongs to the glycosyl hydrolase 18 family
+Acropora_000268,NA
+Acropora_000299,NA
+Acropora_000355,NA
+Acropora_000447,snRNA transcription by RNA polymerase III
+Acropora_000464,Ribonuclease H protein
+Acropora_000595,NA
+Acropora_000676,NA
+Acropora_000756,NA
+Acropora_000767,NA
+Acropora_000839,betaine-homocysteine S-methyltransferase activity
+Acropora_000987,YqaJ-like viral recombinase domain
+Acropora_001033,NA
+Acropora_001067,NA
+Acropora_001096,focadhesin
+Acropora_001319,Alpha beta hydrolase domain-containing protein
+Acropora_001373,Fibronectin type 2 domain
+Acropora_001427,NA
+Acropora_001438,synaptic vesicle uncoating
+Acropora_001490,NA
+Acropora_001598,NA
+Acropora_001660,E3 ubiquitin-protein ligase
+Acropora_001685,NA
+Acropora_001766,TCDD-inducible
+Acropora_001782,Belongs to the protein kinase superfamily. RIO-type Ser Thr kinase family
+Acropora_001803,NA
+Acropora_001836,NA
+Acropora_001855,NA
+Acropora_001893,mitochondrial translation
+Acropora_001965,cotranslational protein targeting to membrane
+Acropora_002056,DNL zinc finger
+Acropora_002087,regulation of acid-sensing ion channel activity
+Acropora_002116,NA
+Acropora_002155,NA
+Acropora_002162,metal ion binding
+Acropora_002183,NA
+Acropora_002221,NA
+Acropora_002239,NA
+Acropora_002322,NA
+Acropora_002363,Belongs to the peptidase M10A family
+Acropora_002383,"Thiol-specific peroxidase that catalyzes the reduction of hydrogen peroxide and organic hydroperoxides to water and alcohols, respectively. Can reduce H(2)O(2) and short chain organic, fatty acid, and phospholipid hydroperoxides. Also has phospholipase activity, and can therefore either reduce the oxidized sn-2 fatty acyl grup of phospholipids (peroxidase activity) or hydrolyze the sn-2 ester bond of phospholipids (phospholipase activity). These activities are dependent on binding to phospholipids at acidic pH and to oxidized phospholipds at cytosolic pH. Plays a role in cell protection against oxidative stress by detoxifying peroxides and in phospholipid homeostasis"
+Acropora_002397,Peptidase M16 inactive domain
+Acropora_002402,regulation of mitotic cell cycle
+Acropora_002417,"Deiodinase, iodothyronine, type I"
+Acropora_002612,WD repeat-containing protein
+Acropora_002636,Lamina-associated polypeptide 1C (LAP1C)
+Acropora_002641,Ribonuclease
+Acropora_002793,adenosine deaminase-like
+Acropora_002818,Bromodomain-containing protein 2
+Acropora_002831,NA
+Acropora_002876,NA
+Acropora_002899,NA
+Acropora_002964,Histidine triad
+Acropora_003023,NA
+Acropora_003170,NA
+Acropora_003213,NA
+Acropora_003277,Belongs to the WD repeat SEC13 family
+Acropora_003320,peptidase inhibitor activity
+Acropora_003372,Catalyzes the attachment of alanine to tRNA(Ala) in a two-step reaction alanine is first activated by ATP to form Ala- AMP and then transferred to the acceptor end of tRNA(Ala). Also edits incorrectly charged tRNA(Ala) via its editing domain
+Acropora_003385,NA
+Acropora_003441,monocarboxylate transporter
+Acropora_003451,NA
+Acropora_003474,NA
+Acropora_003476,NA
+Acropora_003490,NA
+Acropora_003539,NA
+Acropora_003550,NA
+Acropora_003605,Vacuolar sorting protein 9 (VPS9) domain
+Acropora_003613,Inhibitor of carbonic anhydrase-like
+Acropora_003642,NA
+Acropora_003644,NA
+Acropora_003647,Glycine rich protein
+Acropora_003678,GTP binding. It is involved in the biological process described with
+Acropora_003744,TNF receptor-associated factor
+Acropora_003771,NA
+Acropora_003837,phosphoenolpyruvate carboxykinase activity
+Acropora_003871,metalloaminopeptidase activity
+Acropora_003892,NA
+Acropora_004038,NA
+Acropora_004046,cilium assembly
+Acropora_004073,NA
+Acropora_004128,NA
+Acropora_004164,cellular response to nitroglycerin
+Acropora_004358,Chromosome 8 open reading frame 37
+Acropora_004376,NA
+Acropora_004481,homologous chromosome movement towards spindle pole involved in homologous chromosome segregation
+Acropora_004484,"ATPase activity, coupled to transmembrane movement of substances"
+Acropora_004513,NA
+Acropora_004550,calmodulin-dependent protein kinase activity
+Acropora_004619,Ribosomal protein S17
+Acropora_004796,NA
+Acropora_004799,ribonuclease P RNA binding
+Acropora_004834,"SRP-dependent cotranslational protein targeting to membrane, translocation"
+Acropora_004871,extracellularly glutamate-gated ion channel activity
+Acropora_005053,NA
+Acropora_005062,protein heterodimerization activity
+Acropora_005075,NA
+Acropora_005227,WD40 repeats
+Acropora_005228,NA
+Acropora_005380,NA
+Acropora_005383,calcium ion-regulated exocytosis of neurotransmitter
+Acropora_005465,"Transfers N-acetylgalactosamine (GalNAc) from UDP-GalNAc to N-acetylglucosamine-beta-benzyl with a beta-1,4-linkage to form N,N'-diacetyllactosediamine, GalNAc-beta-1,4-GlcNAc structures in N-linked glycans and probably O-linked glycans"
+Acropora_005471,NA
+Acropora_005473,G-quadruplex DNA unwinding
+Acropora_005589,Belongs to the peptidase S1 family
+Acropora_005771,glycerol channel activity
+Acropora_005774,NA
+Acropora_005824,NA
+Acropora_005889,NA
+Acropora_005893,"Phosphatidylinositol 3,4,5-trisphosphate 3-phosphatase and dual-specificity protein phosphatase"
+Acropora_005948,NA
+Acropora_006023,NA
+Acropora_006089,NA
+Acropora_006138,NA
+Acropora_006142,serine-type endopeptidase inhibitor activity
+Acropora_006178,L-cysteine:2-oxoglutarate aminotransferase activity
+Acropora_006206,SCF-dependent proteasomal ubiquitin-dependent protein catabolic process
+Acropora_006228,potassium channel modulatory factor 1
+Acropora_006263,The GINS complex plays an essential role in the initiation of DNA replication
+Acropora_006336,NA
+Acropora_006388,NA
+Acropora_006416,protein heterodimerization activity
+Acropora_006463,NA
+Acropora_006482,NA
+Acropora_006564,glomerular parietal epithelial cell differentiation
+Acropora_006647,NA
+Acropora_006668,microtubule motor activity
+Acropora_006699,GTP binding. It is involved in the biological process described with
+Acropora_006726,Belongs to the peptidase C1 family
+Acropora_006791,regulation of mitotic cell cycle
+Acropora_006818,NA
+Acropora_006858,posttranscriptional tethering of RNA polymerase II gene DNA at nuclear periphery
+Acropora_006943,Endoplasmic reticulum-golgi intermediate compartment
+Acropora_006964,sequence-specific DNA binding
+Acropora_006971,NA
+Acropora_006983,NA
+Acropora_007070,helicase activity
+Acropora_007081,NA
+Acropora_007158,5'-nucleotidase activity
+Acropora_007233,NA
+Acropora_007266,metalloaminopeptidase activity
+Acropora_007268,Colorectal mutant cancer protein
+Acropora_007304,NA
+Acropora_007387,NA
+Acropora_007390,tolloid-like
+Acropora_007455,acetylcholine-gated cation-selective channel activity
+Acropora_007549,stress-activated protein kinase signaling cascade
+Acropora_007634,extracellular matrix constituent secretion
+Acropora_007641,Ankyrin repeats (3 copies)
+Acropora_007693,Rho-related BTB
+Acropora_007740,NA
+Acropora_007754,regulation of mammary gland epithelial cell proliferation
+Acropora_007785,"Tankyrase, TRF1-interacting ankyrin-related ADP-ribose polymerase"
+Acropora_007795,regulation of cellular response to testosterone stimulus
+Acropora_007799,"2 iron, 2 sulfur cluster binding"
+Acropora_007843,glutamate dehydrogenase [NAD(P)+] activity
+Acropora_007853,NA
+Acropora_007931,chaperone mediated protein folding independent of cofactor
+Acropora_007962,dihydrofolate reductase activity
+Acropora_008037,NA
+Acropora_008096,NA
+Acropora_008106,NA
+Acropora_008110,NA
+Acropora_008139,NA
+Acropora_008222,NA
+Acropora_008410,heat shock-mediated polytene chromosome puffing
+Acropora_008415,NA
+Acropora_008422,Phosphatidylethanolamine-binding protein
+Acropora_008433,NA
+Acropora_008434,NA
+Acropora_008452,NA
+Acropora_008463,arachidonic acid secretion
+Acropora_008494,Potassium channel tetramerization domain containing 6
+Acropora_008512,domain protein 4
+Acropora_008530,"BCCT, betaine/carnitine/choline family transporter"
+Acropora_008580,NA
+Acropora_008583,NA
+Acropora_008672,NA
+Acropora_008699,glycine amidinotransferase
+Acropora_008720,-
+Acropora_008771,Golgi vesicle fusion to target membrane
+Acropora_008814,WD repeat domain 7
+Acropora_008841,G-protein beta/gamma-subunit complex binding
+Acropora_008849,RNA polymerase II core promoter sequence-specific DNA binding
+Acropora_008850,Rho guanyl-nucleotide exchange factor activity
+Acropora_008885,NA
+Acropora_008893,acetylcholine-gated cation-selective channel activity
+Acropora_008906,Belongs to the adenylyl cyclase class-4 guanylyl cyclase family
+Acropora_009005,hyaluronic acid binding
+Acropora_009046,ThiF family
+Acropora_009047,NA
+Acropora_009057,neuropeptide Y receptor
+Acropora_009080,NA
+Acropora_009117,NA
+Acropora_009261,NA
+Acropora_009268,NA
+Acropora_009348,NA
+Acropora_009447,"RAB30, member RAS oncogene family"
+Acropora_009449,Winged helix Storkhead-box1 domain
+Acropora_009630,NA
+Acropora_009729,NA
+Acropora_009748,NA
+Acropora_009769,Golgi vesicle fusion to target membrane
+Acropora_009781,NA
+Acropora_009805,NA
+Acropora_009816,tyrosine kinase
+Acropora_009906,transmembrane protein 53
+Acropora_009994,It is involved in the biological process described with
+Acropora_010035,NA
+Acropora_010098,NA
+Acropora_010355,calcium ion binding
+Acropora_010372,NA
+Acropora_010387,NA
+Acropora_010436,NA
+Acropora_010472,heat shock
+Acropora_010516,transitional stage B cell differentiation
+Acropora_010605,retinol dehydrogenase activity
+Acropora_010638,meiotic attachment of telomere to nuclear envelope
+Acropora_010645,Belongs to the protein kinase superfamily. Tyr protein kinase family. CSF-1 PDGF receptor subfamily
+Acropora_010653,NA
+Acropora_010658,protein localization to perinuclear region of cytoplasm
+Acropora_010758,NA
+Acropora_010840,regulation of receptor recycling
+Acropora_010878,regulation of transcription from RNA polymerase II promoter involved in kidney development
+Acropora_010886,"Regulator of the Hippo SWH (Sav Wts Hpo) signaling pathway, a signaling pathway that plays a pivotal role in organ size control and tumor suppression by restricting proliferation and promoting apoptosis. The core of this pathway is composed of a kinase cascade wherein Hippo (Hpo), in complex with its regulatory protein Salvador (Sav), phosphorylates and activates Warts (Wts) in complex with its regulatory protein Mats, which in turn phosphorylates and inactivates the Yorkie (Yki) oncoprotein. Kibra acts synergistically along with Ex and Mer to regulate the Hippo signaling pathway"
+Acropora_010896,NA
+Acropora_010922,SUMO binding
+Acropora_010940,"Protein tyrosine phosphatase, receptor type"
+Acropora_010978,NA
+Acropora_010983,histone H4-K16 acetylation
+Acropora_010993,apoptotic process
+Acropora_010996,NA
+Acropora_011026,chemotaxis to arachidonic acid
+Acropora_011041,Dynactin subunit 2
+Acropora_011047,NA
+Acropora_011072,positive regulation of fibroblast apoptotic process
+Acropora_011093,NA
+Acropora_011215,structural constituent of cuticle
+Acropora_011218,NA
+Acropora_011315,Belongs to the TRAFAC class myosin-kinesin ATPase superfamily. Myosin family
+Acropora_011346,NA
+Acropora_011361,"phosphoprotein, 21"
+Acropora_011368,"Myosin, light"
+Acropora_011477,NA
+Acropora_011526,T cell activation via T cell receptor contact with antigen bound to MHC molecule on antigen presenting cell
+Acropora_011631,C-type lectin (CTL) or carbohydrate-recognition domain (CRD)
+Acropora_011643,semaphorin receptor binding
+Acropora_011680,NA
+Acropora_011703,Low affinity immunoglobulin epsilon Fc receptor
+Acropora_011717,DNA binding
+Acropora_011761,NA
+Acropora_011899,NA
+Acropora_011933,NA
+Acropora_011960,NA
+Acropora_011984,MFS_1 like family
+Acropora_012012,NA
+Acropora_012084,Reverse transcriptase (RNA-dependent DNA polymerase)
+Acropora_012139,NA
+Acropora_012278,NA
+Acropora_012300,NA
+Acropora_012484,NA
+Acropora_012580,NA
+Acropora_012770,"DNA-binding transcription factor activity, RNA polymerase II-specific"
+Acropora_012860,NA
+Acropora_012870,NA
+Acropora_012884,NA
+Acropora_012931,CUB and zona pellucida-like domain-containing protein
+Acropora_012943,NA
+Acropora_013028,NA
+Acropora_013062,Coiled-coil domain containing 148
+Acropora_013064,Schlafen-like protein 1
+Acropora_013066,NA
+Acropora_013069,Protein kinase C conserved region 2 (CalB)
+Acropora_013117,NA
+Acropora_013154,digestion
+Acropora_013181,positive regulation of low-density lipoprotein particle receptor biosynthetic process
+Acropora_013202,intraciliary transport
+Acropora_013211,NA
+Acropora_013241,NA
+Acropora_013251,negative regulation of release of cytochrome c from mitochondria
+Acropora_013253,modulation by host of viral RNA genome replication
+Acropora_013385,cwf18 pre-mRNA splicing factor
+Acropora_013416,ankyrin repeat
+Acropora_013541,NA
+Acropora_013575,regulation of vesicle fusion
+Acropora_013630,Metalloendopeptidase activity. It is involved in the biological process described with proteolysis
+Acropora_013705,complement component C4b binding
+Acropora_013734,NA
+Acropora_013743,NA
+Acropora_013757,ubiquitin protein ligase binding
+Acropora_013817,NA
+Acropora_013894,NA
+Acropora_013921,NA
+Acropora_013940,"Catalyzes the hydrolysis of N-formyl-L-kynurenine to L- kynurenine, the second step in the kynurenine pathway of tryptophan degradation. Kynurenine may be further oxidized to nicotinic acid, NAD(H) and NADP(H). Required for elimination of toxic metabolites"
+Acropora_013946,"Cytochrome P450, family 21, subfamily A, polypeptide 2"
+Acropora_013964,NA
+Acropora_013986,NA
+Acropora_014028,NA
+Acropora_014030,NA
+Acropora_014099,cellular copper ion homeostasis
+Acropora_014183,GAG-pre-integrase domain
+Acropora_014187,NA
+Acropora_014205,ephrin receptor activity
+Acropora_014361,NA
+Acropora_014469,protein modification by small protein conjugation
+Acropora_014499,NA
+Acropora_014579,cytochrome b5 reductase
+Acropora_014582,NA
+Acropora_014584,NA
+Acropora_014585,NA
+Acropora_014683,posttranslational protein targeting to endoplasmic reticulum membrane
+Acropora_014740,galactosyltransferase activity
+Acropora_014789,Belongs to the small GTPase superfamily. Arf family
+Acropora_014798,NA
+Acropora_014859,BTB POZ domain-containing protein
+Acropora_015022,protein K33-linked ubiquitination
+Acropora_015075,sulfotransferase activity
+Acropora_015076,NA
+Acropora_015078,unfolded protein binding
+Acropora_015079,BAG family molecular chaperone regulator 3
+Acropora_015083,unfolded protein binding
+Acropora_015084,NA
+Acropora_015091,Cupin-like domain
+Acropora_015095,NA
+Acropora_015108,motor activity
+Acropora_015157,NA
+Acropora_015158,"posttranslational protein targeting to membrane, translocation"
+Acropora_015172,ADP-ribosylation factor family
+Acropora_015184,NA
+Acropora_015247,"Solute carrier organic anion transporter family, member"
+Acropora_015257,EF-hand domain pair
+Acropora_015264,ribosomal protein S6 kinase
+Acropora_015305,NA
+Acropora_015449,NA
+Acropora_015471,NA
+Acropora_015542,GTPase activity
+Acropora_015580,endothelial cell proliferation
+Acropora_015603,type 1 cannabinoid receptor binding
+Acropora_015608,Belongs to the peptidase M10A family
+Acropora_015609,Belongs to the peptidase M10A family
+Acropora_015624,sphingolipid delta-4 desaturase activity
+Acropora_015642,ribosomal small subunit export from nucleus
+Acropora_015722,NA
+Acropora_015726,thioesterase binding
+Acropora_015771,Belongs to the glycosyl hydrolase 18 family
+Acropora_015776,7 transmembrane receptor (rhodopsin family)
+Acropora_015787,calmodulin-dependent protein kinase activity
+Acropora_015874,mRNA 5'-splice site recognition
+Acropora_015890,NA
+Acropora_015916,Barrier to autointegration factor
+Acropora_015952,NA
+Acropora_016030,to Saccharomyces cerevisiae CMD1 (YBR109C)
+Acropora_016038,NA
+Acropora_016044,Transcriptional regulating factor 1
+Acropora_016046,leucine rich repeat containing 6
+Acropora_016105,NA
+Acropora_016137,plasma membrane to endosome transport
+Acropora_016151,NA
+Acropora_016159,NA
+Acropora_016161,NA
+Acropora_016177,melanocortin receptor activity
+Acropora_016324,NA
+Acropora_016362,NAADP-sensitive calcium-release channel activity
+Acropora_016539,NA
+Acropora_016581,NA
+Acropora_016589,NA
+Acropora_016607,actin binding
+Acropora_016629,nuclear pore localization
+Acropora_016649,NA
+Acropora_016687,NA
+Acropora_016706,NA
+Acropora_016734,HEAT repeat-containing protein
+Acropora_016967,NA
+Acropora_016986,NA
+Acropora_017013,NA
+Acropora_017040,CD5 molecule-like
+Acropora_017096,NA
+Acropora_017101,NA
+Acropora_017169,NA
+Acropora_017215,NA
+Acropora_017294,NA
+Acropora_017370,NA
+Acropora_017373,NA
+Acropora_017481,chromatin remodeling
+Acropora_017565,3-hydroxyacyl-CoA dehydratase activity
+Acropora_017584,phagosome acidification
+Acropora_017642,Protein tyrosine kinase
+Acropora_017649,factor 1
+Acropora_017710,retinol dehydrogenase activity
+Acropora_017734,DNA-directed 5'-3' RNA polymerase activity
+Acropora_017877,molybdopterin synthase activity
+Acropora_017881,Y-form DNA binding
+Acropora_017911,NA
+Acropora_018006,serine C-palmitoyltransferase activity
+Acropora_018032,NA
+Acropora_018049,NA
+Acropora_018093,NA
+Acropora_018124,NA
+Acropora_018207,glutathione hydrolase activity
+Acropora_018267,GTPase activator activity
+Acropora_018307,NA
+Acropora_018340,NA
+Acropora_018344,RNA-directed 5'-3' RNA polymerase activity
+Acropora_018352,NA
+Acropora_018371,stromal membrane-associated protein
+Acropora_018375,"transcription factor activity, RNA polymerase II proximal promoter sequence-specific DNA binding"
+Acropora_018382,NA
+Acropora_018385,negative regulation of dendritic cell antigen processing and presentation
+Acropora_018418,NA
+Acropora_018422,"alpha-N-acetylgalactosaminide alpha-2,6-sialyltransferase activity"
+Acropora_018433,NA
+Acropora_018465,Belongs to the G-protein coupled receptor 2 family
+Acropora_018480,Lecithin retinol acyltransferase
+Acropora_018496,Sigma factor PP2C-like phosphatases
+Acropora_018503,ATP binding. It is involved in the biological process described with protein phosphorylation
+Acropora_018509,intracellular distribution of mitochondria
+Acropora_018554,NA
+Acropora_018597,NA
+Acropora_018619,CHAT domain
+Acropora_018645,MAP kinase activity
+Acropora_018651,NA
+Acropora_018666,GPCR-chaperone
+Acropora_018726,NA
+Acropora_018777,nitric oxide catabolic process
+Acropora_018878,NA
+Acropora_018913,Nucleolar GTP-binding protein 2
+Acropora_019133,reverse transcriptase
+Acropora_019222,Cupin superfamily (DUF985)
+Acropora_019241,macrophage migration inhibitory factor binding
+Acropora_019361,Belongs to the MIP aquaporin (TC 1.A.8) family
+Acropora_019430,Belongs to the peptidase C1 family
+Acropora_019438,NA
+Acropora_019531,anchor protein 10
+Acropora_019536,protein serine/threonine kinase activity
+Acropora_019545,Transposase DDE domain
+Acropora_019652,retinoid X receptor binding
+Acropora_019656,NA
+Acropora_019683,FAD dependent oxidoreductase
+Acropora_019694,NA
+Acropora_019706,NA
+Acropora_019730,microtubule motor activity
+Acropora_019732,nuclear migration
+Acropora_019764,Belongs to the protein kinase superfamily. AGC Ser Thr protein kinase family. GPRK subfamily
+Acropora_019806,NA
+Acropora_019809,NA
+Acropora_019841,BRCA1 associated protein
+Acropora_019868,NA
+Acropora_019911,very-long-chain-acyl-CoA dehydrogenase activity
+Acropora_019924,NA
+Acropora_019982,L-threonine 3-dehydrogenase
+Acropora_019983,nucleic acid binding
+Acropora_020044,NA
+Acropora_020085,Anaphase-promoting complex subunit 4 WD40 domain
+Acropora_020134,L(3)mbt-like 2 (Drosophila)
+Acropora_020277,binding. It is involved in the biological process described with
+Acropora_020282,fibroblast growth factor-activated receptor activity
+Acropora_020292,Trichohyalin-plectin-homology domain
+Acropora_020329,"ATP-dependent microtubule motor activity, plus-end-directed"
+Acropora_020352,NA
+Acropora_020475,NA
+Acropora_020541,"transposition, RNA-mediated"
+Acropora_020661,EF-hand domain pair
+Acropora_020751,NA
+Acropora_021106,IgLON family member 5
+Acropora_021147,Domain of unknown function (DUF4616)
+Acropora_021223,NA
+Acropora_021271,"ATPase activity, coupled to transmembrane movement of substances"
+Acropora_021512,NA
+Acropora_021517,NA
+Acropora_021601,NA
+Acropora_021644,Transcription factor
+Acropora_021647,NA
+Acropora_021648,NA
+Acropora_021687,NA
+Acropora_021814,NA
+Acropora_021887,Asparaginase
+Acropora_021888,negative regulation of triglyceride biosynthetic process
+Acropora_021924,Leucine rich repeat
+Acropora_021929,NA
+Acropora_021950,ribosomal small subunit assembly
+Acropora_022032,NA
+Acropora_022079,snRNA processing
+Acropora_022085,NA
+Acropora_022095,Belongs to the Ca(2 ) cation antiporter (CaCA) (TC 2.A.19) family
+Acropora_022169,O-acyltransferase
+Acropora_022283,NA
+Acropora_022334,positive regulation of translational fidelity
+Acropora_022344,Transmembrane amino acid transporter protein
+Acropora_022380,Belongs to the universal ribosomal protein uS8 family
+Acropora_022459,WD repeat domain 90
+Acropora_022626,dual specificity protein phosphatase
+Acropora_022651,polycystic kidney disease protein 1-like
+Acropora_022698,NA
+Acropora_022750,NA
+Acropora_022804,positive regulation of lung ciliated cell differentiation
+Acropora_022887,NA
+Acropora_022890,NA
+Acropora_023015,NA
+Acropora_023159,structural constituent of nuclear pore
+Acropora_023244,regulation of mitotic cell cycle
+Acropora_023308,NA
+Acropora_023430,factor 5
+Acropora_023438,NA
+Acropora_023492,positive regulation of histone H3-K79 methylation
+Acropora_023511,NA
+Acropora_023565,PIH1 domain-containing protein
+Acropora_023656,NA
+Acropora_023682,NA
+Acropora_023766,diolein transacylation activity
+Acropora_023887,NA
+Acropora_023891,Belongs to the sodium solute symporter (SSF) (TC 2.A.21) family
+Acropora_023907,NA
+Acropora_023984,transmembrane protein 41B
+Acropora_023988,cysteine-tRNA ligase activity
+Acropora_024008,lipoprotein receptor-related protein
+Acropora_024054,V-myc avian myelocytomatosis viral oncogene homolog
+Acropora_024063,NA
+Acropora_024072,ATP-dependent 5'-3' DNA helicase activity
+Acropora_024092,NA
+Acropora_024125,NA
+Acropora_024155,NA
+Acropora_024160,Aminotransferase class-V
+Acropora_024210,NA
+Acropora_024226,NA
+Acropora_024247,NA
+Acropora_024288,NA
+Acropora_024296,"protein O-linked-mannose beta-1,2-N-acetylglucosaminyltransferase 1"
+Acropora_024372,NA
+Acropora_024379,negative regulation of CAMKK-AMPK signaling cascade
+Acropora_024445,NA
+Acropora_024461,sn-glycerol-3-phosphate:ubiquinone-8 oxidoreductase activity
+Acropora_024513,Deoxyribodipyrimidine photo-lyase activity. It is involved in the biological process described with DNA repair
+Acropora_024520,Aldo/keto reductase family
+Acropora_024530,NA
+Acropora_024770,NA
+Acropora_024892,NA
+Acropora_025061,NA
+Acropora_025081,NA
+Acropora_025119,NA
+Acropora_025121,NA
+Acropora_025144,NA
+Acropora_025152,NA
+Acropora_025177,NA
+Acropora_025183,NA
+Acropora_025191,NA
+Acropora_025219,gluconolactonase activity
+Acropora_025271,NA
+Acropora_025346,NA
+Acropora_025386,NA
+Acropora_025450,NA
+Acropora_025486,NA
+Acropora_025618,NA
+Acropora_025683,NA
+Acropora_025756,NA
+Acropora_025822,7 transmembrane receptor (rhodopsin family)
+Acropora_025861,dynein intermediate chain binding
+Acropora_025920,NA
+Acropora_025930,COP9 signalosome assembly
+Acropora_025989,NA
+Acropora_026019,NA
+Acropora_026025,-
+Acropora_026056,supervillin
+Acropora_026058,NA
+Acropora_026084,late endosome to lysosome transport
+Acropora_026091,NA
+Acropora_026127,nucleoside transmembrane transporter activity
+Acropora_026152,ribosomal protein S14
+Acropora_026197,Homeodomain
+Acropora_026300,NA
+Acropora_026309,metal ion binding
+Acropora_026389,peptidyl-prolyl cis-trans isomerase activity
+Acropora_026466,NA
+Acropora_026476,NA
+Acropora_026481,elongation of very long chain fatty acids protein
+Acropora_026529,Glycoprotein 2 (zymogen granule membrane)
+Acropora_026547,Transcription factor
+Acropora_026638,factor 1 alpha subunit inhibitor
+Acropora_026648,NA
+Acropora_026733,NA
+Acropora_026840,NA
+Acropora_026880,G-protein coupled GABA receptor activity. It is involved in the biological process described with G-protein coupled receptor signaling pathway
+Acropora_026911,NA
+Acropora_026952,smooth muscle cell chemotaxis
+Acropora_026956,E3 ubiquitin-protein ligase
+Acropora_026963,NA
+Acropora_026981,NA
+Acropora_026999,NA
+Acropora_027055,NA
+Acropora_027067,NA
+Acropora_027129,NA
+Acropora_027134,NA
+Acropora_027142,NA
+Acropora_027145,NA
+Acropora_027157,NA
+Acropora_027170,NA
+Acropora_027229,NA
+Acropora_027263,NA
+Acropora_027267,NA
+Acropora_027363,NA
+Acropora_027396,guanine nucleotide exchange factor 1
+Acropora_027416,NA
+Acropora_027423,NA
+Acropora_027464,NA
+Acropora_027489,NA
+Acropora_027492,zinc finger CCCH-type containing
+Acropora_027555,G-protein coupled receptor activity
+Acropora_027562,"Organelle biogenesis, Muted-like protein"
+Acropora_027641,NA
+Acropora_027656,Belongs to the sulfotransferase 1 family
+Acropora_027729,four-way junction helicase activity
+Acropora_027759,NA
+Acropora_027782,zinc ion binding
+Acropora_027812,GTPase activator activity
+Acropora_027962,NA
+Acropora_027986,Belongs to the short-chain dehydrogenases reductases (SDR) family
+Acropora_028023,Calponin homology domain
+Acropora_028035,dihydrolipoyllysine-residue acetyltransferase activity
+Acropora_028073,granuloma formation
+Acropora_028112,NA
+Acropora_028114,"phosphatase 4, regulatory subunit"
+Acropora_028141,carnitine O-palmitoyltransferase activity
+Acropora_028248,NA
+Acropora_028356,NA
+Acropora_028370,NA
+Acropora_028439,NA
+Acropora_028541,NA
+Acropora_028542,NA
+Acropora_028604,regulation of mitotic cell cycle
+Acropora_028648,NA
+Acropora_028668,NA
+Acropora_028670,NA
+Acropora_028684,Ribonuclease H protein
+Acropora_028697,"positive regulation of protein localization to chromosome, telomeric region"
+Acropora_028699,Lipocalin-like domain
+Acropora_028811,NA
+Acropora_028867,NA
+Acropora_028903,NA
+Acropora_028937,NA
+Acropora_028959,NA
+Acropora_028997,K02A2.6-like
+Acropora_029017,NA
+Acropora_029223,NA
+Acropora_029253,NA
+Acropora_029310,Transcription factor
+Acropora_029378,regulation of mitotic cell cycle
+Acropora_029392,regulation of mitotic cell cycle
+Acropora_029403,Serine protease 23-like
+Acropora_029411,NA
+Acropora_029442,NA
+Acropora_029455,NA
+Acropora_029543,"Late endosomal lysosomal adaptor, MAPK and MTOR activator 5"
+Acropora_029606,"LSM8 homolog, U6 small nuclear RNA associated"
+Acropora_029621,Glutathione S-transferase mu
+Acropora_029626,NA
+Acropora_029647,NA
+Acropora_029689,protein transport
+Acropora_029717,NA
+Acropora_029734,NA
+Acropora_029822,Phosducin
+Acropora_029853,NA
+Acropora_029857,NA
+Acropora_029910,cellular response to potassium ion starvation
+Acropora_029917,NA
+Acropora_030222,NA
+Acropora_030223,NA
+Acropora_030289,NA
+Acropora_030310,NA
+Acropora_030355,calcium ion binding
+Acropora_030551,NA
+Acropora_030718,DNA binding
+Acropora_030743,NA
+Acropora_030864,NA
+Acropora_030936,NA
+Acropora_031189,nuclear mRNA surveillance of mRNA 3'-end processing
+Acropora_031275,epidermal growth factor receptor
+Acropora_031296,Binds to the 23S rRNA
+Acropora_031414,NA
+Acropora_031463,prolyl 4-hydroxylase
+Acropora_031484,NA
+Acropora_031489,cytoplasmic sequestering of NF-kappaB
+Acropora_031520,NA
+Acropora_031695,Cephalosporin hydroxylase
+Acropora_031768,NA
+Acropora_031782,NA
+Acropora_031820,NA
+Acropora_031873,NA
+Acropora_031879,NA
+Acropora_032168,NA
+Acropora_032202,NA
+Acropora_032252,regulation of mitotic cell cycle
+Acropora_032264,NA
+Acropora_032287,NA
+Acropora_032347,NA
+Acropora_032350,NA
+Acropora_032401,NA
+Acropora_032420,NA
+Acropora_032445,NA
+Acropora_032487,NA
+Acropora_032552,NA
+Acropora_032566,NA
+Acropora_032588,Leucine Rich repeats (2 copies)
+Acropora_032600,NA
+Acropora_032630,"transposition, RNA-mediated"
+Acropora_032651,NA
+Acropora_032681,NA
+Acropora_032842,NA
+Acropora_033023,NA
+Acropora_033092,ATP-dependent RNA helicase
+Acropora_033114,calcium ion binding
+Acropora_033178,NA
+Acropora_033247,NA
+Acropora_033290,NA
+Acropora_033368,NA
+Acropora_033445,meiotic chromosome condensation
+Acropora_033454,NA
+Acropora_033536,NA
+Acropora_033561,NA
+Acropora_033631,NA
+Acropora_033667,NA
+Acropora_033706,NA
+Acropora_033713,"Broad-Complex, Tramtrack and Bric a brac"
+Acropora_033806,NA
+Acropora_033887,NA
+Acropora_033980,NA
+Acropora_34116,NA
+Acropora_34130,NA
+Acropora_34138,NA
+Acropora_34140,distal tubule morphogenesis
+Acropora_34190,Sjogren syndrome antigen B (autoantigen La)
+Acropora_34243,NA
+Acropora_34274,NA
+Acropora_34289,NA
+Acropora_34306,osteoclast fusion
+Acropora_34310,RNA splicing
+Acropora_34342,NA
+Acropora_34382,Reverse transcriptase (RNA-dependent DNA polymerase)
+Acropora_34429,Reverse transcriptase (RNA-dependent DNA polymerase)

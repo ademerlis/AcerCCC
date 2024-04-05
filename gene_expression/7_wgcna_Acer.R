@@ -271,7 +271,7 @@ save(MEs, geneTree, moduleLabels, moduleColors, file = "networkdata_signed.RData
 # plotting correlations with traits:
 load(file = "RData_files/networkdata_signed.RData")
 load(file = "RData_files/wgcnaData.RData");
-traits_n_temp <- read_csv("traits.csv")
+traits_n_temp <- read_csv("WGCNA/traits.csv")
 
 # Define numbers of genes and samples
 nGenes = ncol(datt); #18192
@@ -434,6 +434,7 @@ design %>%
   rownames_to_column(var="Sample_ID") %>% 
   filter(!Sample_ID == "Acer_1099") -> design
 
+#plotting eigengene expression
  MEs %>%
 	  tibble::rownames_to_column("accession_code") %>%
 	  dplyr::inner_join(design %>%
@@ -483,7 +484,6 @@ which.module="brown2"
 which.module="darkseagreen2"
 which.module="magenta3"
 
-
 datME=MEs
 datExpr=datt
 quartz()
@@ -498,8 +498,9 @@ ylab="eigengene expression",xlab="sample")
 
 length(datExpr[1,moduleColors==which.module ]) # brown2 = 482 genes
 
-as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
-  rownames_to_column(var="gene") %>% 
+as.data.frame(datExpr[,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="Sample_ID") %>% 
+  pivot_longer(Acropora_000009:Acropora_34572, names_to="gene", values_to="vst_expression") %>% 
   write_csv("brown2_genelist.csv")
 
 length(datExpr[1,moduleColors==which.module ]) # magenta3 = 735 genes

@@ -1,0 +1,72 @@
+
+from https://github.com/anampc/NCRMP_2023_PR/blob/main/PR_2023_Field-Report.Rmd
+
+```{r}
+library(tidyverse)
+library(leaflet)
+library(webshot)
+library(htmlwidgets)
+```
+
+
+```{r}
+# CCC = -80.144812, 25.766626
+# KB Nursery = -80.0987, 25.6763
+
+#florida bounds
+dt <- data.frame(lon = c(-83, -79), 
+                 lat = c(24, 30), 
+                 var = c("a", "b")
+)
+
+dt_zoomedin <- data.frame(lon = c(-80.5, -80), 
+                 lat = c(25.5,26), 
+                 var = c("a", "b")
+)
+```
+
+```{r makeAmap, echo=FALSE, fig.width = 9, fig.height = 4, fig.align='center'}
+
+map<-leaflet(dt_zoomedin, width = '300') %>% 
+  addTiles() %>%
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+  addScaleBar(position = "topright") %>%
+  fitBounds(lng1=-80.2, lat=25.4, lng2=-80, lat2=25.77)%>%
+  setView(lng = -80.144812, lat = 25.766626, zoom = 11) %>% 
+  leaflet::addCircleMarkers(lng = -80.0987, lat =  25.6763, 
+                            radius = 5) %>%
+  leaflet::addCircleMarkers(lng = -80.144812, lat = 25.766626, 
+                            radius = 5)
+
+map  
+saveWidget(map, "port.html", selfcontained = TRUE)
+
+webshot("port.html", "port.pdf")
+
+```
+
+attempt with ggOceanMaps (not high enough resolution)
+```{r}
+dt <- data.frame(lon = c(-83, -79), 
+                 lat = c(24, 30), 
+                 var = c("a", "b")
+)
+
+basemap(data = dt) + 
+  geom_point(data = dt, aes(x = -80.144812, y = 25.766626), color = "red", size = 3) +
+  theme(panel.background = element_rect(fill = "lightblue"),
+        panel.ontop = FALSE)
+ggsave("mapofflorida.pdf")
+
+dt_zoomedin <- data.frame(lon = c(-80.5, -80), 
+                 lat = c(25.5,26), 
+                 var = c("a", "b")
+)
+  
+basemap(data = dt_zoomedin) + 
+  geom_point(data = dt, aes(x = -80.144812, y = 25.766626), color = "red", size = 3) +
+  theme(panel.background = element_rect(fill = "lightblue"),
+        panel.ontop = FALSE)
+#ugh you can't see the port of miami at all
+```
+

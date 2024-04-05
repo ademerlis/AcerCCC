@@ -109,6 +109,8 @@ pathway_categories_df <- pathway_categories_df %>%
 
 KEGG_enrich_CvN_categories <- left_join(KEGG_enrich_CvN@result, pathway_categories_df, by = "Description")
 
+#write_csv(KEGG_enrich_CvN_categories, "KEGG_CvN_results_withcategories.csv")
+
 length(unique(KEGG_enrich_CvN_categories$Category)) #44 unique categories
 ```
 
@@ -131,8 +133,26 @@ ggplot(., aes(x = reorder(Description, GeneRatio), y = GeneRatio)) +
 labs(x = "MAP Description", y = "Gene Ratio", title = "CCC vs. Nursery") +
   coord_flip() +
   scale_colour_gradient(low="blue", high="red") 
-ggsave("CCCvsnursery_KEGGenrichment_p0.1.pdf")
 
+#ggsave("CCCvsnursery_KEGGenrichment_p0.1.pdf")
+
+```
+### match genes back to KO ids
+```{r}
+gene_annot <- read.table(file="bioinformatics/Acervicornis_iso2geneName.tab", sep = "\t", quote="", fill=FALSE)
+gene_annot %>% 
+  rename(gene = V1, annot=V2) -> gene_annot
+
+map04915_ko_ids <- unlist(strsplit(KEGG_enrich_CvN_categories$geneID[KEGG_enrich_CvN_categories$ID == "map04915"], "/"))
+
+KEGG_enrich_CvN_categories %>% 
+  filter(ID == "map04915" | ID == "map04916" | ID == "map04928") %>% 
+  mutate(keggids=strsplit(geneID,  "/")) %>% 
+  unnest(keggids) %>%
+  rename(KO = keggids) %>%
+  inner_join(kegg.list, by = "KO") %>% 
+  left_join(.,gene_annot, by = "gene") %>% 
+  write_csv("KEGG_CvN_results_withgenes.csv")
 ```
 
 
