@@ -60,6 +60,12 @@ Location_CCC_vs_nursery.fc %>% right_join(kegg.list, by = "gene") %>%
   na.omit() %>% #412 genes
   distinct(KO, .keep_all = TRUE) %>% #365 distinct KEGG terms
   column_to_rownames(var = "KO") -> CCCvsnursery_KEGG_DGEs
+
+#make csv file of DGEs with annot and KEGG term so this can be searched in the KEGG database (https://www.genome.jp/kegg/mapper/search.html)
+
+#Location_CCC_vs_nursery.fc %>% right_join(kegg.list, by = "gene") %>% 
+ # right_join(., CCC_vs_Nursery_DGEs, by = "gene") %>% 
+ # write_csv("DGEs_annot_KEGGterms.csv")
 ```
 
 

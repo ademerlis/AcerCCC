@@ -373,6 +373,7 @@ plot_grid(m1,m2,m3,m4,nrow=1)
 
 # DGEs of interest
 ```{r}
+Location_CCC_vs_Nursery_lfcshrink <- read_csv("results/resLFCLocation_CCC_vs_nursery_annotDGEs_padj05.csv")
 Location_CCC_vs_Nursery_lfcshrink %>% 
   arrange(desc(log2FoldChange)) 
 
@@ -382,6 +383,7 @@ Location_CCC_vs_Nursery_lfcshrink %>%
 # Acropora_015083 = unfolded protein binding
 #Acropora_011526 = T cell activation via T cell receptor contact with antigen bound to MHC molecule on antigen presenting cell	
 
+
 Location_CCC_vs_Nursery_lfcshrink %>% 
   arrange(log2FoldChange)
 #nothing sticks out to me 
@@ -389,12 +391,14 @@ Location_CCC_vs_Nursery_lfcshrink %>%
 
 # normalize gene counts
 ```{r}
-dds <- estimateSizeFactors(dds)
-normalized_counts <- counts(dds, normalized=TRUE)
+results <- results(dds)
 
 # Subset normalized counts based on a criterion, e.g., adjusted p-value less than 0.05
 # First, identify which genes meet the criterion
 significant_genes <- rownames(results[!is.na(results$padj) & results$padj < 0.05, ])
+
+normalized_counts %>% 
+  column_to_rownames(var="gene") ->normalized_counts
 
 # Then, subset the normalized counts based on these genes
 significant_counts <- normalized_counts[significant_genes, ]
