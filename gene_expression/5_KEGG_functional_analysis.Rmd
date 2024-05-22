@@ -5,7 +5,7 @@ date: "2023-01-23"
 output: html_document
 ---
 
-This code is adapted from [Dr. Natalia Andrade Rodriguez](https://github.com/China2302/3_prime_RNAseq_O.faveolata/blob/main/08_functional_analysis.Rmd) 
+This code is adapted from [Dr. Natalia Andrade Rodriguez](https://github.com/China2302/3_prime_RNAseq_O.faveolata/blob/main/09_functional_analysis.Rmd) 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
