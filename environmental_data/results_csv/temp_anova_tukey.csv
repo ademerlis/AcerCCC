@@ -1,22 +1,22 @@
   Tukey multiple comparisons of means
     95% family-wise confidence level
 
-Fit: aov(formula = Temperature ~ site * Season, data = alldata_2020_2021)
+Fit: aov(formula = Temperature ~ site * Season, data = alldata_2021)
 
 $site
-                   diff       lwr       upr p adj
-Nursery-CURES 0.4163177 0.3365937 0.4960418     0
+                        diff       lwr       upr p adj
+Nursery-CURES_tilt 0.3317556 0.2678555 0.3956557     0
 
 $Season
-            diff      lwr      upr p adj
-Wet-Dry 4.143888 4.058729 4.229047     0
+          diff      lwr      upr p adj
+Wet-Dry 3.0745 3.003484 3.145516     0
 
 $`site:Season`
-                              diff        lwr       upr     p adj
-Nursery:Dry-CURES:Dry   0.82302483  0.6959699 0.9500798 0.0000000
-CURES:Wet-CURES:Dry     4.53164302  4.3777073 4.6855787 0.0000000
-Nursery:Wet-CURES:Dry   4.54801550  4.3855845 4.7104465 0.0000000
-CURES:Wet-Nursery:Dry   3.70861819  3.5547536 3.8624828 0.0000000
-Nursery:Wet-Nursery:Dry 3.72499067  3.5626271 3.8873542 0.0000000
-Nursery:Wet-CURES:Wet   0.01637248 -0.1677882 0.2005332 0.9957998
+                                   diff         lwr       upr     p adj
+Nursery:Dry-CURES_tilt:Dry    1.1282234  0.97043791 1.2860088 0.0000000
+CURES_tilt:Wet-CURES_tilt:Dry 3.6308473  3.49915724 3.7625373 0.0000000
+Nursery:Wet-CURES_tilt:Dry    3.6469368  3.51531270 3.7785608 0.0000000
+CURES_tilt:Wet-Nursery:Dry    2.5026239  2.37093388 2.6343139 0.0000000
+Nursery:Wet-Nursery:Dry       2.5187134  2.38708933 2.6503375 0.0000000
+Nursery:Wet-CURES_tilt:Wet    0.0160895 -0.08275838 0.1149374 0.9753589
 

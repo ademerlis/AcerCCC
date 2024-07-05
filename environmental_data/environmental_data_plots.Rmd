@@ -50,7 +50,8 @@ cures_frame_tilt_temp %>%
   dplyr::select(!Date:Datetime) %>% 
   dplyr::rename(Temperature = `Temperature (C)`) -> cures_frame_tilt_temp
 
-max(cures_frame_tilt_temp$Datetime_EST)
+max(cures_frame_tilt_temp$Datetime_EST) #"2022-02-01 12:00:00 EST"
+min(cures_frame_tilt_temp$Datetime_EST) #"2020-10-12 20:00:00 EDT"
 ```
 
 plot all data to visualize
@@ -59,9 +60,8 @@ ggplot(cures_frame_tilt_temp, aes(x=Datetime_EST, y=Temperature)) +
   geom_point()
 ```
 
-
+ARCHIVE
 ```{r}
-
 #filter out first two days because it was logging very high (abnormal) numbers
 cures_frame_tilt_temp %>% 
   filter(Datetime_EST >= "2020-10-13 14:00:00") -> cures_frame_tilt_temp
@@ -168,7 +168,7 @@ CURES_SeaFET %>%
   rename(Temperature = `0303-Temp`) %>% 
   mutate(site = "CURES_seaFET") -> CURES_SeaFET
 
-min(CURES_SeaFET$Datetime_EST)
+min(CURES_SeaFET$Datetime_EST) #"2020-08-04 18:00:13 EDT"
 ```
 
 plot all data to visualize
@@ -487,6 +487,133 @@ filtered_KB_data %>%
 ```
 
 
+## import CRW daily SST data from 2020-2021
+
+```{r}
+   # read all the .nc files 
+    flist_2020<-list.files("raw_data/CRW_NOAA_data/daily/sst/2020",pattern='*.nc',full.names=TRUE)
+  # i deleted any .nc files that were causing issues with importing (two files)
+      
+  # brick them 
+    ras_2020<-lapply(flist_2020, stack)
+    
+   # KB Nursery
+  lat_KB <- (25.6763)
+  lon_KB <- (-80.0987)
+  extract.pts_KB <- cbind(lon_KB,lat_KB)
+  
+  #CCC 
+  lat.CCC <- (25.766626)
+  lon.CCC <- (-80.144812)
+  extract_CCC <- cbind(lon.CCC, lat.CCC)
+  
+  ## Extract data by coordinates 
+    ext_nursery <- lapply(ras_2020,raster::extract,extract.pts_KB)
+    head(ext_nursery)
+    nursery_SST_2020 <- unlist(ext_nursery, recursive = FALSE)
+    head(nursery_SST_2020)
+    
+  ## Extract data by coordinates 
+    ext_CCC <- lapply(ras_2020,raster::extract,extract_CCC)
+    head(ext_CCC)
+    CCC_SST_2020 <- unlist(ext_CCC, recursive = FALSE)
+    head(CCC_SST_2020)
+    
+     # read all the .nc files 
+    flist_2021<-list.files("raw_data/CRW_NOAA_data/daily/sst/2021",pattern='*.nc',full.names=TRUE)
+       # i deleted any .nc files that were causing issues with importing (two files)
+    
+  # brick them 
+    ras_2021<-lapply(flist_2021, stack)
+    
+   # KB Nursery
+  lat_KB <- (25.6763)
+  lon_KB <- (-80.0987)
+  extract.pts_KB <- cbind(lon_KB,lat_KB)
+  
+  #CCC 
+  lat.CCC <- (25.766626)
+  lon.CCC <- (-80.144812)
+  extract_CCC <- cbind(lon.CCC, lat.CCC)
+  
+  ## Extract data by coordinates 
+    ext_nursery <- lapply(ras_2021,raster::extract,extract.pts_KB)
+    head(ext_nursery)
+    nursery_SST_2021 <- unlist(ext_nursery, recursive = FALSE)
+    head(nursery_SST_2021)
+    
+     ## Extract data by coordinates 
+    ext_CCC <- lapply(ras_2021,raster::extract,extract_CCC)
+    head(ext_CCC)
+    CCC_SST_2021 <- unlist(ext_CCC, recursive = FALSE)
+    head(CCC_SST_2021)
+    
+save(ras_2020, ras_2021, file = "combined_rasters.Rdata")
+#need to also save the 2020 and 2021 nursery and CCC files next time, otherwise you have to rerun the raster::extract step which takes forever, especially for 2021
+```
+
+```{r}
+# Create a date list 
+    Dates_2020<-seq.Date(as.Date("2020-10-01"), as.Date("2020-12-29"), by = "day")
+    Dates_2020<-as.character(Dates_2020)
+    #head(Date)
+      
+# Bind GPS points and Dates    Date.location <- merge(pts, Date)
+    nursery_SST_2020.data<-data.frame(Dates_2020, nursery_SST_2020)
+    nursery_SST_2020.data$Date<-as.Date(nursery_SST_2020.data$Dates_2020)
+    head(nursery_SST_2020.data)  
+    nursery_SST_2020.data %>% 
+      rename(Temperature = nursery_SST_2020) %>% 
+      mutate(site = "Nursery") ->nursery_SST_2020.data
+    
+    CCC_SST_2020.data <- data.frame(Dates_2020, CCC_SST_2020)
+    CCC_SST_2020.data$Date <- as.Date(CCC_SST_2020.data$Dates_2020)
+    
+    head(CCC_SST_2020.data)
+    
+    CCC_SST_2020.data %>% 
+      rename(Temperature = CCC_SST_2020) %>% 
+      mutate(site = "CCC") -> CCC_SST_2020.data
+    
+    Dates_2021<-seq.Date(as.Date("2021-01-01"), as.Date("2021-11-30"), by = "day")
+    Dates_2021<-as.character(Dates_2021)
+    #head(Date)
+    
+    nursery_SST_2021.data<-data.frame(Dates_2021, nursery_SST_2021)
+    nursery_SST_2021.data$Date<-as.Date(nursery_SST_2021.data$Dates_2021)
+    head(nursery_SST_2021.data)  
+    nursery_SST_2021.data %>% 
+      rename(Temperature = nursery_SST_2021) %>% 
+      mutate(site = "Nursery") ->nursery_SST_2021.data
+    
+    CCC_SST_2021.data <- data.frame(Dates_2021, CCC_SST_2021)
+    CCC_SST_2021.data$Date <- as.Date(CCC_SST_2021.data$Dates_2021)
+    
+    head(CCC_SST_2021.data)
+    
+    CCC_SST_2021.data %>% 
+      rename(Temperature = CCC_SST_2021) %>% 
+      mutate(site = "CCC") -> CCC_SST_2021.data
+    
+  full_join(nursery_SST_2020.data, nursery_SST_2021.data) %>% 
+    select(!c(Dates_2020, Dates_2021)) %>% 
+    full_join(., nursery_SST_2021.data) %>% 
+    select(!Dates_2021) %>% 
+    full_join(., CCC_SST_2021.data)%>% 
+    select(!Dates_2021) -> CRW_SST_2020_2021
+  
+  # i forgot the CCC_SST_2020 dataset too....
+  
+  CRW_SST_2020_2021 <- read_csv("CRW_SST_2020_2021.csv")
+  
+  full_join(CRW_SST_2020_2021, CCC_SST_2020.data) %>% 
+    select(!Dates_2020) %>% 
+    arrange(Date) -> CRW_SST_2020_2021
+  
+  write_csv(CRW_SST_2020_2021, "CRW_SST_2020_2021.csv")
+```
+
+
 ### ARCHIVE 
 
 plotting and cleaning data 
@@ -596,7 +723,7 @@ all_temp_data %>%
   scale_color_manual(values = c("CURES_tilt" = "orange", "Nursery" = "darkblue")) 
 ```
 
-# Radar plot
+# Radar plot (no DHW)
 
 June 20, 2021 -- Dec 1, 2021
 ```{r}
@@ -607,7 +734,7 @@ all_temp_data %>%
                             as.Date(Datetime_EST) >= "2021-10-16" ~ "Dry")) -> alldata_2021
 ```
 
-## temp summary
+## temp summary (using hourly data)
 
 ### Site and Season (2021)
 ```{r}
@@ -737,11 +864,6 @@ Daily.range %>%
   group_by(site) %>% 
   dplyr::summarise(d.above.30.5 = n()) -> temp.d.30.5 #they are basically the same
 
-Daily.range %>% 
-  filter(Temperature.max > 31) %>% 
-  group_by(site) %>% 
-  dplyr::summarise(d.above.31 = n()) -> temp.d.31 #greater difference here
-
 full_join(temp.summary, temp.d.range) %>% 
   full_join(., temp.d.30.5) -> temp_summary
 
@@ -782,6 +904,7 @@ radarchart(temp_summary_percent, axistype=1 ,
             vlcex=0.9
 )
 ```
+
 
 # MMM
 
@@ -921,6 +1044,8 @@ ggplot(filtered_KB_data_20202021, aes(x=Datetime_EST, y=Temperature, color = sit
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 # yay looks good
 ```
+
+
 ```{r}
 filtered_KB_data_20202021 %>% 
   dplyr::select(!c(Light, z_score)) -> filtered_KB_data_20202021
@@ -946,7 +1071,7 @@ filtered_KB_data_20202021 %>%
 ```
 
 
-## Extract MMM from SST
+## Extract MMM from historical SST (1981-2012)
 
 ```{r Extract_OISST_data, cache=TRUE}
  library(raster)
@@ -974,6 +1099,9 @@ library(ncdf4)
   #MMM <- raster::extract(MMM.data, extract.pts,method="bilinear")
   MMM <- raster::extract(MMM.data, extract.pts_KB,method="simple") # MMM for KB is 29.53
   MMM_CCC <- raster::extract(MMM.data, extract_CCC,method="simple") # MMM for CCC is 29.54
+  
+  MMM_SST_1981_2012_Nursery = 29.53
+  MMM_SST_1981_2012_CCC = 29.54
 
   #write.csv(MMM, "KB_CRW_MMM_1985-2012.csv", row.names=FALSE)
 
@@ -981,7 +1109,66 @@ library(ncdf4)
 ```
 
 
-### plot all the MMMs with the in-situ data
+## Calculate MMM from 2020-2021 SST CRW data
+```{r}
+CRW_SST_2020_2021$Month <- month(CRW_SST_2020_2021$Date)
+CRW_SST_2020_2021$Year <- year(CRW_SST_2020_2021$Date)
+
+# Calculate month-year mean SST
+
+MM.CRW_SST_2020_2021 <- CRW_SST_2020_2021 %>% 
+  group_by(Month, Year, site) %>% 
+summarize(MM = mean(Temperature, na.rm = TRUE))
+
+# Calculate monthly mean SST
+
+monthlyclimatology<-MM.CRW_SST_2020_2021 %>% 
+  group_by(Month, site) %>%
+    summarize(Clima_M = mean(MM, na.rm = TRUE))
+
+monthlyclimatology %>% 
+  filter(site == "Nursery") -> monthlyclimatology_nursery
+
+monthlyclimatology %>% 
+  filter(site == "CCC") -> monthlyclimatology_CCC
+
+# Get maximum monthly mean (MMM)
+  MMM_SST_20202021_nursery <-max(monthlyclimatology_nursery$Clima_M) #30.04
+  MMM_SST_20202021_CCC <- max(monthlyclimatology_CCC$Clima_M) #30.03
+```
+
+
+### plot the mean daily temp for in-situ data and 2020-2021 SST data
+```{r}
+CRW_SST_2020_2021 %>% 
+  mutate(site = case_when(site == "Nursery" ~ "20202021_SST_Nursery",
+                          site == "CCC" ~ "20202021_SST_CCC")) -> CRW_SST_2020_2021
+
+full_join(filtered_KB_data_20202021, cures_frame_tilt_temp) %>%
+  mutate(Date = as.Date(Datetime_EST)) %>% 
+  full_join(., CRW_SST_2020_2021) %>% 
+  group_by(Date, site) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  select(!c(Datetime_EST, Month, Year, Temperature)) %>%
+  distinct() %>% 
+ filter(Date < "2021-12-01" & Date > "2021-06-20") %>% 
+  ggplot(., aes(x=Date, y=mean_daily_temp, color = site)) +
+  geom_line() +
+  theme_bw() +
+  labs(x="Date", y = "Mean Daily Temp (ºC)") +
+  scale_color_manual(values = c("CURES_tilt" = "orange", "Nursery" = "darkblue", "20202021_SST_Nursery" = "lightblue", "20202021_SST_CCC" = "aquamarine")) +
+  geom_hline(yintercept = 29.54, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = 30.49, linetype = "dashed", color = "darkblue") +
+  geom_hline(yintercept = 30.51, linetype = "dashed", color = "orange") +
+  geom_hline(yintercept = 30.04, linetype = "dashed", color = "lightblue") +
+  annotate("text", x = max(CRW_SST_2020_2021$Date) + 1, y = 29.3, label = "SST 1981-2012 MMM", hjust = 1.1, color = "grey") +
+  annotate("text", x = max(CRW_SST_2020_2021$Date) + 1, y = 30.3, label = "Nursery HOBO MMM", hjust = 1.1, color = "darkblue") +
+  annotate("text", x = max(CRW_SST_2020_2021$Date) + 1, y = 30.7, label = "CCC Tilt MMM", hjust = 1.1, color = "orange") +
+  annotate("text", x = max(CRW_SST_2020_2021$Date) + 2, y = 29.9, label = "SST 2020-2021 MMM", hjust = 1.1, color = "lightblue") 
+#ggsave("CURES_nursery_SST_dailytemp_allMMMs.pdf", width=10, height = 7)
+```
+
+### plot bleaching thresholds (MMM + 1ºC)
 ```{r}
 full_join(filtered_KB_data_20202021, cures_frame_tilt_temp) %>%
  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-20") %>% 
@@ -993,40 +1180,76 @@ full_join(filtered_KB_data_20202021, cures_frame_tilt_temp) %>%
   geom_hline(yintercept = 29.54, linetype = "dashed", color = "grey") +
   geom_hline(yintercept = 30.49, linetype = "dashed", color = "darkblue") +
   geom_hline(yintercept = 30.51, linetype = "dashed", color = "orange") +
-  geom_hline(yintercept = 32.25, linetype = "dashed", color = "black") +
-  annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 29.3, label = "SST MMM", hjust = 1.1, color = "grey") +
+  geom_hline(yintercept = 30.54, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = 31.49, linetype = "dashed", color = "darkblue") +
+  geom_hline(yintercept = 31.51, linetype = "dashed", color = "orange") +
+  geom_hline(yintercept = 30.04, linetype = "dashed", color = "lightblue") +
+  geom_hline(yintercept = 31.04, linetype = "dashed", color = "lightblue") +
+  annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 29.3, label = "SST 1981-2012 MMM", hjust = 1.1, color = "grey") +
   annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 30.2, label = "Nursery HOBO MMM", hjust = 1.1, color = "darkblue") +
   annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 30.7, label = "CCC Tilt MMM", hjust = 1.1, color = "orange") +
-  annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 32, label = "VK Buoy MMM", hjust = 1.1, color = "black") 
-#ggsave("CURES_nursery_temp_allMMMs.png", width=10, height = 7)
-
+    annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 30.4, label = "1981-2012 SST bleaching threshold", hjust = 1.1, color = "grey") +
+  annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 31.3, label = "Nursery bleaching threshold", hjust = 1.1, color = "darkblue") +
+  annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 1, y = 31.7, label = "CCC bleaching theshold", hjust = 1.1, color = "orange") +
+  annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 2, y = 29.9, label = "SST 2020-2021 MMM", hjust = 1.1, color = "lightblue") +
+  annotate("text", x = max(filtered_KB_data_20202021$Datetime_EST) + 2, y = 30.9, label = "SST 2020-2021 bleaching threshold", hjust = 1.1, color = "lightblue") 
+ggsave("CURES_nursery_temp_allMMMs_bleachingthresholds.png", width=10, height = 7)
 ```
-
-
-
 
 
 ### calculate SST DHW
 
 from https://github.com/anampc/DHW_Uva/blob/master/A.Temperature_DHW.Rmd
+
+#### historical (1981-2012) SST
 ```{r}
-alldata_2020_2021_sep %>% 
-  dplyr::select(!c(Time, Season)) %>% 
-  dplyr::group_by(Date, site) %>% 
+#for the DHW rollapplyr function it is critical that the dates are in ascending order and that the sites are separated
+
+#first do nursery
+filtered_KB_data_20202021 %>% 
+  mutate(site = case_when(site == "Nursery" ~ "Nursery_SST_19812012")) %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  arrange(Date) %>% 
+  dplyr::group_by(Date) %>% 
   mutate(mean_daily_temp = mean(Temperature)) %>% 
-  dplyr::select(!Temperature) %>% 
+  dplyr::select(!c(Temperature, Time, Month, Year)) %>% 
   distinct() %>% 
-  mutate(HotSpot = case_when(site == "Nursery" ~ (mean_daily_temp - 29.53),
-                             site == "CURES" ~ (mean_daily_temp - 29.54))) %>% 
+  mutate(HotSpot = case_when(site == "Nursery_SST_19812012" ~ (mean_daily_temp - 29.53))) %>% 
   mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
   mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
-  mutate(Weeks_Stress = Stress/7)  -> Long.data.DHW
+  mutate(Weeks_Stress = Stress/7) -> Long.data.DHW.nurserySST
+  
+Long.data.DHW.nurserySST$DHW<-rollapplyr(Long.data.DHW.nurserySST$Weeks_Stress,list(-(83:0)),sum,fill=NA)
 
-Long.data.DHW$DHW<-rollapplyr(Long.data.DHW$Weeks_Stress,list(-(83:0)),sum,fill=NA)
+ggplot(Long.data.DHW.nurserySST, aes(x=ymd(Date))) + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed")+
+    geom_line(aes(y = DHW)) #ok this looks better
+  
+# now do CCC
+curestilt_20202021 %>% 
+  mutate(site = case_when(site == "CURES_tilt" ~ "CCC_SST_19812012")) %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  arrange(Date) %>% 
+  dplyr::group_by(Date) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  dplyr::select(!c(Temperature, Time)) %>% 
+  distinct() %>% 
+  mutate(HotSpot = case_when(site == "CCC_SST_19812012" ~ (mean_daily_temp - 29.54))) %>% 
+  mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
+  mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
+  mutate(Weeks_Stress = Stress/7)  -> Long.data.DHW.CCCSST
+
+Long.data.DHW.CCCSST$DHW<-rollapplyr(Long.data.DHW.CCCSST$Weeks_Stress,list(-(83:0)),sum,fill=NA)
+
+ggplot(Long.data.DHW.CCCSST, aes(x=ymd(Date))) + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed")+
+    geom_line(aes(y = DHW)) #ok this looks better
 
 
-# Plot data
-Long.data.DHW %>% 
+# Plot just DHW SST data
+full_join(Long.data.DHW.nurserySST, Long.data.DHW.CCCSST) %>% 
   filter(ymd(Date) >= "2021-01-01") %>% 
 ggplot(., aes(x=ymd(Date))) + 
     geom_hline(yintercept=8, linetype="dashed")+
@@ -1035,21 +1258,294 @@ ggplot(., aes(x=ymd(Date))) +
     ylab("DWH (C-week)  /  Temperature (C)") +
     xlab("Date") +
     theme_classic() +
-  scale_color_manual(values = c("CURES" = "orange", "Nursery" = "darkblue"))
+  scale_color_manual(values = c("CCC_SST_19812012" = "orange", "Nursery_SST_19812012" = "darkblue"))
 #ggsave("DHW_linegraph.pdf")
 
-# Highest DWH per year
-    MaxDHW<-as.data.frame(Long.data.DHW %>%
-          group_by(site, year(Date)) %>%
-          summarize(max = max(DHW, na.rm = TRUE)))
+# Highest DHW per year
+max(Long.data.DHW.nurserySST$Date) #"2021-11-30"
+max(Long.data.DHW.CCCSST$Date) #"2021-11-30"
+#this is only the span of january to december 2021
+    MaxDHW_SST<-full_join(Long.data.DHW.nurserySST, Long.data.DHW.CCCSST) %>% 
+  filter(ymd(Date) >= "2021-01-01") %>% 
+          group_by(site) %>%
+          summarize(max = max(DHW, na.rm=TRUE))
+```
 
-    MaxDHW %>% 
-      filter(`year(Date)` == "2021") %>% 
-      rename(DHW = max) -> MaxDHW
+#### 2020-2021 SST
+```{r}
+#nursery 
+filtered_KB_data_20202021 %>% 
+  mutate(site = case_when(site == "Nursery" ~ "Nursery_SST_20202021")) %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  arrange(Date) %>% 
+  dplyr::group_by(Date) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  dplyr::select(!c(Temperature, Time, Month, Year)) %>% 
+  distinct() %>% 
+  mutate(HotSpot = case_when(site == "Nursery_SST_20202021" ~ (mean_daily_temp - MMM_SST_20202021_nursery))) %>% 
+  mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
+  mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
+  mutate(Weeks_Stress = Stress/7) -> Long.data.DHW.nurserySST_2021
+  
+Long.data.DHW.nurserySST_2021$DHW<-rollapplyr(Long.data.DHW.nurserySST_2021$Weeks_Stress,list(-(83:0)),sum,fill=NA)
+
+ggplot(Long.data.DHW.nurserySST_2021, aes(x=ymd(Date))) + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed")+
+    geom_line(aes(y = DHW)) #ok this looks better
+
+max(Long.data.DHW.nurserySST_2021$DHW, na.rm = TRUE)
+
+# now do CCC
+curestilt_20202021 %>% 
+  mutate(site = case_when(site == "CURES_tilt" ~ "CCC_SST_20202021")) %>%
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  arrange(Date) %>% 
+  dplyr::group_by(Date) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  dplyr::select(!c(Temperature, Time)) %>% 
+  distinct() %>% 
+  mutate(HotSpot = case_when(site == "CCC_SST_20202021" ~ (mean_daily_temp - MMM_SST_20202021_CCC))) %>% 
+  mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
+  mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
+  mutate(Weeks_Stress = Stress/7)  -> Long.data.DHW.CCCSST_2021
+
+Long.data.DHW.CCCSST_2021$DHW<-rollapplyr(Long.data.DHW.CCCSST_2021$Weeks_Stress,list(-(83:0)),sum,fill=NA)
+
+ggplot(Long.data.DHW.CCCSST_2021, aes(x=ymd(Date))) + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed")+
+    geom_line(aes(y = DHW)) #ok this looks better
+
+max(Long.data.DHW.CCCSST_2021$DHW, na.rm = TRUE)
 ```
 
 
-### make a new radar plot with SST DHW
+### calculate in-situ DHW
+```{r}
+#first do nursery
+filtered_KB_data_20202021 %>% 
+  mutate(site = case_when(site == "Nursery" ~ "Nursery_insitu")) %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  arrange(Date) %>% 
+  dplyr::group_by(Date) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  dplyr::select(!c(Temperature, Time, Month, Year)) %>% 
+  distinct() %>% 
+  mutate(HotSpot = case_when(site == "Nursery_insitu" ~ (mean_daily_temp - MMM_nursery_HOBO))) %>% 
+  mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
+  mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
+  mutate(Weeks_Stress = Stress/7) -> Long.data.DHW.nurseryinsitu
+  
+Long.data.DHW.nurseryinsitu$DHW<-rollapplyr(Long.data.DHW.nurseryinsitu$Weeks_Stress,list(-(83:0)),sum,fill=NA)
+
+max(Long.data.DHW.nurseryinsitu$DHW,  na.rm = TRUE) #0
+
+ggplot(Long.data.DHW.nurseryinsitu, aes(x=ymd(Date))) + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed")+
+    geom_line(aes(y = DHW)) #zero
+
+# now do CCC
+curestilt_20202021 %>% 
+  mutate(site = case_when(site == "CURES_tilt" ~ "CCC_insitu")) %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
+  arrange(Date) %>% 
+  dplyr::group_by(Date) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  dplyr::select(!c(Temperature, Time)) %>% 
+  distinct() %>% 
+  mutate(HotSpot = case_when(site == "CCC_insitu" ~ (mean_daily_temp - MMM_CCC_tilt))) %>% 
+  mutate(HotSpot = ifelse(HotSpot >= 0, HotSpot, 0)) %>% 
+  mutate(Stress = ifelse(HotSpot >= 1, HotSpot, 0)) %>% 
+  mutate(Weeks_Stress = Stress/7)  -> Long.data.DHW.CCCinsitu
+
+Long.data.DHW.CCCinsitu$DHW<-rollapplyr(Long.data.DHW.CCCinsitu$Weeks_Stress,list(-(83:0)),sum,fill=NA)
+
+ggplot(Long.data.DHW.CCCinsitu, aes(x=ymd(Date))) + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed")+
+    geom_line(aes(y = DHW)) #the tiniest blip
+
+max(Long.data.DHW.CCCinsitu$DHW, na.rm = TRUE)
+```
+
+
+### plot all DHW together
+```{r}
+rbind(Long.data.DHW.CCCinsitu, Long.data.DHW.nurseryinsitu) %>% 
+  full_join(., Long.data.DHW.CCCSST) %>% 
+  rbind(., Long.data.DHW.CCCSST_2021, Long.data.DHW.nurserySST, Long.data.DHW.nurserySST_2021) %>% 
+ mutate(site = factor(site, levels = c("CCC_SST_19812012", "Nursery_SST_19812012", "CCC_SST_20202021", "CCC_insitu", "Nursery_SST_20202021", "Nursery_insitu"))) %>% 
+  ggplot(., aes(x=ymd(Date), y=DHW, color = site)) + 
+  geom_line() + 
+    geom_hline(yintercept=8, linetype="dashed")+
+    geom_hline(yintercept=4, linetype="dashed") +
+  theme_bw()
+#ggsave("all_DHWs.pdf", width = 10, height = 7)
+```
+
+```{r}
+rbind(Long.data.DHW.CCCinsitu, Long.data.DHW.nurseryinsitu) %>% 
+  full_join(., Long.data.DHW.CCCSST) %>% 
+  rbind(., Long.data.DHW.CCCSST_2021, Long.data.DHW.nurserySST, Long.data.DHW.nurserySST_2021) %>% 
+ mutate(site = factor(site, levels = c("CCC_SST_19812012", "Nursery_SST_19812012", "CCC_SST_20202021", "CCC_insitu", "Nursery_SST_20202021", "Nursery_insitu"))) %>% 
+  group_by(site) %>% 
+  summarise(maxDHW = max(DHW, na.rm = TRUE)) -> max_DHW_alltypes
+```
+
+
+
+from this point on, use in-situ data + daily temps from 2020-2021 SST + both MMMs
+
+
+## radar plot
+
+June 20, 2021 -- Dec 1, 2021
+```{r}
+CRW_SST_2020_2021 %>% 
+  mutate(site = case_when(site == "Nursery" ~ "20202021_SST_Nursery",
+                          site == "CCC" ~ "20202021_SST_CCC")) -> CRW_SST_2020_2021
+
+full_join(filtered_KB_data_20202021, cures_frame_tilt_temp) %>%
+  mutate(Date = as.Date(Datetime_EST)) %>% 
+  full_join(., CRW_SST_2020_2021) %>% 
+  group_by(Date, site) %>% 
+  mutate(mean_daily_temp = mean(Temperature)) %>% 
+  select(!c(Datetime_EST, Month, Year, Temperature)) %>%
+  distinct() %>% 
+ filter(Date < "2021-12-01" & Date > "2021-06-20") %>% 
+  mutate(Season = case_when(Date <= "2021-10-15" ~ "Wet",
+                            Date >= "2021-10-16" ~ "Dry")) -> alldata_2021
+```
+
+### Site, DHW
+```{r}
+temp.summary<- summaryBy(mean_daily_temp ~ site, data = alldata_2021,
+                         FUN = function(x) { c(max = max(x), min = min(x)) } )
+
+temp.summary$Temp.seasonal <- temp.summary$mean_daily_temp.max - temp.summary$mean_daily_temp.min
+
+#bind all DHWs
+max_DHW_alltypes %>% 
+  filter(site != "CCC_SST_19812012" & site != "Nursery_SST_19812012") %>% 
+cbind(temp.summary, .)  -> temp_DHW_summary
+
+temp_DHW_summary %>% 
+  select(!c(5)) -> temp_DHW_summary
+
+write_csv(temp_DHW_summary, "temp_DHW_summary.csv")
+```
+
+
+```{r}
+scale_by_max <- function(x) {
+  x * 100 / max(x, na.rm = TRUE)
+}
+
+temp_DHW_summary %>% 
+  column_to_rownames(var="site") -> temp_DHW_summary
+
+colnames(temp_DHW_summary) <- c("Max", "Min", "Seasonal", "DHW")
+
+ temp_DHW_summary %>%
+  dplyr::mutate(across(everything(), as.numeric)) %>%
+  dplyr::mutate(across(everything(), scale_by_max)) -> temp_summary_percent
+
+# To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
+temp_summary_percent <- rbind(rep(100,5), rep(0,5), temp_summary_percent)
+
+# Color vector
+colors_border=c("yellow", "lightblue", "orange", "darkblue")
+colors_in=c("yellow", "lightblue","orange", "darkblue")
+
+# Define colors with transparency using adjustcolor
+colors_border <- c(adjustcolor("yellow", alpha = 0.9), adjustcolor("lightblue", alpha = 0.9), adjustcolor("orange", alpha = 0.9), adjustcolor("darkblue", alpha = 0.9))
+colors_in <- c(adjustcolor("yellow", alpha = 0.4), adjustcolor("lightblue", alpha = 0.4), adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha = 0.4))
+
+library(fmsb)
+# plot with default options:
+pdf("radarchart_SST_initu.pdf")
+radarchart(temp_summary_percent, axistype=1 , 
+            #custom polygon
+            pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+            #custom the grid
+            cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.8,
+            #custom labels
+            vlcex=0.9
+)
+dev.off()
+
+```
+
+## radar plot for figure
+
+### Site only (2021)
+```{r}
+temp.summary<- summaryBy(Temperature ~ site, data = alldata_2021,
+                         FUN = function(x) { c(max = max(x), min = min(x)) } )
+temp.summary$Temp.seasonal <- temp.summary$Temperature.max - temp.summary$Temperature.min
+
+alldata_2021 %>% 
+  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") -> alldata_2021_sep
+
+# Daily Range
+Daily.range <- summaryBy(Temperature ~ Date + site, data=alldata_2021_sep, FUN=c(max,min,mean,sd))
+
+Daily.range$temp.daily.range <- Daily.range$Temperature.max - Daily.range$Temperature.min
+
+temp.d.range <- summaryBy(temp.daily.range ~ site, data = Daily.range,
+                          FUN = function(x) { c(mean = mean(x)) } )
+Daily.range %>% 
+  filter(Temperature.max > 30.5) %>% 
+  group_by(site) %>% 
+  dplyr::summarise(d.above.30.5 = n()) -> temp.d.30.5 #they are basically the same
+
+full_join(temp.summary, temp.d.range) %>% 
+  full_join(., temp.d.30.5) -> temp_summary
+
+
+scale_by_max <- function(x) {
+  x * 100 / max(x, na.rm = TRUE)
+}
+
+colnames(temp_summary) <- c("site", "Max", "Min", "Seasonal", "Daily", "30.5°C")
+
+temp_summary %>% 
+  column_to_rownames(var="site") -> temp_summary
+
+ temp_summary %>%
+  dplyr::mutate(across(everything(), as.numeric)) %>%
+  dplyr::mutate(across(everything(), scale_by_max)) -> temp_summary_percent
+
+# To use the fmsb package, I have to add 2 lines to the dataframe: the max and min of each variable to show on the plot!
+temp_summary_percent <- rbind(rep(100,5), rep(0,5), temp_summary_percent)
+
+# Color vector
+colors_border=c("orange", "darkblue")
+colors_in=c("orange", "darkblue")
+
+# Define colors with transparency using adjustcolor
+colors_border <- c(adjustcolor("orange", alpha = 0.9), adjustcolor("darkblue", alpha = 0.9))
+colors_in <- c(adjustcolor("orange", alpha = 0.4), adjustcolor("darkblue", alpha = 0.4))
+
+library(fmsb)
+# plot with default options:
+#pdf("radarchart_alldata_30_5.pdf")
+radarchart(temp_summary_percent, axistype=1 , 
+            #custom polygon
+            pcol=colors_border , pfcol=colors_in , plwd=4 , plty=1,
+            #custom the grid
+            cglcol="grey", cglty=1, axislabcol="grey", caxislabels=seq(0,100,25), cglwd=0.8,
+            #custom labels
+            vlcex=0.9
+)
+```
+
+
+
+
+## make new radar plot
 
 ```{r}
 cbind(temp_summary, MaxDHW) %>% 
@@ -1098,15 +1594,17 @@ radarchart(temp_DHW_summary_percent, axistype=1 ,
 ```{r}
 library(rstatix)
 # Ensure 'site' and 'season' are factors
-alldata_2020_2021$site <- as.factor(alldata_2020_2021$site)
-alldata_2020_2021$Season <- as.factor(alldata_2020_2021$Season)
+alldata_2021$site <- as.factor(alldata_2021$site)
+alldata_2021$Season <- as.factor(alldata_2021$Season)
 
-treat_model <- lm(Temperature ~ site*Season, data = alldata_2020_2021)
+#this is just during the experimental period: jun-dec 2021
+
+treat_model <- lm(Temperature ~ site*Season, data = alldata_2021)
 treat_model_metrics <- augment(treat_model)
 plot(treat_model) #sufficiently normal
 
 # Run the two-way ANOVA
-result <- aov(Temperature ~ site * Season, data = alldata_2020_2021)
+result <- aov(Temperature ~ site * Season, data = alldata_2021)
 
 
 # Display the summary of the ANOVA
@@ -1114,7 +1612,7 @@ summary(result)
 
 capture.output(summary(result), file = "temp_anova.csv")
 
-TukeyHSD(aov(Temperature ~ site * Season, data = alldata_2020_2021))
-capture.output(TukeyHSD(aov(Temperature ~ site * Season, data = alldata_2020_2021)), file = "temp_anova_tukey.csv")
+TukeyHSD(aov(Temperature ~ site * Season, data = alldata_2021))
+capture.output(TukeyHSD(aov(Temperature ~ site * Season, data = alldata_2021)), file = "temp_anova_tukey.csv")
 ```
 

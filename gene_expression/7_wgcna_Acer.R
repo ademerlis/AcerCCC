@@ -48,16 +48,31 @@ traits %>%
 
 traits
 
-temp_data <- read_csv("results/temp_DHW_summary.csv")
+temp_data <- read_csv("../environmental_data/temp_DHW_summary.csv")
+
+temp_data$site
+
+# separate data into SST data and then insitu data, so when you append it to the traits table they are separate columns
+temp_data %>% 
+  filter(site == "20202021_SST_CCC" | site == "20202021_SST_Nursery") %>% 
+  rename(mean_daily_temp.max_SST = mean_daily_temp.max, mean_daily_temp.min_SST = mean_daily_temp.min, 
+         Temp.seasonal_SST = Temp.seasonal, maxDHW_SST = maxDHW) %>% 
+  mutate(site = case_when(site == "20202021_SST_CCC" ~ "CCC", 
+                          site == "20202021_SST_Nursery" ~ "Nursery")) -> temp_data_SST
 
 temp_data %>% 
-  mutate(site = case_when(DHW >=5 ~ "CCC",
-                          DHW < 4 ~ "Nursery")) -> temp_data
+  filter(site == "CURES_tilt" | site == "Nursery") %>% 
+  rename(mean_daily_temp.max_insitu = mean_daily_temp.max, mean_daily_temp.min_insitu = mean_daily_temp.min, 
+         Temp.seasonal_insitu = Temp.seasonal, maxDHW_insitu = maxDHW) %>% 
+  mutate(site = case_when(site == "CURES_tilt" ~ "CCC", 
+                          site == "Nursery" ~ "Nursery")) -> temp_data_insitu
+
 
 
 traits %>% 
   pivot_longer(CCC:Nursery, names_to="site", values_to = "binary") %>% 
-  full_join(., temp_data, by = "site") %>% 
+  full_join(., temp_data_SST, by = "site") %>% 
+  full_join(., temp_data_insitu, by = "site") %>% 
   filter(binary == 1) -> traits
 
 traits %>% 
@@ -90,7 +105,7 @@ quartz()
 barplot(meanExpressionByArray,
         xlab = "Sample", ylab = "Mean expression",
         main ="Mean expression across samples",
-        names.arg = c(1:44), cex.names = 0.7)
+        names.arg = c(1:12), cex.names = 0.7)
 # look for any obvious deviations in expression across samples
 
 # sample dendrogram and trait heat map showing outliers
