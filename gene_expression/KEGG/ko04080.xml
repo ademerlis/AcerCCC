@@ -485,8 +485,8 @@
         <graphics name="K04238..." fgcolor="#000000" bgcolor="#BFBFFF"
              type="rectangle" x="405" y="786" width="46" height="17"/>
     </entry>
-    <entry id="119" name="ko:K03914 ko:K04234 ko:K04235 ko:K04236 ko:K04237" type="ortholog"
-        link="https://www.kegg.jp/dbget-bin/www_bget?K03914+K04234+K04235+K04236+K04237">
+    <entry id="119" name="ko:K03914 ko:K04234 ko:K04235 ko:K04236" type="ortholog"
+        link="https://www.kegg.jp/dbget-bin/www_bget?K03914+K04234+K04235+K04236">
         <graphics name="K03914..." fgcolor="#000000" bgcolor="#BFBFFF"
              type="rectangle" x="612" y="273" width="46" height="17"/>
     </entry>

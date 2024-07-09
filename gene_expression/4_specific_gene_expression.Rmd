@@ -13,7 +13,11 @@ library(cowplot)
 load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
 load("Rdata_files/realModels_Acer.RData")
 
-KEGG_genes <- read_csv("results/KEGG_CvN_results_withgenes.csv")
+KEGG_genes <- read_csv("KEGG/KEGG_CvN_results_withgenes.csv")
+
+KEGG_WGCNA_darkmagenta_genes <- read_csv("KEGG/KEGG_darkmagentamodule_withgenes.csv")
+
+KEGG_WGCNA_mediumpurple3_genes <- read_csv("KEGG/KEGG_mediumpurple3_withgenes.csv")
 ```
 
 # normalize gene counts
@@ -118,6 +122,72 @@ p4<-KEGG_genes_normcounts %>%
   theme(legend.position = "none")
 ```
 
+
+Pathways in cancer
+```{r}
+KEGG_genes_normcounts_l2fc %>% 
+  filter(ID == "map05200") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("TNF|tumor necrosis factor", annot))
+
+KEGG_genes_normcounts_l2fc %>% 
+  filter(ID == "map05200") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("activation of NF-kappaB-inducing kinase activity", annot))
+```
+
+Prostate cancer
+```{r}
+KEGG_genes_normcounts_l2fc %>% 
+  filter(ID == "map05215") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("fibroblast", annot))
+
+KEGG_genes_normcounts_l2fc %>% 
+  filter(ID == "map05215") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("heat|Heat", annot))
+```
+
+Fluid shear stress and atherosclerosis
+```{r}
+KEGG_genes_normcounts_l2fc %>% 
+  filter(ID == "map05418") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("heat|Heat", annot))
+
+KEGG_genes_normcounts_l2fc %>% 
+  filter(ID == "map05418") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("unfolded", annot))
+
+KEGG_genes_normcounts_l2fc %>% 
+  filter(ID == "map05418") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("EF", annot))
+```
+
 Melanogenesis
 ```{r}
 p5<-KEGG_genes_normcounts_l2fc %>% 
@@ -150,41 +220,6 @@ p6<-KEGG_genes_normcounts %>%
 
 ```
 
-Parathyroid hormone synthesis, secretion and action
-```{r}
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map04928") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange))
-#cAMP response element binding	
-# Matrix metalloproteinase-28	
-
-
-p7<-KEGG_genes_normcounts %>% 
-  filter(annot == "cAMP response element binding" & gene =="Acropora_000581") %>% 
-  filter(norm_expression > 0) %>% 
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
-  geom_boxplot() +
-  labs(y = "Normalized Expression Level", title = "map04928:Parathyroid hormone synthesis, secretion and action; Acropora_000581: cAMP response element binding") +
-  facet_wrap(~gene, scales = "free_y")+
-  theme(text = element_text(size = 15)) +
-  theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
-
-p8<-KEGG_genes_normcounts %>% 
-  filter(annot == "Matrix metalloproteinase-28") %>% 
-  filter(norm_expression > 0) %>% 
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
-  geom_boxplot() +
-  facet_wrap(~gene, scales = "free_y")+
-  labs(y = "Normalized Expression Level", title = "map04928:Parathyroid hormone synthesis, secretion and action; Acropora_006280: Matrix metalloproteinase-28") +
-  theme(text = element_text(size = 15)) +
-  theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
-```
-
 plot all genes together
 ```{r}
 plot_grid(p1,p2,p3,p4,p5,p6,p7,p8, nrow=3)
@@ -193,13 +228,13 @@ plot_grid(p1,p2,p3,p4,p5,p6,p7,p8, nrow=3)
 
 # WGCNA genes
 
-## brown module
+## darkmagenta module
 ```{r}
-brown2 <- read_csv("WGCNA/brown2_genelist.csv")
+darkmagenta <- read_csv("WGCNA/darkmagenta_genelist.csv")
 
-brown2 %>% 
+darkmagenta %>% 
   select(gene) %>% 
-  distinct() -> browngenes
+  distinct() -> darkmagentagenes
 
 gene_annot <- read.table(file="bioinformatics/Acervicornis_iso2geneName.tab", sep = "\t", quote="", fill=FALSE)
 gene_annot %>% 
@@ -208,18 +243,24 @@ gene_annot %>%
 design %>% 
   rownames_to_column(var="Sample_ID") -> design
 
-browngenes %>% 
+darkmagentagenes %>% 
   left_join(., gene_annot, by = "gene") %>% 
   drop_na(annot) %>% 
   left_join(., normalized_counts) %>% 
   pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
   left_join(., genes_l2fc) %>% 
-  left_join(., design, by = "Sample_ID") -> browngenes_annot_counts
+  left_join(., design, by = "Sample_ID") -> darkmagentagenes_annot_counts
 
-#write_csv(browngenes_annot_counts, "browngenes_annot_normcounts.csv")
+write_csv(darkmagentagenes_annot_counts, "darkmagentagenes_annot_counts.csv")
+```
+
+### DEGs of interest in module
+```{r}
+darkmagentagenes_annot_counts %>% 
+  arrange(desc(log2FoldChange))
 
 # heat shock-mediated polytene chromosome puffing	
-p1<-browngenes_annot_counts %>% 
+p1<-darkmagentagenes_annot_counts %>% 
   filter(annot == "heat shock-mediated polytene chromosome puffing" & gene == "Acropora_008410") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -230,7 +271,7 @@ p1<-browngenes_annot_counts %>%
   theme(legend.position = "none")
 
 # Belongs to the small heat shock protein (HSP20) family	
-p2<-browngenes_annot_counts %>% 
+p2<-darkmagentagenes_annot_counts %>% 
   filter(annot == "Belongs to the small heat shock protein (HSP20) family" & gene == "Acropora_017542") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -241,7 +282,7 @@ p2<-browngenes_annot_counts %>%
   theme(legend.position = "none")
 
 # RAB30, member RAS oncogene family
-p3<-browngenes_annot_counts %>% 
+p3<-darkmagentagenes_annot_counts %>% 
   filter(annot == "RAB30, member RAS oncogene family") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -252,7 +293,7 @@ p3<-browngenes_annot_counts %>%
   theme(legend.position = "none") 
 
 #G-protein coupled GABA receptor activity. It is involved in the biological process described with G-protein coupled receptor signaling pathway	
-p4<-browngenes_annot_counts %>% 
+p4<-darkmagentagenes_annot_counts %>% 
   filter(annot == "G-protein coupled GABA receptor activity. It is involved in the biological process described with G-protein coupled receptor signaling pathway") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -263,7 +304,7 @@ p4<-browngenes_annot_counts %>%
   theme(legend.position = "none")
 
 # heat shock
-p5<-browngenes_annot_counts %>% 
+p5<-darkmagentagenes_annot_counts %>% 
   filter(annot == "heat shock") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -274,7 +315,7 @@ p5<-browngenes_annot_counts %>%
   theme(legend.position = "none")
 
 # Cytochrome P450, family 21, subfamily A, polypeptide 2
-p6<-browngenes_annot_counts %>% 
+p6<-darkmagentagenes_annot_counts %>% 
   filter(annot == "Cytochrome P450, family 21, subfamily A, polypeptide 2") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -285,7 +326,7 @@ p6<-browngenes_annot_counts %>%
   theme(legend.position = "none")
 
 #	apoptotic process
-p7<-browngenes_annot_counts %>% 
+p7<-darkmagentagenes_annot_counts %>% 
   filter(annot == "apoptotic process") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -296,32 +337,81 @@ p7<-browngenes_annot_counts %>%
   theme(legend.position = "none")
 
 plot_grid(p1,p2,p3,p4,p5,p6,p7,nrow=2)
-#ggsave("brownmodule_genes.pdf", width = 12, height = 7)
+#ggsave("darkmagentagenes.pdf", width = 12, height = 7)
 ```
 
-## magenta module
+### KEGG analysis on module specific genes
 ```{r}
-magenta3 <- read_csv("WGCNA/magenta3_genelist.csv")
+KEGG_WGCNA_darkmagenta_genes %>% 
+  dplyr::select(ID, Description, Category, KO, gene, annot) %>% 
+  left_join(., normalized_counts, by = "gene") %>%  #151 genes
+  pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
+  full_join(., design, by = "Sample_ID") -> KEGG_darkmagenta_genes_normcounts
 
-magenta3 %>% 
+KEGG_darkmagenta_genes_normcounts %>% 
+  right_join(., genes_l2fc, by="gene") -> KEGG_darkmagneta_genes_normcounts_l2fc
+```
+
+```{r}
+KEGG_darkmagneta_genes_normcounts_l2fc %>% 
+  filter(ID == "map04080") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("G-protein", annot))
+```
+
+
+## mediumpurple3 module
+
+### KEGG analysis 
+```{r}
+KEGG_WGCNA_mediumpurple3_genes %>% 
+  dplyr::select(ID, Description, Category, KO, gene, annot) %>% 
+  left_join(., normalized_counts, by = "gene") %>%  #151 genes
+  pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
+  full_join(., design, by = "Sample_ID") -> KEGG_mediumpurple3_genes_normcounts
+
+KEGG_mediumpurple3_genes_normcounts %>% 
+  right_join(., genes_l2fc, by="gene") -> KEGG_mediumpurple3_genes_normcounts_l2fc
+```
+
+```{r}
+KEGG_mediumpurple3_genes_normcounts_l2fc %>% 
+  filter(ID == "map04080") %>% 
+  filter(norm_expression > 0) %>% 
+  arrange(desc(log2FoldChange)) %>% 
+  select(gene, annot, log2FoldChange) %>% 
+  distinct() %>% 
+   filter(grepl("G-protein", annot))
+```
+
+
+
+### specific genes of interest
+```{r}
+mediumpurple3 <- read_csv("WGCNA/mediumpurple3_genelist.csv")
+
+mediumpurple3 %>% 
   select(gene) %>% 
-  distinct() -> magentagenes
+  distinct() -> mediumpurple3genes
 
-magentagenes %>% 
+mediumpurple3genes %>% 
   left_join(., gene_annot, by = "gene") %>% 
   drop_na(annot) %>% 
   left_join(., normalized_counts) %>% 
   pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
   left_join(., genes_l2fc) %>% 
-  left_join(., design, by = "Sample_ID") -> magentagenes_annot_counts
+  left_join(., design, by = "Sample_ID") -> mediumpurple3genes_annot_counts
 
-#write_csv(magentagenes_annot_counts, "magenta3genes_annotated_normcounts.csv")
+#write_csv(mediumpurple3genes_annot_counts, "mediumpurple3genes_annot_counts.csv")
 
-magentagenes_annot_counts %>% 
-  arrange(log2FoldChange)
+mediumpurple3genes_annot_counts %>% 
+  arrange(desc(log2FoldChange))
 
 # PIH1 domain-containing protein
-m1<-magentagenes_annot_counts %>% 
+m1<-mediumpurple3genes_annot_counts %>% 
   filter(annot == "PIH1 domain-containing protein") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -332,7 +422,7 @@ m1<-magentagenes_annot_counts %>%
   theme(legend.position = "none")
 
 # assists the folding of proteins upon ATP hydrolysis
-m2<-magentagenes_annot_counts %>% 
+m2<-mediumpurple3genes_annot_counts %>% 
   filter(annot == "assists the folding of proteins upon ATP hydrolysis") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -343,7 +433,7 @@ m2<-magentagenes_annot_counts %>%
   theme(legend.position = "none")
 
 # Matrix metalloproteinase-28
-m3<-magentagenes_annot_counts %>% 
+m3<-mediumpurple3genes_annot_counts %>% 
   filter(annot == "Matrix metalloproteinase-28") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -354,7 +444,7 @@ m3<-magentagenes_annot_counts %>%
   theme(legend.position = "none")
 
 # C-type lectin (CTL) or carbohydrate-recognition domain (CRD)
-m4<-magentagenes_annot_counts %>% 
+m4<-mediumpurple3genes_annot_counts %>% 
   filter(annot == "C-type lectin (CTL) or carbohydrate-recognition domain (CRD)") %>% 
   ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
   geom_boxplot() +
@@ -364,14 +454,15 @@ m4<-magentagenes_annot_counts %>%
   scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
   theme(legend.position = "none")
 
+
 plot_grid(m1,m2,m3,m4,nrow=1)
-#ggsave("magentagenes.pdf", width = 12, height = 7)
+#ggsave("mediumpurple3genes.pdf", width = 12, height = 7)
 ```
 
 
 
 
-# DGEs of interest
+# DEGs of interest
 ```{r}
 Location_CCC_vs_Nursery_lfcshrink <- read_csv("results/resLFCLocation_CCC_vs_nursery_annotDGEs_padj05.csv")
 Location_CCC_vs_Nursery_lfcshrink %>% 

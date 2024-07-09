@@ -10,6 +10,8 @@
 # repos="http://cran.us.r-project.org"
 # run these above commands once, then comment out
 
+# note: all WGCNA tutorials have moved to dropbox: https://www.dropbox.com/scl/fo/4vqfiysan6rlurfo2pbnk/h?rlkey=thqg8wlpdn4spu3ihjuc1kmlu&e=1&dl=0
+
 # always run these before running any of the following script chunks
 library(tidyverse)
 library(WGCNA)
@@ -39,53 +41,6 @@ Nursery = as.numeric(design$Location == "nursery")
 
 traits <- data.frame(cbind(CCC, Nursery))
 
-rownames(traits) <- rownames(design)
-
-traits
-
-traits %>% 
-  rownames_to_column(var = "Sample_ID")  -> traits
-
-traits
-
-temp_data <- read_csv("../environmental_data/temp_DHW_summary.csv")
-
-temp_data$site
-
-# separate data into SST data and then insitu data, so when you append it to the traits table they are separate columns
-temp_data %>% 
-  filter(site == "20202021_SST_CCC" | site == "20202021_SST_Nursery") %>% 
-  rename(mean_daily_temp.max_SST = mean_daily_temp.max, mean_daily_temp.min_SST = mean_daily_temp.min, 
-         Temp.seasonal_SST = Temp.seasonal, maxDHW_SST = maxDHW) %>% 
-  mutate(site = case_when(site == "20202021_SST_CCC" ~ "CCC", 
-                          site == "20202021_SST_Nursery" ~ "Nursery")) -> temp_data_SST
-
-temp_data %>% 
-  filter(site == "CURES_tilt" | site == "Nursery") %>% 
-  rename(mean_daily_temp.max_insitu = mean_daily_temp.max, mean_daily_temp.min_insitu = mean_daily_temp.min, 
-         Temp.seasonal_insitu = Temp.seasonal, maxDHW_insitu = maxDHW) %>% 
-  mutate(site = case_when(site == "CURES_tilt" ~ "CCC", 
-                          site == "Nursery" ~ "Nursery")) -> temp_data_insitu
-
-
-
-traits %>% 
-  pivot_longer(CCC:Nursery, names_to="site", values_to = "binary") %>% 
-  full_join(., temp_data_SST, by = "site") %>% 
-  full_join(., temp_data_insitu, by = "site") %>% 
-  filter(binary == 1) -> traits
-
-traits %>% 
- select(!binary) -> traits
-
-CCC = as.numeric(traits$site=="CCC")
-Nursery = as.numeric(traits$site == "Nursery")
-
-cbind(traits, CCC, Nursery) -> traits_n_temp
-
-traits_n_temp %>% 
-  select(!c(Sample_ID, site)) -> traits_n_temp
-
 #### OUTLIER DETECTION ####
 
 # identifies outlier genes
@@ -94,7 +49,7 @@ gsg$allOK #if TRUE, no outlier genes
 #TRUE!
 
 # calculates mean expression per array, then the number of missing values per array
-meanExpressionByArray=apply( datt,1,mean, na.rm=T)
+meanExpressionByArray=apply(datt,1,mean, na.rm=T)
 NumberMissingByArray=apply( is.na(data.frame(datt)),1, sum)
 NumberMissingByArray
 # keep samples with missing values under 500
@@ -122,8 +77,8 @@ thresholdZ.k=-2.5 # often -2.5
 outlierColor=ifelse(Z.k<thresholdZ.k,"red","black")
 sampleTree = flashClust(as.dist(1-A), method = "average")
 # Convert traits to a color representation where red indicates high values
-traitColors=data.frame(numbers2colors(traits_n_temp,signed=TRUE))
-dimnames(traitColors)[[2]]=paste(names(traits_n_temp))
+traitColors=data.frame(numbers2colors(traits,signed=TRUE))
+dimnames(traitColors)[[2]]=paste(names(traits))
 datColors=data.frame(outlierC=outlierColor,traitColors)
 # Plot the sample dendrogram and the colors underneath.
 quartz()
@@ -134,14 +89,14 @@ plotDendroAndColors(sampleTree,groupLabels=names(datColors), colors=datColors,ma
 # Remove outlying samples from expression and trait data
 remove.samples= Z.k<thresholdZ.k | is.na(Z.k)
 datt=datt[!remove.samples,]
-traits_n_temp=traits_n_temp[!remove.samples,] #1 sample removed
+traits=traits[!remove.samples,] #1 sample removed
 
 str(datt) #11
-str(traits_n_temp) #11
+str(traits) #11
   
-write.csv(traits_n_temp, file="traits.csv")
+write.csv(traits, file="traits.csv")
 
-save(datt,traits_n_temp,file="wgcnaData.RData")
+save(datt,traits,file="wgcnaData.RData")
 
 
 #### SOFT THRESHOLDS ####
@@ -153,8 +108,7 @@ library(ape)
 options(stringsAsFactors=FALSE)
 allowWGCNAThreads()
 
-load("RData_files/wgcnaData.RData")
-traits_n_temp <- read_csv("traits.csv")
+load("wgcnaData.RData")
 
 #datt=t(vsd.wg)
 str(datt) #11
@@ -194,7 +148,46 @@ dev.off()
 #### MAKING MODULES ####
 
 # take a look at the threshold plots produced above, and the output table from the pickSoftThreshold command
-# pick the power that corresponds with a SFT.R.sq value above 0.90
+# so Michael's code recommends this: "pick the power that corresponds with a SFT.R.sq value above 0.90."
+
+#However, in doing some googling (because none of my SFTs in this dataset exceed 0.9), I came across this 
+#helpful tutorial: https://alexslemonade.github.io/refinebio-examples/04-advanced-topics/network-analysis_rnaseq_01_wgcna.html#45_Format_normalized_data_for_WGCNA
+# it says this: WGCNA’s authors recommend using a power that has an signed R2
+# above 0.80, otherwise they warn your results may be too noisy to be meaningful.
+# If you have multiple power values with signed R2
+# above 0.80, then picking the one at an inflection point, in other words where the R2
+# values seem to have reached their saturation (Zhang and Horvath 2005). 
+#You want to a power that gives you a big enough R2 but is not excessively large.
+
+# they also provide this code to visualize the sft cut-off better
+
+sft_df <- data.frame(sft$fitIndices) %>%
+  dplyr::mutate(model_fit = -sign(slope) * SFT.R.sq)
+
+ggplot(sft_df, aes(x = Power, y = model_fit, label = Power)) +
+  # Plot the points
+  geom_point() +
+  # We'll put the Power labels slightly above the data points
+  geom_text(nudge_y = 0.1) +
+  # We will plot what WGCNA recommends as an R^2 cutoff
+  geom_hline(yintercept = 0.80, col = "red") +
+  # Just in case our values are low, we want to make sure we can still see the 0.80 level
+  ylim(c(min(sft_df$model_fit), 1.05)) +
+  # We can add more sensible labels for our axis
+  xlab("Soft Threshold (power)") +
+  ylab("Scale Free Topology Model Fit, signed R^2") +
+  ggtitle("Scale independence") +
+  # This adds some nicer aesthetics to our plot
+  theme_classic()
+
+#based on this graph above, I'm going to pick #14 ! 
+#14 led to NA for the MEgrey module, so i'm going to try to run 15 instead and see if that helps
+
+# ok after all of this back and forth, it seems like the "lower" sft numbers like 14 and 15 
+# result in only 2 genes for the grey module, which ends up causing problems for the 
+# correlation of the MEs. Doesn't matter if i use the traits_n_temp or just traits.
+#so i think i will just stick to 26 because that gives the grey module 7 genes and seems to work
+# for the correlation plot. 
 
 # run from the line below to the save command
 s.th=26 # re-specify according to previous section
@@ -209,7 +202,7 @@ geneTree = flashClust(as.dist(dissTOM), method = "average")
 plot(geneTree, xlab="", sub="", main="Gene Clustering on TOM-based dissimilarity", labels= FALSE,hang=0.04)
 
 # We like large modules, so we set the minimum module size relatively high:
-minModuleSize = 30; 
+minModuleSize = 100; 
 dynamicMods = cutreeDynamic(dendro = geneTree, distM = dissTOM,
 deepSplit = 2, pamRespectsDendro = FALSE,
 minClusterSize = minModuleSize);
@@ -286,7 +279,7 @@ save(MEs, geneTree, moduleLabels, moduleColors, file = "networkdata_signed.RData
 # plotting correlations with traits:
 load(file = "RData_files/networkdata_signed.RData")
 load(file = "RData_files/wgcnaData.RData");
-traits_n_temp <- read_csv("WGCNA/traits.csv")
+traits <- read_csv("WGCNA/traits.csv")
 
 # Define numbers of genes and samples
 nGenes = ncol(datt); #18192
@@ -299,7 +292,7 @@ MEs = orderMEs(MEs0)
 moduleGeneCor=cor(MEs,datt)
 moduleGenePvalue = corPvalueStudent(moduleGeneCor, nSamples);
 
-moduleTraitCor = cor(MEs, traits_n_temp, use = "p");
+moduleTraitCor = cor(MEs, traits, use = "p");
 moduleTraitPvalue = corPvalueStudent(moduleTraitCor, nSamples);
 
 # module-trait correlations
@@ -311,7 +304,7 @@ par(mar = c(6, 8.5, 3, 3));
 # Display the correlation values within a heatmap plot
 labeledHeatmap(
   Matrix = moduleTraitCor,
-  xLabels = names(traits_n_temp),
+  xLabels = names(traits),
   yLabels = names(MEs),
   ySymbols = names(MEs),
   colorLabels = FALSE,
@@ -339,7 +332,7 @@ dim(textMatrix) = dim(moduleTraitCor)
 par(mar = c(6, 8.5, 3, 3));
 # Display the correlation values within a heatmap plot
 labeledHeatmap(Matrix = moduleTraitCor,
-               xLabels = names(traits_n_temp),
+               xLabels = names(traits),
                ySymbols = modLabels,
                yLabels = modLabels,
                colorLabels = FALSE,
@@ -372,7 +365,7 @@ text(mct[rev(modLabels)]+labelShift,y=x,mct[rev(modLabels)],cex=0.9)
 # scatterplots of gene significance (correlation-based) vs kME
 load(file = "RData_files/networkdata_signed.RData")
 load(file = "RData_files/wgcnaData.RData");
-traits_n_temp
+traits
 table(moduleColors)
 
 # run for each of these statements individually
@@ -380,7 +373,7 @@ whichTrait="CCC"
 
 nGenes = ncol(datt);
 nSamples = nrow(datt);
-selTrait = as.data.frame(traits_n_temp[,whichTrait]);
+selTrait = as.data.frame(traits[,whichTrait]);
 names(selTrait) = whichTrait
 # names (colors) of the modules
 modNames = substring(names(MEs), 3)
@@ -399,8 +392,8 @@ rownames_to_column(geneModuleMembership, var="Locus") -> geneModuleMembership
 merged_GS_MM <- inner_join(geneTraitSignificance, geneModuleMembership, by = "Locus")
 
 merged_GS_MM %>% 
-  tidyr::gather(module, module_membership, MMgreen4:MMgrey) %>%
-  filter(module== "MMbrown2" | module == "MMmagenta3") %>% 
+  tidyr::gather(module, module_membership, MMdarkturquoise:MMgrey) %>%
+  filter(module== "MMdarkmagenta" | module == "MMmediumpurple3") %>% 
   ggplot(aes(module_membership, GS.CCC, color = module)) +
   geom_point(size = 2, alpha = 1/100) +
   geom_smooth(color="black", method = lm, se = T, fill = "grey") +
@@ -408,7 +401,7 @@ merged_GS_MM %>%
   ylim(c(-1,1)) +
   xlim(c(-1,1)) +
   facet_wrap(~module, scales = "free") +
-  scale_color_manual(values = c("brown2", "magenta3")) +
+  scale_color_manual(values = c("darkmagenta", "mediumpurple")) +
   theme(legend.position = "none") +
   labs(x="Module Membership",
        y="Gene Significance for Coral City Camera")
@@ -416,7 +409,7 @@ ggsave("MM_GS_CCC.pdf")
 
 
 # selecting specific modules to plot (change depending on which trait you're looking at)
-moduleCols=c("brown2","darkseagreen2", "magenta3") # for Initial
+moduleCols=c("darkmagenta","mediumpurple3")
 quartz()
 # set par to be big enough for all significant module correlations, 
 #then run the next whichTrait and moduleCols statements above and repeat from the 'for' loop
@@ -455,37 +448,37 @@ design %>%
 	  dplyr::inner_join(design %>%
 	                      dplyr::select(Sample_ID, Location),
 	                    by = c("accession_code" = "Sample_ID")) %>% 
-   select(accession_code, MEbrown2, MEmagenta3, Location) %>% 
-   pivot_longer(MEbrown2:MEmagenta3, names_to = "module", values_to = "collective_expression_level") %>% 
+   select(accession_code, MEdarkmagenta, MEmediumpurple3, Location) %>% 
+   pivot_longer(MEdarkmagenta:MEmediumpurple3, names_to = "module", values_to = "collective_expression_level") %>% 
 	ggplot(.,aes(x = Location, y = collective_expression_level,fill = Location)) +
 	  geom_boxplot(width = 0.2) +
    facet_wrap(~module) +
 	  theme_classic() +
    scale_fill_manual(values = c("darkblue", "orange"))
-# ggsave("ME_expression_location.pdf")
+#ggsave("ME_expression_location.pdf")
  
 
  design %>% 
    dplyr::rename(site = Location) -> design
  
- temp_data %>% 
-   mutate(site = case_when(site == "Nursery" ~ "nursery",
-                           site == "CCC" ~ "CCC")) -> temp_data
- 
-full_join(design, temp_data, by = "site") -> sample_data_temp
-
-MEs %>%
-  tibble::rownames_to_column("accession_code") %>%
-  dplyr::inner_join(sample_data_temp %>%
-                      dplyr::select(Sample_ID, site, Max:DHW),
-                    by = c("accession_code" = "Sample_ID")) %>% 
-  select(accession_code, MEbrown2, MEmagenta3, site:DHW) %>% 
-  pivot_longer(MEbrown2:MEmagenta3, names_to = "module", values_to = "collective_expression_level") %>% 
-  ggplot(.,aes(x = Seasonal, y = collective_expression_level,fill = site)) +
-  geom_boxplot(width = 0.2) +
-  facet_wrap(~module) +
-  theme_classic() +
-  scale_fill_manual(values = c("orange", "darkblue"))
+#  temp_data %>% 
+#    mutate(site = case_when(site == "Nursery" ~ "nursery",
+#                            site == "CCC" ~ "CCC")) -> temp_data
+#  
+# full_join(design, temp_data, by = "site") -> sample_data_temp
+# 
+# MEs %>%
+#   tibble::rownames_to_column("accession_code") %>%
+#   dplyr::inner_join(sample_data_temp %>%
+#                       dplyr::select(Sample_ID, site, Max:DHW),
+#                     by = c("accession_code" = "Sample_ID")) %>% 
+#   select(accession_code, MEbrown2, MEmagenta3, site:DHW) %>% 
+#   pivot_longer(MEbrown2:MEmagenta3, names_to = "module", values_to = "collective_expression_level") %>% 
+#   ggplot(.,aes(x = Seasonal, y = collective_expression_level,fill = site)) +
+#   geom_boxplot(width = 0.2) +
+#   facet_wrap(~module) +
+#   theme_classic() +
+#   scale_fill_manual(values = c("orange", "darkblue"))
 
 #### EIGENGENE SANITY CHECK ####
 
@@ -495,9 +488,9 @@ load(file = "Rdata_files/networkdata_signed.RData")
 load(file = "Rdata_files/wgcnaData.RData");
 
 # run for each of these statements individually
-which.module="brown2"
-which.module="darkseagreen2"
-which.module="magenta3"
+which.module="darkmagenta"
+which.module="mediumpurple3"
+
 
 datME=MEs
 datExpr=datt
@@ -511,18 +504,17 @@ par(mar=c(5, 4.2, 0, 0.7))
 barplot(ME, col=which.module, main="", cex.main=2,
 ylab="eigengene expression",xlab="sample")
 
-length(datExpr[1,moduleColors==which.module ]) # brown2 = 482 genes
+length(datExpr[1,moduleColors==which.module ]) # darkmagenta = 658 genes
 
-as.data.frame(datExpr[,moduleColors==which.module ])  %>% 
-  rownames_to_column(var="Sample_ID") %>% 
-  pivot_longer(Acropora_000009:Acropora_34572, names_to="gene", values_to="vst_expression") %>% 
-  write_csv("brown2_genelist.csv")
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>%
+  write_csv("darkmagenta_genelist.csv")
 
-length(datExpr[1,moduleColors==which.module ]) # magenta3 = 735 genes
+length(datExpr[1,moduleColors==which.module ]) # mediumpurple3 = 751 genes
 
 as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
   rownames_to_column(var="gene") %>% 
-  write_csv("magenta3_genelist.csv")
+  write_csv("mediumpurple3_genelist.csv")
 
 # If individual samples appear to be driving expression of significant modules, they are likely outliers
 
@@ -539,9 +531,8 @@ allkME =as.data.frame(signedKME(datt, MEs))
 names(allkME)=gsub("kME","",names(allkME))
 
 # run for each of these statements individually
-which.module="brown2"
-which.module="darkseagreen2"
-which.module="magenta3"
+which.module="darkmagenta"
+which.module="mediumpurple3"
 
 
 # Saving data for Fisher-MWU combo test (GO_MWU)
@@ -563,10 +554,8 @@ load(file = "RData_files/wgcnaData.RData");
 allkME =signedKME(datt, MEs)
 gg=read.delim(file="bioinformatics/Acervicornis_iso2geneName.tab",sep="\t")
 
-which.module="brown2"
-which.module="darkseagreen2"
-which.module="magenta3"
-
+which.module="darkmagenta"
+which.module="mediumpurple3"
 design %>% 
   rownames_to_column(var = "Sample_ID") -> design
 
@@ -643,8 +632,6 @@ hubgenes <- tibble::rownames_to_column(hubgenes, "module")
 hubgenes
 
 hubgenes %>%
-  rename("gene" = 
-           hubgenes) %>%
   left_join(read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
                        sep = "\t",
                        quote="", fill=FALSE) %>%
