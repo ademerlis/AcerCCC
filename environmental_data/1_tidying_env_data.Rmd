@@ -1,0 +1,616 @@
+---
+title: "env_data"
+author: "allyson_demerlis"
+date: "2024-10-16"
+output: html_document
+---
+# load libraries
+```{r}
+library(tidyverse)
+```
+
+# import and tidy CCC temp logger (tilt meter)
+```{r}
+cures_frame_tilt_temp <- read_excel("raw_data/Oct2020_Jan2022_1901102_urban-2020-10_(0)_Temperature.xlsx", sheet = "1901102_urban-2020-10_(0)_Tempe")
+#logged every 15 min
+
+#edit cures frame time
+cures_frame_tilt_temp$Datetime <- as.POSIXct(cures_frame_tilt_temp$Datetime, tz="UTC")
+cures_frame_tilt_temp$Datetime_EST <- with_tz(cures_frame_tilt_temp$Datetime, "America/New_York")
+
+# Filter the data to select time points at 2-hour intervals
+cures_frame_tilt_temp <- cures_frame_tilt_temp %>%
+  filter(minute(Datetime_EST) == 0 & (hour(Datetime_EST) %% 2 == 0))
+
+#add cures frame site
+cures_frame_tilt_temp %>% 
+  mutate(site = "CCC") %>% 
+  dplyr::select(!Date:Datetime) %>% 
+  dplyr::rename(Temperature = `Temperature (C)`) -> cures_frame_tilt_temp
+
+max(cures_frame_tilt_temp$Datetime_EST) #"2022-02-01 12:00:00 EST"
+min(cures_frame_tilt_temp$Datetime_EST) #"2020-10-12 20:00:00 EDT"
+```
+
+plot all data to visualize
+```{r}
+ggplot(cures_frame_tilt_temp, aes(x=Datetime_EST, y=Temperature)) +
+  geom_point()
+```
+
+```{r}
+cures_frame_tilt_temp %>% 
+  filter(as.Date(Datetime_EST) < "2020-11-01") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature)) +
+  geom_point()
+
+# remove first day of data because the range is not real
+
+cures_frame_tilt_temp %>% 
+  filter(as.Date(Datetime_EST) > "2020-10-13") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature)) +
+  geom_point()
+
+cures_frame_tilt_temp %>% 
+  filter(as.Date(Datetime_EST) > "2020-10-13") -> CCC_temp_filtered
+```
+
+
+```{r}
+CCC_temp_filtered %>% 
+  filter(as.Date(Datetime_EST) < "2020-12-06" & as.Date(Datetime_EST) > "2020-12-03") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point(alpha = 0.7) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+#december 4 2020 looks concerning
+```
+
+```{r}
+CCC_temp_filtered %>% 
+  filter(as.Date(Datetime_EST) < "2020-12-06" & as.Date(Datetime_EST) > "2020-12-03") %>% 
+  filter(Temperature > 21 & Temperature < 25) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point(alpha = 0.7) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+CCC_temp_filtered %>% 
+  filter(as.Date(Datetime_EST) < "2020-12-06" & as.Date(Datetime_EST) > "2020-12-03") %>% 
+  filter(Temperature > 21 & Temperature < 25) -> dec2020_CCCfiltered
+```
+
+
+calculate daily thermal variability during entire dataset
+```{r}
+CCC_temp_filtered %>% 
+  filter(!as.Date(Datetime_EST) < "2020-12-06" & as.Date(Datetime_EST) > "2020-12-03") %>%  
+  full_join(., dec2020_CCCfiltered) %>% 
+  group_by(as.Date(Datetime_EST)) %>% 
+  summarise(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
+  ggplot(., aes(x=`as.Date(Datetime_EST)`, y=daily_range)) +
+  geom_line() +
+  theme_bw() 
+
+# lots of outliers after Dec 2021 but we don't need that data
+```
+
+## overwriting CCC filtered datafile
+```{r}
+CCC_temp_filtered %>% 
+  filter(!as.Date(Datetime_EST) < "2020-12-06" & as.Date(Datetime_EST) > "2020-12-03") %>%  
+  full_join(., dec2020_CCCfiltered) -> CCC_temp_filtered
+```
+
+
+
+filter for experimental period (June to December 2021)
+```{r}
+CCC_temp_filtered %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-23") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point(alpha = 0.7) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+calculate daily thermal variability during experimental period
+```{r}
+CCC_temp_filtered %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-23") %>% 
+  group_by(as.Date(Datetime_EST)) %>% 
+  summarise(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
+  ggplot(., aes(x=`as.Date(Datetime_EST)`, y=daily_range)) +
+  geom_line() +
+  theme_bw() 
+```
+
+# import and tidy KB Nursery HOBO logger
+
+We want to plot all available data to illustrate what the temperature profiles were like for all corals before the transplantation to the CCC site occurred.
+```{r}
+#HOBO logs every two hours
+convertFtoC <- function(F) {
+  C <- (F - 32) * 5/9
+  return(C)
+}
+
+KB_01092018<-read_csv("raw_data/KBNursery_2018_01_09.csv", skip = 1)
+KB_01092018  %>% 
+  dplyr::select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °F (LGR S/N: 20194578, SEN S/N: 20194578)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20194578, SEN S/N: 20194578)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) %>% 
+  mutate(Temperature=convertFtoC(Temperature)) -> KB_01092018
+
+KB_07092019<-read_csv("raw_data/KBNursery_2019_07_09.csv", skip = 1)
+KB_07092019  %>% 
+  dplyr::select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 10795158, SEN S/N: 10795158)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 10795158, SEN S/N: 10795158)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_07092019
+
+KB_10152019<-read_csv("raw_data/KBNursery_2019_10_15.csv", skip = 1)
+KB_10152019 %>% 
+  dplyr::select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20518526, SEN S/N: 20518526)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20518526, SEN S/N: 20518526)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_10152019
+
+KB_01162020<-read_csv("raw_data/KBNursery_2020_01_16.csv", skip = 1)
+KB_01162020 %>% 
+  dplyr::select(!`#`) %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20473194, SEN S/N: 20473194)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20473194, SEN S/N: 20473194)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_01162020
+
+KB_03062020<-read_csv("raw_data/KBNursery_2020_03_06.csv", skip = 1)
+KB_03062020 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20685544, SEN S/N: 20685544)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685544, SEN S/N: 20685544)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_03062020
+
+KB_05012020<-read_csv("raw_data/KBNursery_2020_05_01.csv", skip = 1)
+KB_05012020 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20685559, SEN S/N: 20685559)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20685559, SEN S/N: 20685559)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_05012020
+
+KB_09112020<-read_csv("raw_data/KBNursery_2020_09_11.csv", skip = 1)
+
+KB_09112020 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_09112020
+
+KB_02102021 <- read_csv("raw_data/KBNursery_2021_02_10.csv", skip = 1)
+KB_02102021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_02102021
+
+KB_05282021 <- read_csv("raw_data/KBNursery_2021_05_28.csv", skip = 1)
+KB_05282021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21085862, SEN S/N: 21085862)`) %>% 
+  dplyr::select(Temperature, Datetime_EST) %>% 
+  mutate(Light = NA) -> KB_05282021
+
+KB_08112021 <- read_csv("raw_data/KBNursery_2021_08_11.csv", skip = 1)
+KB_08112021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_08112021
+
+KB_120821 <- read_csv("raw_data/KBNursery_2021_12_08.csv", skip = 1)
+KB_120821%>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_120821
+
+rbind(KB_01092018, KB_07092019, KB_10152019, KB_01162020, KB_03062020, KB_05012020, KB_09112020, KB_02102021, KB_05282021, KB_08112021, KB_120821) -> all_KB_data
+
+all_KB_data %>% 
+  mutate(site = "Nursery") -> all_KB_data
+
+all_KB_data$Temperature <- as.numeric(all_KB_data$Temperature)
+```
+
+plot all raw data 
+```{r}
+ggplot(all_KB_data, aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw() +
+  scale_x_datetime(date_labels = "%b %Y",  # Customize the date format
+                     date_breaks = "1 month") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+all_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2019-07-08" & as.Date(Datetime_EST) < "2021-12-01") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw() +
+  scale_x_datetime(date_labels = "%b %Y",  # Customize the date format
+                     date_breaks = "1 month") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+
+plot raw data within experimental period
+```{r}
+all_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2021-06-23" & as.Date(Datetime_EST) < "2021-12-01") %>%
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw() +
+  scale_x_datetime(date_labels = "%b %Y",  # Customize the date format
+                     date_breaks = "1 month") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+## outlier removal
+```{r}
+# Z-score method
+all_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2019-07-10" & as.Date(Datetime_EST) < "2021-12-01") %>%
+  mutate(z_score = scale(Temperature)) %>% 
+  filter(abs(z_score) < 3) -> filtered_KB_data
+
+ggplot(filtered_KB_data, aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+#still a lot of outliers
+```
+
+```{r}
+# separate by year and visually inspect each section
+
+#2019
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) < "2019-12-31") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2019-10-12" & as.Date(Datetime_EST) < "2019-10-20") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2019-10-12" & as.Date(Datetime_EST) < "2019-10-20") %>% 
+  filter(Temperature < 31.5 & Temperature > 28) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+#looks better
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2019-10-12" & as.Date(Datetime_EST) < "2019-10-20") %>% 
+  filter(Temperature < 31.5 & Temperature > 28) -> oct2019_filtered_data
+
+# 2020
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2019-12-31" & as.Date(Datetime_EST) < "2020-12-31") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+
+#three spots of concern: january, after april, and before october
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-01-05" & as.Date(Datetime_EST) < "2020-01-31") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-01-05" & as.Date(Datetime_EST) < "2020-01-31") %>% 
+  filter(Temperature > 23 & Temperature < 27) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-01-05" & as.Date(Datetime_EST) < "2020-01-31") %>% 
+  filter(Temperature > 23 & Temperature < 27) -> jan2020_filtered
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-03-01" & as.Date(Datetime_EST) < "2020-03-15") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+#filter temp < 27
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-03-01" & as.Date(Datetime_EST) < "2020-03-15") %>% 
+  filter(Temperature < 27) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-03-01" & as.Date(Datetime_EST) < "2020-03-15") %>% 
+  filter(Temperature < 27) -> mar2020_filtered
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-04-05" & as.Date(Datetime_EST) < "2020-06-01") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+# filtering temps less than 25ºC should get rid of it
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-04-05" & as.Date(Datetime_EST) < "2020-06-01") %>% 
+  filter(Temperature > 25) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+# looks good
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-04-05" & as.Date(Datetime_EST) < "2020-06-01") %>% 
+  filter(Temperature > 25) -> may2020_filtereddata
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-09-01" & as.Date(Datetime_EST) < "2020-09-15") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+# filter anything less than 29ºC and greater than 31.5
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-09-01" & as.Date(Datetime_EST) < "2020-09-15") %>% 
+  filter(Temperature > 29 & Temperature < 31.5) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2020-09-01" & as.Date(Datetime_EST) < "2020-09-15") %>% 
+  filter(Temperature > 29 & Temperature < 31.5) -> sept2020_filtereddata
+
+#2021
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2021-01-01" & as.Date(Datetime_EST) < "2021-12-31") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+# two areas -- june and august
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2021-05-25" & as.Date(Datetime_EST) < "2021-06-15") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+#remove temps less than 25
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2021-05-25" & as.Date(Datetime_EST) < "2021-06-15") %>%
+  filter(Temperature > 25) -> june2021_filtered
+
+filtered_KB_data %>% 
+  filter(as.Date(Datetime_EST) > "2021-08-10" & as.Date(Datetime_EST) < "2021-08-24") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  theme_bw()
+# the temperature is oscillating 5 degrees per day 
+
+# for this section, I am going to manually filter out the low temps <27ºC and extremely high temps
+filtered_KB_data %>% 
+  dplyr::select(!z_score) %>% 
+  filter(as.Date(Datetime_EST) > "2021-08-10" & as.Date(Datetime_EST) < "2021-08-24") %>% #301 
+  filter(Temperature > 27 & Temperature < 31.5) -> august_filtered_KB_data
+
+# all time
+filtered_KB_data %>% 
+  filter(!(as.Date(Datetime_EST) > "2019-10-12" & as.Date(Datetime_EST) < "2019-10-20")) %>% 
+  full_join(., oct2019_filtered_data) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-01-05" & as.Date(Datetime_EST) < "2020-01-31")) %>% 
+  full_join(., jan2020_filtered) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-03-01" & as.Date(Datetime_EST) < "2020-03-15")) %>%
+  full_join(., mar2020_filtered) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-04-05" & as.Date(Datetime_EST) < "2020-06-01")) %>% 
+  full_join(., may2020_filtereddata) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-09-01" & as.Date(Datetime_EST) < "2020-09-15")) %>% 
+  full_join(., sept2020_filtereddata) %>% 
+  filter(!(as.Date(Datetime_EST) > "2021-05-25" & as.Date(Datetime_EST) < "2021-06-15")) %>% 
+  full_join(., june2021_filtered) %>% 
+  filter(!(as.Date(Datetime_EST) > "2021-08-10" & as.Date(Datetime_EST) < "2021-08-24")) %>% 
+  full_join(., august_filtered_KB_data) %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() 
+
+filtered_KB_data %>% 
+  filter(!(as.Date(Datetime_EST) > "2019-10-12" & as.Date(Datetime_EST) < "2019-10-20")) %>% 
+  full_join(., oct2019_filtered_data) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-01-05" & as.Date(Datetime_EST) < "2020-01-31")) %>% 
+  full_join(., jan2020_filtered) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-03-01" & as.Date(Datetime_EST) < "2020-03-15")) %>%
+  full_join(., mar2020_filtered) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-04-05" & as.Date(Datetime_EST) < "2020-06-01")) %>% 
+  full_join(., may2020_filtereddata) %>% 
+  filter(!(as.Date(Datetime_EST) > "2020-09-01" & as.Date(Datetime_EST) < "2020-09-15")) %>% 
+  full_join(., sept2020_filtereddata) %>% 
+  filter(!(as.Date(Datetime_EST) > "2021-05-25" & as.Date(Datetime_EST) < "2021-06-15")) %>% 
+  full_join(., june2021_filtered) %>% 
+  filter(!(as.Date(Datetime_EST) > "2021-08-10" & as.Date(Datetime_EST) < "2021-08-24")) %>% 
+  full_join(., august_filtered_KB_data)  -> tidy_KB_data
+
+# experimental period
+filtered_KB_data %>% 
+  filter(!(as.Date(Datetime_EST) > "2021-08-10" & as.Date(Datetime_EST) < "2021-08-24")) %>% 
+  full_join(., august_filtered_KB_data) %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-20") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() 
+```
+
+calculate daily thermal variability
+```{r}
+tidy_KB_data %>% 
+  group_by(as.Date(Datetime_EST)) %>% 
+  summarise(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
+  ggplot(., aes(x=`as.Date(Datetime_EST)`, y=daily_range)) +
+  geom_line() +
+  theme_bw() 
+```
+
+# join both datasets and plot temps 
+```{r}
+tidy_KB_data %>% 
+  full_join(., CCC_temp_filtered) %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_line() +
+  theme_bw() +
+  labs(x="Date", y = "Temp (ºC)") +
+  scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
+  scale_x_datetime(date_labels = "%b %Y",  # Customize the date format
+                     date_breaks = "3 month") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_vline(xintercept=as.POSIXct(as.Date("2021-06-23")))
+#ggsave("CCCvsnursery_temp.png", width=10, height = 7)
+```
+
+# save tidied dataset
+
+```{r}
+tidy_KB_data %>% 
+  full_join(., CCC_temp_filtered) %>% 
+  select(Temperature, Datetime_EST, site) %>% 
+  as.data.frame() %>% 
+  write_csv(., "tidy_KB_CCC_data.csv")
+```
+
+
+# plot CCC HOBO data to show why it was removed
+```{r}
+CCC_hobo <- read_csv("raw_data/CCC_HOBO.csv", skip = 1)
+
+convertFtoC <- function(F) {
+  C <- (F - 32) * 5/9
+  return(C)
+}
+
+CCC_hobo %>% 
+  rename(Temperature = `Temp, °F (LGR S/N: 20261765, SEN S/N: 20261765)`) %>% 
+  rename(Date_GMT = `Date Time, GMT-04:00`) %>% 
+  select(Date_GMT, Temperature) %>% 
+  mutate(site = "CCC_HOBO") %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(Date_GMT, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  mutate(Temperature=convertFtoC(Temperature)) -> CCC_hobo
+```
+
+
+## virginia key buoy water temp data
+```{r}
+file_paths <- c("raw_data/virginiakeybuoy/vakf1h2020.txt", "raw_data/virginiakeybuoy/vakf1h2021.txt", "raw_data/virginiakeybuoy/vakf1h2022.txt")
+
+process_file <- function(file_path) {
+  data <- read.table(file_path, header = FALSE, sep = "", comment.char = "#", stringsAsFactors = FALSE)
+
+# Read the first two lines to get the column names
+lines <- read_lines(file_path, n_max = 2)
+
+# Extract column names from the second line
+column_names <- strsplit(lines[1], "\\s+")[[1]]
+
+# Assign the column names to the data frame
+colnames(data) <- column_names
+
+data %>% 
+  rename(Temperature = WTMP) %>% 
+  select(`#YY`:mm,Temperature) -> data
+  
+data$Datetime <- ymd_hm(paste(data$`#YY`, data$MM, data$DD, data$hh, data$mm))
+
+data$Datetime <- as.POSIXct(data$Datetime, tz="UTC")
+data$Datetime_EST <- with_tz(data$Datetime, "America/New_York")
+
+return(data)
+}
+
+# Initialize an empty list to store the processed data frames
+all_data <- list()
+
+# Loop over the file paths and process each file
+for (file_path in file_paths) {
+  data <- process_file(file_path)
+  all_data[[file_path]] <- data
+}
+
+# Optionally, combine all data frames into one, if needed
+combined_data <- do.call(rbind, all_data)
+
+# View the combined data
+print(combined_data)
+
+combined_data %>% 
+  select(Temperature, Datetime_EST) %>% 
+  mutate(site = "VK_Buoy") -> vkbuoydata
+
+rownames(vkbuoydata) <- NULL
+
+#VK_Buoy data gets written as "999" if there is no available data for that time point, so filter that out
+
+vkbuoydata %>% 
+  filter(Temperature < 999) -> vkbuoydata
+
+# Filter the data to select time points at 2-hour intervals
+vkbuoydata <- vkbuoydata %>%
+  filter(minute(Datetime_EST) == 0 & (hour(Datetime_EST) %% 2 == 0))
+```
+
+```{r}
+tidy_KB_data <- read_csv("tidy_KB_CCC_data.csv")
+```
+
+
+```{r}
+tidy_KB_data #every 2 hr
+
+vkbuoydata %>% 
+  select(Temperature, Datetime_EST) %>% 
+  mutate(site = "VK Buoy") -> vkbuoydata_subset #every 2 hr
+
+full_join(CCC_hobo, tidy_KB_data) %>% 
+  full_join(., vkbuoydata_subset) %>% 
+  select(!Date_GMT) %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-20") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_line() +
+  theme_classic() +
+  labs(x="Date") 
+#ggsave("plot_withCCCHOBO.png")
+```
+
+

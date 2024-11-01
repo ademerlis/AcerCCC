@@ -12,219 +12,110 @@ library(cowplot)
 
 load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
 load("Rdata_files/realModels_Acer.RData")
-
-KEGG_genes <- read_csv("KEGG/KEGG_CvN_results_withgenes.csv")
-
-KEGG_WGCNA_darkmagenta_genes <- read_csv("KEGG/KEGG_darkmagentamodule_withgenes.csv")
-
-KEGG_WGCNA_mediumpurple3_genes <- read_csv("KEGG/KEGG_mediumpurple3_withgenes.csv")
+load("Rdata_files/vsd.RData")
+load("Rdata_files/pvals.RData")
 ```
 
-# normalize gene counts
+
+# DEGs of interest
 ```{r}
-dds <- estimateSizeFactors(dds)
-normalized_counts <- counts(dds, normalized=TRUE)
+Location_CCC_vs_Nursery_lfcshrink <- read_csv("results/resLFCLocation_CCC_vs_nursery_annotDGEs_padj05.csv")
+Location_CCC_vs_Nursery_lfcshrink %>% 
+  arrange(desc(log2FoldChange)) 
 
-resLFC <- lfcShrink(dds, coef="Location_CCC_vs_nursery", type="apeglm")
+#Acropora_003744 = TNF associated factor
+# Acropora_008410 = heat shock-mediated polytene chromosome puffing	
+#Acropora_017542 = Belongs to the small heat shock protein (HSP20) family	
+# Acropora_015083 = unfolded protein binding
 
-normalized_counts %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var="gene") -> normalized_counts
+Location_CCC_vs_Nursery_lfcshrink %>% 
+  arrange(log2FoldChange)
+#nothing sticks out to me 
 
 design %>% 
-  rownames_to_column(var="Sample_ID") -> design
-```
+  rownames_to_column(var="Sample") -> design
+``` 
 
-# join KEGG terms with gene counts
+
+## Acropora_003744 = TNF associated factor
 ```{r}
-KEGG_genes %>% 
-  dplyr::select(ID, Description, Category, KO, gene, annot) %>% 
-  left_join(., normalized_counts, by = "gene") %>%  #151 genes
-  pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
-  full_join(., design, by = "Sample_ID") -> KEGG_genes_normcounts
-
-
-resLFC %>% 
+p1<-t(vsd) %>% 
   as.data.frame() %>% 
-  rownames_to_column(var="gene") %>% 
-  dplyr::select(gene, log2FoldChange) -> genes_l2fc
+  select(Acropora_003744) %>% 
+  rownames_to_column() %>% 
+  separate(rowname, into = c("Species", "ID", "Location", "Genotype"), sep ="_") %>% 
+  unite("Sample", Species,ID, sep = "_") %>% 
+  select(!Genotype) %>% 
+  full_join(., design) %>% 
+  ggplot(., aes(x=Location, y=Acropora_003744, fill = Location)) +
+  geom_boxplot() +
+  theme_classic() +
+  labs(y = "VST-Normalized Expression Level", title = "Acropora_003744 = TNF associated factor") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
 
-resLFC %>% 
+## Acropora_008410 = heat shock-mediated polytene chromosome puffing	
+```{r}
+p2<-t(vsd) %>% 
   as.data.frame() %>% 
-  rownames_to_column(var="gene") %>% 
-filter(gene == "Acropora_013375")
-
-KEGG_genes_normcounts %>% 
-  right_join(., genes_l2fc, by="gene") -> KEGG_genes_normcounts_l2fc
-```
-
-Estrogen signaling pathway
-```{r}
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map04915") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange))
-#heat shock-mediated polytene chromosome puffing	L2FC=6
-# unfolded protein binding L2FC=1.95
-# heat shock protein 90kDa beta (Grp94), member 1
-# protein refolding
-
-p1<-KEGG_genes_normcounts %>% 
-  filter(ID == "map04915") %>% 
-  filter(norm_expression > 0) %>% 
-  filter(annot == "heat shock-mediated polytene chromosome puffing" & gene == "Acropora_008410") %>% 
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
+  select(Acropora_008410) %>% 
+  rownames_to_column() %>% 
+  separate(rowname, into = c("Species", "ID", "Location", "Genotype"), sep ="_") %>% 
+  unite("Sample", Species,ID, sep = "_") %>% 
+  select(!Genotype) %>% 
+  full_join(., design) %>% 
+  ggplot(., aes(x=Location, y=Acropora_008410, fill = Location)) +
   geom_boxplot() +
-  facet_wrap(~gene, scales = "free_y") +
-  labs(y = "Normalized Expression Level", title = "map04915:Estrogen signaling pathway; Acropora_008410: heat shock-mediated polytene chromosome puffing") +
-  theme(text = element_text(size = 15)) +
   theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
+  labs(y = "VST-Normalized Expression Level", title = "Acropora_008410 = heat shock-mediated polytene chromosome puffing") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
 
-p2<-KEGG_genes_normcounts %>% 
-  filter(ID == "map04915") %>% 
-  filter(norm_expression > 0) %>% 
-  filter(annot == "unfolded protein binding") %>% 
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
+## Acropora_017542 = Belongs to the small heat shock protein (HSP20) family	
+```{r}
+p3<-t(vsd) %>% 
+  as.data.frame() %>% 
+  select(Acropora_017542) %>% 
+  rownames_to_column() %>% 
+  separate(rowname, into = c("Species", "ID", "Location", "Genotype"), sep ="_") %>% 
+  unite("Sample", Species,ID, sep = "_") %>% 
+  select(!Genotype) %>% 
+  full_join(., design) %>% 
+  ggplot(., aes(x=Location, y=Acropora_017542, fill = Location)) +
   geom_boxplot() +
-  facet_wrap(~gene, scales = "free_y") +
-  labs(y = "Normalized Expression Level", title = "map04915:Estrogen signaling pathway; Acropora_017735: unfolded protein binding") +
-  theme(text = element_text(size = 15)) +
   theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
+  labs(y = "VST-Normalized Expression Level", title = "Acropora_017542 = Belongs to the small heat shock protein (HSP20) family") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
+```
 
-p3<-KEGG_genes_normcounts %>% 
-  filter(ID == "map04915") %>% 
-  filter(norm_expression > 0) %>% 
-  filter(annot == "heat shock protein 90kDa beta (Grp94), member 1") %>% 
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
+## Acropora_015083 = unfolded protein binding
+```{r}
+p4<-t(vsd) %>% 
+  as.data.frame() %>% 
+  select(Acropora_015083) %>% 
+  rownames_to_column() %>% 
+  separate(rowname, into = c("Species", "ID", "Location", "Genotype"), sep ="_") %>% 
+  unite("Sample", Species,ID, sep = "_") %>% 
+  select(!Genotype) %>% 
+  full_join(., design) %>% 
+  ggplot(., aes(x=Location, y=Acropora_015083, fill = Location)) +
   geom_boxplot() +
-  facet_wrap(~gene, scales = "free_y") +
-  labs(y = "Normalized Expression Level", title = "map04915:Estrogen signaling pathway; Acropora_029829: heat shock protein 90kDa beta (Grp94), member 1") +
-  theme(text = element_text(size = 15)) +
   theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
-
-p4<-KEGG_genes_normcounts %>% 
-  filter(ID == "map04915") %>% 
-  filter(norm_expression > 0) %>% 
-  filter(annot == "protein refolding") %>% 
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
-  geom_boxplot() +
-  facet_wrap(~gene, scales = "free_y") +
-  labs(y = "Normalized Expression Level", title = "map04915:Estrogen signaling pathway; Acropora_000806: protein refolding") +
+  labs(y = "VST-Normalized Expression Level", title = "Acropora_015083 = unfolded protein binding") +
   theme(text = element_text(size = 15)) +
-  theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
+  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
 ```
 
 
-Pathways in cancer
 ```{r}
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map05200") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("TNF|tumor necrosis factor", annot))
-
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map05200") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("activation of NF-kappaB-inducing kinase activity", annot))
+cowplot::plot_grid(p1, p2, p3, p4, ncol = 1)
+ggsave("specificgeneexpression.pdf", width = 12, height = 7)
 ```
 
-Prostate cancer
-```{r}
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map05215") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("fibroblast", annot))
 
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map05215") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("heat|Heat", annot))
-```
-
-Fluid shear stress and atherosclerosis
-```{r}
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map05418") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("heat|Heat", annot))
-
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map05418") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("unfolded", annot))
-
-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map05418") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("EF", annot))
-```
-
-Melanogenesis
-```{r}
-p5<-KEGG_genes_normcounts_l2fc %>% 
-  filter(ID == "map04916") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  filter(gene=="Acropora_015787") %>% #greatest L2FC
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
-  geom_boxplot()+
-  facet_wrap(~gene, scales = "free_y")+
-  labs(y = "Normalized Expression Level", title = "map04916:Melanogenesis; Acropora_015787: calmodulin-dependent protein kinase activity") +
-  theme(text = element_text(size = 15)) +
-  theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
-
-
-#frizzled binding
-p6<-KEGG_genes_normcounts %>% 
-  filter(annot == "frizzled binding" & gene == "Acropora_009948") %>% 
-  filter(norm_expression > 0) %>% 
-  ggplot(., aes(x=Location, y=norm_expression, fill=Location)) +
-  geom_boxplot() +
-  facet_wrap(~gene, scales = "free_y")+
-  labs(y = "Normalized Expression Level", title = "map04916:Melanogenesis; Acropora_009948: frizzled binding") +
-  theme(text = element_text(size = 15)) +
-  theme_classic() +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) +
-  theme(legend.position = "none")
-
-```
-
-plot all genes together
-```{r}
-plot_grid(p1,p2,p3,p4,p5,p6,p7,p8, nrow=3)
-#ggsave("kegg_genes_expression.pdf", width=12,height=7)
-```
 
 # WGCNA genes
 
@@ -243,15 +134,30 @@ gene_annot %>%
 design %>% 
   rownames_to_column(var="Sample_ID") -> design
 
+vsd %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var="gene") %>% 
+  arrange(desc(gene))
+
+as.data.frame(resLFC) %>% 
+  rownames_to_column(var="gene") -> allgenesl2fc
+
+t(vsd) %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  separate(rowname, into = c("Species", "ID", "Location", "Genotype"), sep ="_") %>% 
+  unite("Sample_ID", Species,ID, sep = "_") %>% 
+  select(!Genotype) %>% 
+  pivot_longer(Acropora_000001:Acropora_34621, names_to = "gene", values_to = "norm_expression") -> vst_normalized_counts
+
 darkmagentagenes %>% 
   left_join(., gene_annot, by = "gene") %>% 
   drop_na(annot) %>% 
-  left_join(., normalized_counts) %>% 
-  pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
-  left_join(., genes_l2fc) %>% 
-  left_join(., design, by = "Sample_ID") -> darkmagentagenes_annot_counts
+  left_join(., vst_normalized_counts) %>% 
+  left_join(allgenesl2fc, by = "gene") %>% 
+  left_join(., design, by = c("Sample_ID", "Location")) -> darkmagentagenes_annot_counts
 
-write_csv(darkmagentagenes_annot_counts, "darkmagentagenes_annot_counts.csv")
+#write_csv(darkmagentagenes_annot_counts, "darkmagentagenes_annot_counts_vstnormalized.csv")
 ```
 
 ### DEGs of interest in module
@@ -340,54 +246,6 @@ plot_grid(p1,p2,p3,p4,p5,p6,p7,nrow=2)
 #ggsave("darkmagentagenes.pdf", width = 12, height = 7)
 ```
 
-### KEGG analysis on module specific genes
-```{r}
-KEGG_WGCNA_darkmagenta_genes %>% 
-  dplyr::select(ID, Description, Category, KO, gene, annot) %>% 
-  left_join(., normalized_counts, by = "gene") %>%  #151 genes
-  pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
-  full_join(., design, by = "Sample_ID") -> KEGG_darkmagenta_genes_normcounts
-
-KEGG_darkmagenta_genes_normcounts %>% 
-  right_join(., genes_l2fc, by="gene") -> KEGG_darkmagneta_genes_normcounts_l2fc
-```
-
-```{r}
-KEGG_darkmagneta_genes_normcounts_l2fc %>% 
-  filter(ID == "map04080") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("G-protein", annot))
-```
-
-
-## mediumpurple3 module
-
-### KEGG analysis 
-```{r}
-KEGG_WGCNA_mediumpurple3_genes %>% 
-  dplyr::select(ID, Description, Category, KO, gene, annot) %>% 
-  left_join(., normalized_counts, by = "gene") %>%  #151 genes
-  pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
-  full_join(., design, by = "Sample_ID") -> KEGG_mediumpurple3_genes_normcounts
-
-KEGG_mediumpurple3_genes_normcounts %>% 
-  right_join(., genes_l2fc, by="gene") -> KEGG_mediumpurple3_genes_normcounts_l2fc
-```
-
-```{r}
-KEGG_mediumpurple3_genes_normcounts_l2fc %>% 
-  filter(ID == "map04080") %>% 
-  filter(norm_expression > 0) %>% 
-  arrange(desc(log2FoldChange)) %>% 
-  select(gene, annot, log2FoldChange) %>% 
-  distinct() %>% 
-   filter(grepl("G-protein", annot))
-```
-
-
 
 ### specific genes of interest
 ```{r}
@@ -400,12 +258,11 @@ mediumpurple3 %>%
 mediumpurple3genes %>% 
   left_join(., gene_annot, by = "gene") %>% 
   drop_na(annot) %>% 
-  left_join(., normalized_counts) %>% 
-  pivot_longer(Acer_1089:Acer_2384, names_to="Sample_ID", values_to="norm_expression") %>% 
-  left_join(., genes_l2fc) %>% 
-  left_join(., design, by = "Sample_ID") -> mediumpurple3genes_annot_counts
+  left_join(., vst_normalized_counts) %>% 
+  left_join(allgenesl2fc, by = "gene") %>% 
+  left_join(., design, by = c("Sample_ID", "Location")) -> mediumpurple3genes_annot_counts
 
-#write_csv(mediumpurple3genes_annot_counts, "mediumpurple3genes_annot_counts.csv")
+#write_csv(mediumpurple3genes_annot_counts, "mediumpurple3genes_annot_counts_vstnormalized.csv")
 
 mediumpurple3genes_annot_counts %>% 
   arrange(desc(log2FoldChange))
@@ -460,138 +317,4 @@ plot_grid(m1,m2,m3,m4,nrow=1)
 ```
 
 
-
-
-# DEGs of interest
-```{r}
-Location_CCC_vs_Nursery_lfcshrink <- read_csv("results/resLFCLocation_CCC_vs_nursery_annotDGEs_padj05.csv")
-Location_CCC_vs_Nursery_lfcshrink %>% 
-  arrange(desc(log2FoldChange)) 
-
-#Acropora_003744 = TNF associated factor
-# Acropora_008410 = heat shock-mediated polytene chromosome puffing	
-#Acropora_017542 = Belongs to the small heat shock protein (HSP20) family	
-# Acropora_015083 = unfolded protein binding
-#Acropora_011526 = T cell activation via T cell receptor contact with antigen bound to MHC molecule on antigen presenting cell	
-
-
-Location_CCC_vs_Nursery_lfcshrink %>% 
-  arrange(log2FoldChange)
-#nothing sticks out to me 
-``` 
-
-# normalize gene counts
-```{r}
-results <- results(dds)
-
-# Subset normalized counts based on a criterion, e.g., adjusted p-value less than 0.05
-# First, identify which genes meet the criterion
-significant_genes <- rownames(results[!is.na(results$padj) & results$padj < 0.05, ])
-
-normalized_counts %>% 
-  column_to_rownames(var="gene") ->normalized_counts
-
-# Then, subset the normalized counts based on these genes
-significant_counts <- normalized_counts[significant_genes, ]
-```
-
-
-# boxplot Acropora_003744 = TNF associated factor
-```{r}
-Acropora_003744_counts <- significant_counts["Acropora_003744",]
-
-df_Acropora_003744 <- data.frame(expression_level = Acropora_003744_counts)
-
-df_Acropora_003744 %>% 
-  rownames_to_column(var="Sample") -> df_Acropora_003744
-
-design %>% 
-  rownames_to_column(var="Sample") -> design
-  
-p1<-full_join(design, df_Acropora_003744) %>% 
-  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
-  geom_boxplot() +
-  theme_classic() +
-  labs(y = "Normalized Expression Level", title = "Acropora_003744 = TNF associated factor") +
-  theme(text = element_text(size = 15)) +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
-```
-
-# boxplot of Acropora_008410 = heat shock-mediated polytene chromosome puffing	
-```{r}
-Acropora_008410_counts <- normalized_counts["Acropora_008410",]
-
-df_Acropora_008410 <- data.frame(expression_level = Acropora_008410_counts)
-
-df_Acropora_008410 %>% 
-  rownames_to_column(var="Sample") -> df_Acropora_008410
- 
-p2<-full_join(design, df_Acropora_008410) %>% 
-  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
-  geom_boxplot() +
-  theme_classic() +
-  labs(y = "Normalized Expression Level", title = "Acropora_008410 = heat shock-mediated polytene chromosome puffing	") +
-  theme(text = element_text(size = 15)) +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
-```
-
-#Acropora_017542 = Belongs to the small heat shock protein (HSP20) family	
-```{r}
-Acropora_017542_counts <- normalized_counts["Acropora_017542",]
-
-df_Acropora_017542 <- data.frame(expression_level = Acropora_017542_counts)
-
-df_Acropora_017542 %>% 
-  rownames_to_column(var="Sample") -> df_Acropora_017542
- 
-p3<-full_join(design, df_Acropora_017542) %>% 
-  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
-  geom_boxplot() +
-  theme_classic() +
-  labs(y = "Normalized Expression Level", title = "Acropora_017542 = Belongs to the small heat shock protein (HSP20) family") +
-  theme(text = element_text(size = 15)) +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
-```
-
-# Acropora_015083 = unfolded protein binding
-```{r}
-Acropora_015083_counts <- normalized_counts["Acropora_015083",]
-
-df_Acropora_015083 <- data.frame(expression_level = Acropora_015083_counts)
-
-df_Acropora_015083 %>% 
-  rownames_to_column(var="Sample") -> df_Acropora_015083
- 
-p4<-full_join(design, df_Acropora_015083) %>% 
-  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
-  geom_boxplot() +
-  theme_classic() +
-  labs(y = "Normalized Expression Level", title = "Acropora_015083 = unfolded protein binding") +
-  theme(text = element_text(size = 15)) +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
-```
-
-# Acropora_011526 = T cell activation via T cell receptor contact with antigen bound to MHC molecule on antigen presenting cell	
-```{r}
-Acropora_011526_counts <- normalized_counts["Acropora_011526",]
-
-df_Acropora_011526 <- data.frame(expression_level = Acropora_011526_counts)
-
-df_Acropora_011526 %>% 
-  rownames_to_column(var="Sample") -> df_Acropora_011526
- 
-p5<-full_join(design, df_Acropora_011526) %>% 
-  ggplot(., aes(x=Location, y=expression_level, fill=Location)) +
-  geom_boxplot() +
-  theme_classic() +
-  labs(y = "Normalized Expression Level", title = "Acropora_011526 = T cell activation ") +
-  theme(text = element_text(size = 15)) +
-  scale_fill_manual(values = c("CCC" = "orange", "nursery" = "darkblue")) 
-```
-
-
-```{r}
-cowplot::plot_grid(p1, p2, p3, p4, p5, ncol = 3)
-ggsave("specificgeneexpression.pdf", width = 12, height = 7)
-```
 

@@ -405,7 +405,7 @@ merged_GS_MM %>%
   theme(legend.position = "none") +
   labs(x="Module Membership",
        y="Gene Significance for Coral City Camera")
-ggsave("MM_GS_CCC.pdf")
+ggsave("MM_GS_CCC.png", width = 8, height = 5)
 
 
 # selecting specific modules to plot (change depending on which trait you're looking at)
@@ -452,7 +452,7 @@ design %>%
    pivot_longer(MEdarkmagenta:MEmediumpurple3, names_to = "module", values_to = "collective_expression_level") %>% 
 	ggplot(.,aes(x = Location, y = collective_expression_level,fill = Location)) +
 	  geom_boxplot(width = 0.2) +
-   facet_wrap(~module) +
+   facet_wrap(~module, ncol = 1) +
 	  theme_classic() +
    scale_fill_manual(values = c("darkblue", "orange"))
 #ggsave("ME_expression_location.pdf")
