@@ -1,25 +1,43 @@
-# How does an urbanized environment influence gene expression of *Acropora cervicornis*?
+This repository contains data and analysis scripts for the manuscript:
 
-<img width="656" alt="Screen Shot 2023-08-04 at 11 47 45 AM" src="https://github.com/ademerlis/AcerCCC/assets/56000927/db381d49-a962-4656-ad18-21efcd8a5c77">
+## 
+#### **Authors:** 
+#### **Journal:** 
 
-From [Enochs et al. 2023](https://www.nature.com/articles/s41598-023-33467-7)
+-----
 
+### Description:
+These repository contains all data and code used to study the physiological impact of translocation of _Acropora cervicorns_ to an urbanized environment in the Port of Miami.
 
-## Methods
+### Contents:
 
-**1. Field collections**
+#### Environmental Data:
+* In the subfolder **raw_data**, 
 
-In June 2021, four genotypes of *A. cervicornis* were outplanted to the urban Coral City Camera site following collection from the in-situ coral nursery off Key Biscayne, FL. In late October/early November 2021, ~1 cm tissue samples were collected from each surviving outplant and an offshore in-situ nursery conspecific and immediately preserved in Zymo DNA/RNA Shield. 
+#### Physiology:
+* The complete data file that contains all metadata and buoyant weight mesaurements is the file **metadata.csv**.
+* Physiology data analysis is broken up into three subfolders: **Calcification**, **R_intensity**, and **Photosynthetic Efficiency**.
+* In the subfolder **Calcification**, **calcification.Rmd** has all the code needed for Supplementary Figure 1 and Table S3 statistics.
+* In the subfolder **R_intensity**, **colorscores.Rmd** has all the code needed for Supplementary Figure 2 and Table S4 statistics.
+* The subfolder **Photosynthetic Efficiency** has several R files that are important for analysis.
+  - **1_importtidyPAMdata.Rmd** includes the function to import raw IPAM data into R, and creates a format file that matches coral fragment metadata to the area of interest (AOI) and YII (photosynthetic efficiency) values to the IPAM image metadata files. The raw files for this can be found in the **ipam_data** subfolder.
+ 
+#### Gene Expression:
+* The raw sequence .fastq files will be made publicly available on the National Center for Biotechnology Information (NCBI) Sequence Read Archive (SRA) under BioProject PRJNA1196005, upon publication.
+* The file **readcounts_rawtrimmedaligned_summary.csv** has a description of the raw, trimmed, and aligned reads for *A. cervicornis* and *P. clivosa*.
+* The file **treatment_metadata.csv** has the sample metadata, including date sampled, treatment group, and genotype.
+* For each species, there is a corresponding subfolder.
+* In **Acervicornis**:
+  - **1_bioinformatics** subfolder contains the scripts needed to process raw 3' RNA-Seq sequences on the UM HPC, [Pegasus](https://acs-docs.readthedocs.io/pegasus/README.html), which uses an LSF resource manager. The bioinformatics pipeline outlined in this folder includes: FastQC > Cutadapt > bowtie2 > samtools
+  - **2_DESeq2_host.Rmd** R markdown file for analyzing *A. cervicornis* host differential gene expression as a result of the variable temperature treatment. This has the code needed for Figures 3 and 4, as well as Supplementary Tables 8, 9, and 11.
+  - **2_DESeq2_symbiont.Rmd** R markdown file for analyzing *A. cervicornis* symbiont differential gene expression as a result of the variable temperature treatment. This has the code needed for Figures 3 and 4, as well as Supplementary Tables 8, 9, and 12.
+  - **2_outlier_detection** subfolder for the *ArrayQualityMetrics* outlier detection method used for removing samples based on gene expression patterns.
+  - **3_GO-MWU** subfolder contains the R markdown files and functions necessary for running the specific method of Gene Ontology (GO) enrichment analysis used in this study. This has the code needed for Figures 5 and 6, as well as Supplementary Tables 10, 15, 16, and 17.
+  - **results_csv** subfolder contains all the results files for the *A. cervicornis* host and symbiont differential gene expression.
+ 
+#### Figures:
+* This folder contains all the manuscript figures.
+</br>
 
-![Acer color zipties at CCC June 2021](https://github.com/ademerlis/AcerCCC/assets/56000927/fa307ad4-e7ec-4225-b149-f7c8bd39edc5)
-![Acer growth at CCC Nov 2021](https://github.com/ademerlis/AcerCCC/assets/56000927/828eb7dd-2f96-462b-a472-ef618a68dcc0)
-Figure 2. Images from Dalton Hesley of initial outplants in June 2021 with colored zipties for genotype tracking, and different outplants after six months in the field (Nov 2021).
-
-**2. Extractions and Sequencing**
-
-Total RNA was extracted using the Zymo MagBead DNA/RNA extraction kit, then prepared as QuantSeq 3'mRNA-Seq cDNA libraries and sequenced on a NOVAseq S2 flow cell at the University of Miami Genomics Center.
-
-**3. Bioinformatics**
-
-See [this README](https://github.com/ademerlis/AcerCCC/blob/main/gene_expression/bioinformatics/README.md) for in-depth scripts of pipeline.
-
+#### Notes
+* This README.md was formatted following [Dr. Ana Palacio's GitHub repository](https://github.com/anampc/Acer_NH4_disease/tree/master).
