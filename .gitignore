@@ -5,7 +5,7 @@
 *.pdf
 dissertation_figures/
 map/
-plots_for_manuscript/
+figures_for_manuscript/
 *.RData
 *.obo
 *.tab
