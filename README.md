@@ -1,7 +1,12 @@
 This repository contains data and analysis scripts for the manuscript:
 
-## 
-#### **Authors:** 
+## Characterization of gene expression patterns in Acropora cervicornis following transplantation to a marginal environment
+#### **Authors:** Allyson DeMerlis1,2,3, Colin Foord4, Dalton J. Hesley1, Joseph D. Unsworth1, Richard F. Karp1,2,3, Martine D’Alessandro1, Lys M. Isma1, Natalia Andrade-Rodriguez1, Kevin Wong1, Michael S. Studivan2,3, Mike Jankulak3, Andrew C. Baker1, Diego Lirman1, Nikki Traylor-Knowles1, Ian C. Enochs3
+1. Rosenstiel School for Marine, Atmospheric, and Earth Science, University of Miami, Miami, FL, USA
+2. University of Miami Cooperative Institute for Marine and Atmospheric Studies, Miami, FL, USA
+3. Atlantic Oceanographic and Meteorological Laboratory, Ocean Chemistry and Ecosystems Division, U.S. National Oceanic and Atmospheric Administration, Miami, FL, USA
+4. Coral Morphologic, Miami, FL, USA
+
 #### **Journal:** 
 
 -----
@@ -11,8 +16,9 @@ These repository contains all data and code used to study the physiological impa
 
 ### Contents:
 
-#### Environmental Data:
-* In the subfolder **raw_data**, 
+#### environmental_data:
+* This folder contains 3 Rmarkdown files for tidying temperature data (**1_tidying_env_data.Rmda**), calculating and plotting thermal variability (**2_thermalvariability.Rmd**), and obtaining the mean monthly maximum (MMM) data from NOAA CoralWatch satellite data products (**3_MMMDHW.Rmd**).
+* In the subfolder **raw_data**, there are .csv files for the temperature data at the Key Biscayne (KB) Nursery, 
 
 #### Physiology:
 * The complete data file that contains all metadata and buoyant weight mesaurements is the file **metadata.csv**.
