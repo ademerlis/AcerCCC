@@ -10,29 +10,29 @@ output: html_document
 ```{r}
 library(tidyverse)
 
-tidy_KB_CCC_data <- read_csv("tidy_KB_CCC_data.csv")
+tidy_KB_CCC_data <- read_csv("results_csv/tidy_KB_CCC_data.csv")
 ```
 
 # diel variability for experiment
 
 ```{r}
 tidy_KB_CCC_data %>% 
-  filter(as.Date(Datetime_EST) < "2021-11-01" & as.Date(Datetime_EST) > "2021-06-23") %>% 
-  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  filter(Date < "2021-11-01" & Date > "2021-06-23") %>% 
+  ggplot(., aes(x=Date, y=Temperature, color = site)) +
   geom_line() +
   theme_bw() +
   scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
-  scale_x_datetime(date_labels = "%b %Y",  # Customize the date format
+  scale_x_date(date_labels = "%b %Y",  # Customize the date format
                      date_breaks = "1 month") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x="Month Year", y = "Temperature")
 #ggsave("temps_experimentalperiod.pdf")
 ```
 
-
+looking at just a couple of days
 ```{r}
 tidy_KB_CCC_data %>% 
-  filter(as.Date(Datetime_EST) <= "2021-10-30" & as.Date(Datetime_EST) >= "2021-10-28") %>% 
+  filter(Date <= "2021-10-30" & Date >= "2021-10-28") %>% 
   ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
   geom_point() +
   geom_line() +
@@ -41,26 +41,67 @@ tidy_KB_CCC_data %>%
   labs(x="Date", y = "Temperature")  +
   scale_x_datetime(date_breaks = "3 hours", date_labels = "%H:%M") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-#ggsave("temps_experimentalperiod.pdf")
+```
+
+
+daily range (thermal variability)
+```{r}
+tidy_KB_CCC_data %>% 
+  group_by(Date,site) %>% 
+  summarise(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
+  ggplot(., aes(x=Date, y=daily_range, color = site)) +
+  geom_line() +
+  theme_bw() 
+#there are definitely outliers in here
+```
+
+
+```{r}
+tidy_KB_CCC_data %>% 
+  filter(site == "CCC") %>% 
+  mutate(year = year(Date), month = month(Date), day = day(Date)) %>% 
+  filter(Date < "2021-12-01") %>% 
+  mutate(Date = as.factor(Date)) %>% 
+  ggplot(., aes(x=Time, y=Temperature, color = Date)) +
+  geom_point() +
+  geom_smooth(se=F) +
+  facet_wrap(~month) +
+  scale_x_time(labels = scales::time_format("%H:%M")) +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+```{r}
+tidy_KB_CCC_data %>% 
+  filter(site == "Nursery") %>% 
+  mutate(year = year(Date), month = month(Date), day = day(Date)) %>% 
+  filter(Date < "2021-12-01") %>% 
+  mutate(Date = as.factor(Date)) %>% 
+  ggplot(., aes(x=Time, y=Temperature, color = Date)) +
+  geom_point() +
+  geom_smooth(se=F) +
+  facet_wrap(~month) +
+  scale_x_time(labels = scales::time_format("%H:%M")) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 ```
 
 ```{r}
 tidy_KB_CCC_data %>% 
   filter(as.Date(Datetime_EST) < "2021-11-01" & as.Date(Datetime_EST) > "2021-06-23") %>% 
-  separate(Datetime_EST, into = c("Date", "Time"), sep = " ") %>% 
-  mutate(Date = ymd(Date), Time = hms(Time)) %>%
-  mutate(Month = month(Date)) %>% 
-  mutate(Hour = hour(Time)) %>% 
-  ggplot(., aes(x=Hour, y=Temperature, color = site)) +
+  ggplot(., aes(x=Time, y=Temperature, color = site)) +
   geom_point() + 
   geom_smooth() +
-  facet_wrap(~Month)
+  facet_wrap(~month) +
+  scale_x_time(labels = scales::time_format("%H:%M"))+ 
+   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ## temperature data summary statistics
 ```{r}
 tidy_KB_CCC_data %>% 
-  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2020-12-01") %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-01") %>% 
   group_by(as.Date(Datetime_EST), site) %>% 
   mutate(season = case_when(`as.Date(Datetime_EST)` <= "2021-05-25" ~ "Dry",
                             `as.Date(Datetime_EST)` >= "2021-05-26" & `as.Date(Datetime_EST)` <= "2021-10-15" ~ "Wet",
