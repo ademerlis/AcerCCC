@@ -51,8 +51,8 @@ tidy_KB_CCC_data %>%
   summarise(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
   ggplot(., aes(x=Date, y=daily_range, color = site)) +
   geom_line() +
+  scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
   theme_bw() 
-#there are definitely outliers in here
 ```
 
 
@@ -65,7 +65,7 @@ tidy_KB_CCC_data %>%
   ggplot(., aes(x=Time, y=Temperature, color = Date)) +
   geom_point() +
   geom_smooth(se=F) +
-  facet_wrap(~month) +
+  facet_wrap(~month, scales = "free_x") +
   scale_x_time(labels = scales::time_format("%H:%M")) +
   theme_bw() +
   theme(legend.position = "none")
@@ -89,7 +89,7 @@ tidy_KB_CCC_data %>%
 
 ```{r}
 tidy_KB_CCC_data %>% 
-  filter(as.Date(Datetime_EST) < "2021-11-01" & as.Date(Datetime_EST) > "2021-06-23") %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-23") %>% 
   ggplot(., aes(x=Time, y=Temperature, color = site)) +
   geom_point() + 
   geom_smooth() +
@@ -97,6 +97,19 @@ tidy_KB_CCC_data %>%
   scale_x_time(labels = scales::time_format("%H:%M"))+ 
    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
+```{r}
+tidy_KB_CCC_data %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-01") %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
+  geom_line() +
+  facet_wrap(~month, scales = "free_x") +
+  scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
+  theme_bw()  +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+
 
 ## temperature data summary statistics
 ```{r}
@@ -125,10 +138,10 @@ tidy_KB_CCC_data %>%
   geom_line() +
   theme_bw() +
   scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
-  scale_x_date(date_labels = "%b %Y",  # Customize the date format
-                     date_breaks = "3 month") +
+  scale_x_date(date_labels = "%b",  # Customize the date format
+                     date_breaks = "1 month") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x="Month Year", y = "Daily Variability (ºC/day)")
+  labs(x="Month", y = "Daily Variability (ºC/day)")
 ```
 
 # mean daily variability by season

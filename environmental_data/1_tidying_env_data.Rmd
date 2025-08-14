@@ -31,7 +31,10 @@ cures_frame_tilt_temp %>%
 # split date and time into two columns
 cures_frame_tilt_temp %>% 
   tidyr::separate(Datetime_EST, c("Date", "Time"), sep = "\\ ", remove = FALSE) %>% 
-  mutate(Date = as.Date(Date), Time = hms(Time)) -> cures_frame_tilt_temp
+  mutate(Date = as.Date(Date), Time = format(Datetime_EST, format = "%H:%M:%S")) -> cures_frame_tilt_temp
+
+cures_frame_tilt_temp %>% 
+  mutate(Time_period = hms(Time)) -> cures_frame_tilt_temp
 
 max(cures_frame_tilt_temp$Datetime_EST) #"2022-02-01 12:00:00 EST"
 min(cures_frame_tilt_temp$Datetime_EST) #"2020-10-12 20:00:00 EDT"
@@ -44,8 +47,9 @@ ggplot(cures_frame_tilt_temp, aes(x=Date, y=Temperature)) +
 ```
 
 ```{r}
+# trim off the first and last day because those include time points before the instrument was in the water
 cures_frame_tilt_temp %>% 
-  filter(Date > "2021-06-01") -> CCC_temp_2021_06_01
+  filter(Date > "2021-06-01" & Date < "2021-12-01") -> CCC_temp_2021_06_01
 ```
 
 
@@ -70,18 +74,14 @@ CCC_temp_2021_06_01 %>%
 
 # import and tidy KB Nursery HOBO logger
 ```{r}
-#HOBO logs every two hours
-convertFtoC <- function(F) {
-  C <- (F - 32) * 5/9
-  return(C)
-}
-
+# trim off the first and last days because those include time points before the HOBO was in the water
 KB_05282021 <- read_csv("raw_data/KBNursery_2021_05_28.csv", skip = 1)
 KB_05282021 %>% 
   mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21085862, SEN S/N: 21085862)`) %>% 
   dplyr::select(Temperature, Datetime_EST) %>% 
+  filter(Datetime_EST > "2021-05-29 01:00:00" & Datetime_EST < "2021-08-11 11:00:00") %>% 
   mutate(Light = NA) -> KB_05282021
 
 KB_08112021 <- read_csv("raw_data/KBNursery_2021_08_11.csv", skip = 1)
@@ -90,6 +90,7 @@ KB_08112021 %>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
+  filter(Datetime_EST < "2021-12-07 17:00:00") %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_08112021
 
 KB_120821 <- read_csv("raw_data/KBNursery_2021_12_08.csv", skip = 1)
@@ -98,6 +99,7 @@ KB_120821%>%
   mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
   dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
   dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
+  filter(Datetime_EST > "2021-12-10 04:00:00" & Datetime_EST < "2021-12-31 00:00:00") %>% 
   dplyr::select(Temperature, Light, Datetime_EST) -> KB_120821
 
 rbind(KB_05282021, KB_08112021, KB_120821) -> all_KB_data
@@ -106,6 +108,13 @@ all_KB_data %>%
   mutate(site = "Nursery") -> all_KB_data
 
 all_KB_data$Temperature <- as.numeric(all_KB_data$Temperature)
+
+all_KB_data %>% 
+  tidyr::separate(Datetime_EST, c("Date", "Time"), sep = "\\ ", remove = FALSE) %>% 
+  mutate(Date = as.Date(Date), Time = format(Datetime_EST, format = "%H:%M:%S")) -> all_KB_data
+
+all_KB_data %>% 
+  mutate(Time_period = hms(Time)) -> all_KB_data
 ```
 
 plot all raw data 
@@ -118,50 +127,10 @@ ggplot(all_KB_data, aes(x=Datetime_EST, y=Temperature, color = site)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 ```
 
-tidying data and removing extreme outliers
-```{r}
-all_KB_data %>% 
-  filter(as.Date(Datetime_EST) < "2021-12-01") %>% 
-  tidyr::separate(Datetime_EST, c("Date", "Time"), sep = "\\ ", remove = FALSE) %>% 
-  mutate(Date = as.Date(Date), Time = hms(Time)) %>% 
-  select(!Light) %>% 
-  filter(Temperature < 35) %>% 
-  mutate( #filtering out those weirdly low data points between Aug-Sept 2021
-    keep_row = case_when(
-      Date >= as.Date("2021-08-01") & Date <= as.Date("2021-09-02") & Temperature < 26 ~ FALSE,
-      TRUE ~ TRUE
-    )
-  ) %>%
-  filter(keep_row) %>%
-  select(-keep_row)%>%  
-  ggplot(., aes(x=Date, y=Temperature, color = site)) +
-  geom_point() +
-  theme_bw() +
-  scale_x_date(date_labels = "%b %Y",  # Customize the date format
-                     date_breaks = "1 month") 
-```
-
-
-```{r}
-tidy_KB_data <- all_KB_data %>% 
-  filter(as.Date(Datetime_EST) < "2021-12-01") %>% 
-  tidyr::separate(Datetime_EST, c("Date", "Time"), sep = "\\ ", remove = FALSE) %>% 
-  mutate(Date = as.Date(Date), Time = hms(Time)) %>% 
-  select(!Light) %>% 
-  filter(Temperature < 35) %>% 
-  mutate( #filtering out those weirdly low data points between Aug-Sept 2021
-    keep_row = case_when(
-      Date >= as.Date("2021-08-01") & Date <= as.Date("2021-09-02") & Temperature < 26 ~ FALSE,
-      TRUE ~ TRUE
-    )
-  ) %>%
-  filter(keep_row) %>%
-  select(-keep_row)
-```
 
 mean daily temperature during entire dataset
 ```{r}
-tidy_KB_data %>% 
+all_KB_data %>% 
   group_by(Date) %>% 
   summarise(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
   ggplot(., aes(x=Date, y=mean_daily_temp)) +
@@ -172,11 +141,11 @@ tidy_KB_data %>%
 
 
 ```{r}
-tidy_KB_data %>% 
+all_KB_data %>% 
   mutate(year = year(Date), month = month(Date), day = day(Date)) %>% 
   filter(Date > "2021-06-01") %>% 
   mutate(Date = as.factor(Date)) %>% 
-  ggplot(., aes(x=Time, y=Temperature, color = Date)) +
+  ggplot(., aes(x=Time_period, y=Temperature, color = Date)) +
   geom_point() +
   geom_smooth(se=F) +
   facet_wrap(~month) +
@@ -189,7 +158,7 @@ tidy_KB_data %>%
 
 # join both datasets and plot temps 
 ```{r}
-tidy_KB_data %>% 
+all_KB_data %>% 
   full_join(., CCC_temp_2021_06_01) %>% 
   filter(Date < "2021-12-01" & Date > "2021-06-01") %>% 
   ggplot(., aes(x=Date, y=Temperature, color = site)) +
@@ -201,12 +170,12 @@ tidy_KB_data %>%
                      date_breaks = "1 month") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   geom_vline(xintercept=as.POSIXct(as.Date("2021-06-23")))
-#ggsave("CCCvsnursery_temp.png", width=10, height = 7)
+#ggsave("CCCvsnursery_temp.pdf", width=10, height = 7)
 ```
 
 # save tidied dataset
 ```{r}
-tidy_KB_data %>% 
+all_KB_data %>% 
   full_join(., CCC_temp_2021_06_01) %>% 
   filter(Date < "2021-12-01" & Date > "2021-06-01") %>% 
   mutate(year = year(Date), month = month(Date), day = day(Date)) %>% 
