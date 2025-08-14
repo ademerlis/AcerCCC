@@ -1,6 +1,6 @@
 This repository contains data and analysis scripts for the manuscript:
 
-## Characterization of gene expression patterns in Acropora cervicornis following transplantation to a marginal environment
+## Characterization of gene expression patterns in *Acropora cervicornis* following transplantation to a marginal environment
 #### **Authors:** Allyson DeMerlis1,2,3, Colin Foord4, Dalton J. Hesley1, Joseph D. Unsworth1, Richard F. Karp1,2,3, Martine D’Alessandro1, Lys M. Isma1, Natalia Andrade-Rodriguez1, Kevin Wong1, Michael S. Studivan2,3, Mike Jankulak3, Andrew C. Baker1, Diego Lirman1, Nikki Traylor-Knowles1, Ian C. Enochs3
 1. Rosenstiel School for Marine, Atmospheric, and Earth Science, University of Miami, Miami, FL, USA
 2. University of Miami Cooperative Institute for Marine and Atmospheric Studies, Miami, FL, USA
@@ -12,34 +12,32 @@ This repository contains data and analysis scripts for the manuscript:
 -----
 
 ### Description:
-These repository contains all data and code used to study the physiological impact of translocation of _Acropora cervicorns_ to an urbanized environment in the Port of Miami.
+These repository contains all data and code used to study the physiological impact of translocation of _Acropora cervicornis_ to an urbanized environment in the Port of Miami.
 
 ### Contents:
 
 #### environmental_data:
-* This folder contains 3 Rmarkdown files for tidying temperature data (**1_tidying_env_data.Rmda**), calculating and plotting thermal variability (**2_thermalvariability.Rmd**), and obtaining the mean monthly maximum (MMM) data from NOAA CoralWatch satellite data products (**3_MMMDHW.Rmd**).
-* In the subfolder **raw_data**, there are .csv files for the temperature data at the Key Biscayne (KB) Nursery, 
+* This folder contains 3 Rmarkdown files:
+    * **1_tidying_env_data.Rmd**: tidying temperature data
+    * **2_thermalvariability.Rmd**: calculating and plotting thermal variability
+    * **3_MMMDHW.Rmd**: obtaining the mean monthly maximum (MMM) data from NOAA Coral Watch.
+* In the subfolder **raw_data**, there are .csv files for the temperature data at the Key Biscayne (KB) Nursery (KBNursery_X_.csv), for the [CCC site](https://github.com/ademerlis/AcerCCC/blob/main/environmental_data/raw_data/Oct2020_Jan2022_1901102_urban-2020-10_(0)_Temperature.xlsx), and the [NOAA Coral Watch 5km climatology](https://github.com/ademerlis/AcerCCC/blob/main/environmental_data/raw_data/ct5km_climatology_v3.1.nc).
+* In the subfolder **results_csv**, there are tables and plots for the temperature data comparisons between sites.
 
-#### Physiology:
-* The complete data file that contains all metadata and buoyant weight mesaurements is the file **metadata.csv**.
-* Physiology data analysis is broken up into three subfolders: **Calcification**, **R_intensity**, and **Photosynthetic Efficiency**.
-* In the subfolder **Calcification**, **calcification.Rmd** has all the code needed for Supplementary Figure 1 and Table S3 statistics.
-* In the subfolder **R_intensity**, **colorscores.Rmd** has all the code needed for Supplementary Figure 2 and Table S4 statistics.
-* The subfolder **Photosynthetic Efficiency** has several R files that are important for analysis.
-  - **1_importtidyPAMdata.Rmd** includes the function to import raw IPAM data into R, and creates a format file that matches coral fragment metadata to the area of interest (AOI) and YII (photosynthetic efficiency) values to the IPAM image metadata files. The raw files for this can be found in the **ipam_data** subfolder.
- 
-#### Gene Expression:
-* The raw sequence .fastq files will be made publicly available on the National Center for Biotechnology Information (NCBI) Sequence Read Archive (SRA) under BioProject PRJNA1196005, upon publication.
-* The file **readcounts_rawtrimmedaligned_summary.csv** has a description of the raw, trimmed, and aligned reads for *A. cervicornis* and *P. clivosa*.
-* The file **treatment_metadata.csv** has the sample metadata, including date sampled, treatment group, and genotype.
-* For each species, there is a corresponding subfolder.
-* In **Acervicornis**:
-  - **1_bioinformatics** subfolder contains the scripts needed to process raw 3' RNA-Seq sequences on the UM HPC, [Pegasus](https://acs-docs.readthedocs.io/pegasus/README.html), which uses an LSF resource manager. The bioinformatics pipeline outlined in this folder includes: FastQC > Cutadapt > bowtie2 > samtools
-  - **2_DESeq2_host.Rmd** R markdown file for analyzing *A. cervicornis* host differential gene expression as a result of the variable temperature treatment. This has the code needed for Figures 3 and 4, as well as Supplementary Tables 8, 9, and 11.
-  - **2_DESeq2_symbiont.Rmd** R markdown file for analyzing *A. cervicornis* symbiont differential gene expression as a result of the variable temperature treatment. This has the code needed for Figures 3 and 4, as well as Supplementary Tables 8, 9, and 12.
-  - **2_outlier_detection** subfolder for the *ArrayQualityMetrics* outlier detection method used for removing samples based on gene expression patterns.
-  - **3_GO-MWU** subfolder contains the R markdown files and functions necessary for running the specific method of Gene Ontology (GO) enrichment analysis used in this study. This has the code needed for Figures 5 and 6, as well as Supplementary Tables 10, 15, 16, and 17.
-  - **results_csv** subfolder contains all the results files for the *A. cervicornis* host and symbiont differential gene expression.
+#### gene_expression:
+* The raw sequence .fastq files will be made publicly available on the National Center for Biotechnology Information (NCBI) Sequence Read Archive (SRA) under BioProject ____, upon publication.
+* The file **readcounts_rawtrimmedaligned_summary.csv** has a description of the raw, trimmed, and aligned reads for *A. cervicornis*.
+* The file **sample_metadata.csv** has the sample metadata, including date sampled, genotype, and location.
+* Subfolders:
+    * **1_bioinformatics** subfolder contains the scripts needed to process raw 3' RNA-Seq sequences on the UM HPC, [Pegasus](https://acs-docs.readthedocs.io/pegasus/README.html), which uses an LSF resource manager. The bioinformatics pipeline outlined in this folder includes: FastQC > Cutadapt > bowtie2 > samtools
+    * **2_WGCNA** subfolder contains results following the weighted gene co-expression network analysis (WGCNA).
+    * **3_GO-MWU** subfolder contains the code for running gene ontology (GO) enrichment analysis (**6_GO_MWU.R**, **GO_terms_tidying.Rmd**, and **GO_term_venndiagram.Rmd**), and the results of the analysis. 
+* R code:
+    * **1_Acer_deseq2.R**: R file for analyzing *A. cervicornis* host differential gene expression.
+    * **2_Acer_PCA.Rmd** For making the principal components analysis (PCA) plots.
+    * **3_VolcanoPlots.Rmd** Code for making volcano plots.
+    * **4_specific_gene_expression.Rmd** Code for making boxplots of specific gene expression patterns.
+    * **5_wgcna_Acer.R** Code for running weighted gene co-expression network analysis (WGCNA).
  
 #### Figures:
 * This folder contains all the manuscript figures.
