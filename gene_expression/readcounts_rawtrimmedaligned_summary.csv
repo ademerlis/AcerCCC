@@ -1,0 +1,22 @@
+Date_Sampled,Location,Genotype,Replicate,Sample ID,Count Raw Reads,Trimmed Reads,% Remaining,Acer Aligned Reads (Locatelli + Shoguchi),% Alignment,Used in analysis?,Reason?
+10/26/21,CCC,Miami Beach-C,2,1087,12055074,6786850,56%,425550,6%,No,Counts too low
+10/26/21,CCC,Miami Beach-C,1,1097,13837894,12866733,93%,6971391,54%,No,Filtered out during outlier removal in R
+10/26/21,CCC,Sunny Isles-E,1,1098,10420929,7996315,77%,3760448,47%,No,Filtered out during outlier removal in R
+10/26/21,CCC,Sunny Isles-E,2,1100,609708,426690,70%,55540,13%,No,Counts too low
+11/3/21,nursery,Cheetos-B,2,2264,45532,25588,56%,640,3%,No,Counts too low
+11/3/21,nursery,Miami Beach-C,2,2383,4274229,3229827,76%,655475,20%,No,Counts too low
+10/26/21,CCC,Cheetos-B,2,1091,24715528,24146063,98%,13819732,57%,Yes,
+10/26/21,CCC,Cheetos-B,3,1092,20012075,18329951,92%,9513155,52%,Yes,
+10/26/21,CCC,Cheetos-B,1,1099,17250449,16534490,96%,9309479,56%,Yes,
+10/26/21,CCC,Miami Beach-C,3,1089,22384089,18414920,82%,10308747,56%,Yes,
+10/26/21,CCC,Sunny Isles-E,3,1090,24995122,19517057,78%,10276550,53%,Yes,
+11/3/21,nursery,Cheetos-B,1,2263,18528392,16914205,91%,9888397,58%,Yes,
+11/3/21,nursery,Cheetos-B,3,2265,19008002,17610280,93%,10268711,58%,Yes,
+11/3/21,nursery,Miami Beach-C,1,2382,18582623,9606043,52%,5505657,57%,Yes,
+11/3/21,nursery,Miami Beach-C,3,2384,19280109,18960947,98%,12077386,64%,Yes,
+11/3/21,nursery,Sunny Isles-E,1,2266,22434155,22055557,98%,12989223,59%,Yes,
+11/3/21,nursery,Sunny Isles-E,2,2267,22854745,22624435,99%,13573042,60%,Yes,
+11/3/21,nursery,Sunny Isles-E,3,2268,19852858,18047303,91%,10406778,58%,Yes,
+,,,,,,,,,,,
+,,,,mean,1.63E+07,1.42E+07,83%,1.07E+07,57%,this was calculated for just the 12 samples used in downstream analysis,
+,,,,stdev,7.59E+06,7.41E+06,15%,2.27E+06,3%,,
