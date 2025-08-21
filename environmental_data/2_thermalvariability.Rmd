@@ -103,10 +103,11 @@ tidy_KB_CCC_data %>%
   filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2021-06-01") %>% 
   ggplot(., aes(x=Datetime_EST, y=Temperature, color = site)) +
   geom_line() +
-  facet_wrap(~month, scales = "free_x") +
+  facet_wrap(~month, scales = "free") +
   scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
   theme_bw()  +
    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+#ggsave("monthly_temps.pdf", width = 10, height = 7)
 ```
 
 
@@ -122,6 +123,17 @@ tidy_KB_CCC_data %>%
   group_by(site, season) %>% 
   summarise(sample_size = n(), mean_temp = mean(Temperature), sd_temp = sd(Temperature), max_temp = max(Temperature), min_temp =min(Temperature)) %>% 
   write_csv("summary_stats_temp_data.csv")
+
+tidy_KB_CCC_data %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01") %>% 
+  mutate(season = case_when(as.Date(Datetime_EST) <= "2021-05-25" ~ "Dry",
+                            as.Date(Datetime_EST) >= "2021-05-26" & as.Date(Datetime_EST) <= "2021-10-15" ~ "Wet",
+                            as.Date(Datetime_EST) >= "2021-10-16" ~ "Dry")) %>% 
+  dplyr::select(Temperature, Datetime_EST, site, season) %>% 
+  group_by(as.Date(Datetime_EST), site, season) %>% 
+  mutate(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
+  group_by(site, season) %>% 
+  summarise(average_daily_range = mean(daily_range), max_daily_range = max(daily_range))
 ```
 
 
@@ -149,7 +161,7 @@ tidy_KB_CCC_data %>%
 #ian's code for season: phDataRaw$rDateTime[i]>"2020-5-26" && phDataRaw$rDateTime[i]<"2020-10-15"){phDataRaw$precipitation[i] = "wet"}
 
 tidy_KB_CCC_data %>% 
-  filter(as.Date(Datetime_EST) < "2021-12-01" & as.Date(Datetime_EST) > "2020-12-01") %>% 
+  filter(as.Date(Datetime_EST) < "2021-12-01") %>% 
   group_by(as.Date(Datetime_EST), site) %>% 
   summarise(daily_variability = (max(Temperature)-min(Temperature))) %>% 
   mutate(season = case_when(`as.Date(Datetime_EST)` <= "2021-05-25" ~ "Dry",
