@@ -10,12 +10,12 @@ library(raster)
 library(parallel)
 library(ncdf4)
 library(tidyverse)
+library(lubridate)
+library(readxl)
 
 #Climatology_MMM <- "raw_data/ct5km_climatology_v3.1.nc" #this only has mean monthly maximum data
 
 tidy_KB_CCC_data <- read_csv("results_csv/tidy_KB_CCC_data.csv")
-
-
 ```
 
 # Extract MMM from CRW data
@@ -50,7 +50,8 @@ DO NOT RE-RUN -- just get the MMMs that are written in the notes
 ```
 
 
-# calculate DHW
+
+# calculate DHW using NOAA Coral Reef Watch MMM
 
 code adapted from https://github.com/anampc/DHW_Uva/blob/master/A.Temperature_DHW.Rmd
 
@@ -125,6 +126,19 @@ ggplot(., aes(x=Date, y = DHW, color = site)) +
 # Nursery = 4.17 DHW
 ```
 
+# calculate days above bleaching threshold
+```{r}
+tidy_KB_CCC_data %>% 
+  group_by(site, Date) %>% 
+  summarise(max_temp = max(Temperature)) %>% 
+  filter(max_temp > 31.5) %>% 
+  group_by(site) %>% 
+  summarise(count = n())
+```
+
+
+
+
 # plot temps with MMM and DHW
 ```{r}
 tidy_KB_CCC_data %>%
@@ -143,5 +157,113 @@ tidy_KB_CCC_data %>%
 
 #ggsave("CCC_nursery_temp.pdf", width=10, height = 7)
 ```
+
+# calculate MMM using in-situ data
+
+## CCC
+```{r}
+cures_frame_tilt_temp <- readxl::read_excel("raw_data/Oct2020_Jan2022_1901102_urban-2020-10_(0)_Temperature.xlsx", sheet = "1901102_urban-2020-10_(0)_Tempe")
+
+cures_frame_tilt_temp %>% 
+  filter(Date >= "2021-01-01" & Date <= "2021-12-31") %>% 
+  select(Date, `Temperature (C)`) %>% 
+  arrange(Date) %>% 
+  mutate(month = month(Date), year = year(Date)) %>% 
+  group_by(month, year) %>%
+  summarize(MM = mean(`Temperature (C)`, na.rm = TRUE)) %>% 
+  arrange(desc(MM)) #30.52 for CCC
+```
+
+
+## nursery
+
+import and tidy HOBO data
+```{r}
+# trim off the first and last days because those include time points before the HOBO was in the water
+KB_09112020<-read_csv("raw_data/archive/KBNursery_2020_09_11.csv", skip = 1)
+
+KB_09112020 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20597589, SEN S/N: 20597589)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_09112020
+
+KB_09112020 %>% 
+  filter(Datetime_EST > "2021-01-02" & Datetime_EST < "2021-02-10") -> KB_09112020
+
+KB_02102021 <- read_csv("raw_data/archive/KBNursery_2021_02_10.csv", skip = 1)
+KB_02102021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20976501, SEN S/N: 20976501)`) %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_02102021
+
+KB_02102021 %>% 
+  filter(Datetime_EST > "2021-02-09" & Datetime_EST < "2021-05-28") -> KB_02102021
+
+KB_05282021 <- read_csv("raw_data/KBNursery_2021_05_28.csv", skip = 1)
+KB_05282021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hms(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21085862, SEN S/N: 21085862)`) %>% 
+  dplyr::select(Temperature, Datetime_EST) %>% 
+  filter(Datetime_EST > "2021-05-29 01:00:00" & Datetime_EST < "2021-08-11 11:00:00") %>% 
+  mutate(Light = NA) -> KB_05282021
+
+KB_08112021 <- read_csv("raw_data/KBNursery_2021_08_11.csv", skip = 1)
+KB_08112021 %>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-04:00`, tz = "Etc/GMT+4"), tzone = "Etc/GMT+4")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 20831178, SEN S/N: 20831178)`) %>% 
+  filter(Datetime_EST < "2021-12-07 17:00:00") %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_08112021
+
+KB_120821 <- read_csv("raw_data/KBNursery_2021_12_08.csv", skip = 1)
+KB_120821%>% 
+  mutate(Datetime_EST=with_tz(mdy_hm(`Date Time, GMT-05:00`, tz = "Etc/GMT+5"), tzone = "Etc/GMT+5")) %>% 
+  mutate(Datetime_EST=with_tz(Datetime_EST, tzone = "America/New_York")) %>% 
+  dplyr::rename(Temperature = `Temp, °C (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
+  dplyr::rename(Light = `Intensity, lum/ft² (LGR S/N: 21236769, SEN S/N: 21236769)`) %>% 
+  filter(Datetime_EST > "2021-12-10 04:00:00" & Datetime_EST < "2021-12-31 00:00:00") %>% 
+  dplyr::select(Temperature, Light, Datetime_EST) -> KB_120821
+
+rbind(KB_09112020, KB_02102021, KB_05282021, KB_08112021, KB_120821) -> all_KB_data
+
+all_KB_data$Temperature <- as.numeric(all_KB_data$Temperature)
+
+all_KB_data %>% 
+  tidyr::separate(Datetime_EST, c("Date", "Time"), sep = "\\ ", remove = FALSE) %>% 
+  mutate(Date = as.Date(Date), Time = format(Datetime_EST, format = "%H:%M:%S")) -> all_KB_data
+
+all_KB_data %>% 
+  mutate(Time_period = hms(Time)) -> all_KB_data
+```
+
+visualize
+```{r}
+all_KB_data %>% 
+  ggplot(., aes(x=Datetime_EST, y=Temperature)) +
+  geom_point() +
+  theme_bw() +
+  scale_x_datetime(date_labels = "%b %Y",  # Customize the date format
+                     date_breaks = "1 month") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+calculate MMM
+```{r}
+all_KB_data %>% 
+  filter(Date >= "2021-01-01" & Date <= "2021-12-31") %>% 
+  select(Date, Temperature) %>% 
+  arrange(Date) %>% 
+  mutate(month = month(Date), year = year(Date)) %>% 
+  group_by(month, year) %>%
+  summarize(MM = mean(Temperature, na.rm = TRUE)) %>% 
+  arrange(desc(MM)) #30.49 for nursery
+```
+
 
 

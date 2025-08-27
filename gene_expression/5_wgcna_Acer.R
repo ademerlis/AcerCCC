@@ -19,6 +19,7 @@ library(flashClust)
 library(ape)
 options(stringsAsFactors=FALSE)
 allowWGCNAThreads()
+#BiocManager::install(c("GO.db", "preprocessCore", "impute") ) #WGCNA dependencies
 
 #### DATA IMPORT and TRAITS ####
 
@@ -279,7 +280,7 @@ save(MEs, geneTree, moduleLabels, moduleColors, file = "networkdata_signed.RData
 # plotting correlations with traits:
 load(file = "RData_files/networkdata_signed.RData")
 load(file = "RData_files/wgcnaData.RData");
-traits <- read_csv("WGCNA/traits.csv")
+traits <- read_csv("4_WGCNA/traits.csv")
 
 # Define numbers of genes and samples
 nGenes = ncol(datt); #18192
@@ -488,8 +489,20 @@ load(file = "Rdata_files/networkdata_signed.RData")
 load(file = "Rdata_files/wgcnaData.RData");
 
 # run for each of these statements individually
-which.module="darkmagenta"
+
+#significant modules
+which.module="darkmagenta" 
 which.module="mediumpurple3"
+
+#non-significant modules
+which.module="darkturquoise"
+which.module="red"
+which.module="orangered4"
+which.module="plum1"
+which.module="black"
+which.module="brown"
+which.module="darkolivegreen"
+which.module="grey"
 
 
 datME=MEs
@@ -515,6 +528,55 @@ length(datExpr[1,moduleColors==which.module ]) # mediumpurple3 = 751 genes
 as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
   rownames_to_column(var="gene") %>% 
   write_csv("mediumpurple3_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # darkturquoise = 323 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("darkturquoise_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # red = 4165 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("red_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # orangered4 = 400 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("orangered4_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # plum1 = 184 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("plum1_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # black = 1444 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("black_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # brown = 7312 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("brown_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # darkolivegreen = 2759 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("darkolivegreen_genelist.csv")
+
+length(datExpr[1,moduleColors==which.module ]) # grey = 196 genes 
+
+as.data.frame(datExpr[1,moduleColors==which.module ])  %>% 
+  rownames_to_column(var="gene") %>% 
+  write_csv("grey_genelist.csv")
+
 
 # If individual samples appear to be driving expression of significant modules, they are likely outliers
 

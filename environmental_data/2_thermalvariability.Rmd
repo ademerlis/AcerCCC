@@ -107,7 +107,7 @@ tidy_KB_CCC_data %>%
   scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
   theme_bw()  +
    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-#ggsave("monthly_temps.pdf", width = 10, height = 7)
+ggsave("monthly_temps.pdf", width = 10, height = 7)
 ```
 
 
@@ -174,7 +174,7 @@ tidy_KB_CCC_data %>%
   facet_wrap(~season) + 
   stat_summary(fun.y=mean, geom="point", shape=18,
                  size=3, color="black")
-#ggsave("averagedailyvariabilitybyseason.pdf")
+#ggsave("averagedailyvariabilitybyseason.pdf", width = 8, height = 6)
 ```
 
 

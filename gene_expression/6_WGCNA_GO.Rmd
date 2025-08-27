@@ -1,0 +1,149 @@
+---
+title: "WGCNA_GO"
+author: "Allyson"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Following https://rpubs.com/LeonYu/995707 and https://datacatz.wordpress.com/2018/01/19/gene-set-enrichment-analysis-with-topgo-part-1/ 
+
+# install libraries
+```{r}
+BiocManager::install("Rgraphviz")
+BiocManager::install("topGO")
+BiocManager::install("clusterProfiler")
+BiocManager::install("GOplot")
+```
+
+# load libraries and R Data files
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(topGO)
+library(plyr)
+library(tidyr)
+library(scales)
+library(clusterProfiler)
+library(GOplot)
+library(stringr)
+
+load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
+load("Rdata_files/realModels_Acer.RData")
+load("Rdata_files/vsd.RData")
+load("Rdata_files/pvals.RData")
+
+geneID2GO <- read.delim("~/OneDrive - University of Miami/PhD/NOAA AOML Coral Program/chapter2_UrbanCorals/Acropora_iso2go.tab", header = FALSE, stringsAsFactors = FALSE)
+colnames(geneID2GO) <- c("gene", "GO")
+length(geneID2GO) #7995
+
+# Split on semicolon
+geneID2GO <- setNames(strsplit(geneID2GO$GO, ";"), geneID2GO$gene)
+
+# Background = all genes from the mapping
+allgenes <- names(geneID2GO)
+```
+
+# Make a list of genes and modules
+```{r}
+
+# Path to your folder containing the CSV files
+module_gene_lists_subfolder <- "4_WGCNA/module_gene_lists"
+
+# List all files ending with "_genelist.csv" in the folder
+file_list <- list.files(path = module_gene_lists_subfolder, 
+                        pattern = "_genelist\\.csv$", 
+                        full.names = TRUE)
+
+# Read all files and add a 'module' column with the file name
+all_genes <- file_list %>%
+  set_names() %>%                    # name the list with full paths
+    map_dfr(~ read_csv(.x) %>%
+            mutate(module = str_remove(tools::file_path_sans_ext(basename(.x)),
+                                       "_genelist$")),
+          .id = NULL)
+
+# Check result
+head(all_genes)
+
+all_genes %>% 
+  select(gene, module) -> all_genes
+```
+
+
+Loop to run all modules
+```{r}
+# Background universe: all unique genes across all modules
+allgenes <- unique(all_genes$gene)
+
+# List of modules to iterate over
+modules <- unique(all_genes$module)
+
+# Loop through each module
+for(mod in modules) {
+  
+  # Genes in this specific module
+  module_genes <- all_genes$genes[all_genes$module == mod]
+  
+  # Build geneList for topGO (0/1 factor)
+  geneList <- factor(as.integer(allgenes %in% module_genes),
+                     levels = c(0,1))
+  names(geneList) <- allgenes
+  
+  #Build the topGOdata matrix for each ontology categories
+  GOdata_BP <- new("topGOdata", ontology = "BP", allGenes = geneList,
+                    annot = annFUN.gene2GO, gene2GO = geneID2GO,nodeSize=5)
+
+  GOdata_CC <- new("topGOdata", ontology = "CC", allGenes = geneList,
+                    annot = annFUN.gene2GO, gene2GO = geneID2GO,nodeSize=5)
+
+  GOdata_MF <- new("topGOdata", ontology = "MF", allGenes = geneList,
+                    annot = annFUN.gene2GO, gene2GO = geneID2GO, nodeSize=5)
+  
+  #Perform enrichemnt analysis 
+  resultTopGO.BP <- runTest(GOdata_BP, algorithm = "classic", statistic = "fisher")
+  resultTopGO.CC <- runTest(GOdata_CC, algorithm = "classic", statistic = "fisher" )
+  resultTopGO.MF <- runTest(GOdata_MF, algorithm = "classic", statistic = "fisher" )
+  
+  allBPGO = genesInTerm(GOdata_BP)
+  allCCGO = genesInTerm(GOdata_CC)
+  allMFGO = genesInTerm(GOdata_MF)
+  
+  ### Load function for extracting genes associated with a GO ID
+  BP_ANOTATION = lapply(allBPGO,function(x) x[x %in% module_genes])
+  CC_ANOTATION = lapply(allCCGO,function(x) x[x %in% module_genes])
+  MF_ANOTATION = lapply(allMFGO,function(x) x[x %in% module_genes])
+  
+  
+  #Transform data and save into csv
+  BP_Res <- GenTable(GOdata_BP, classicFisher = resultTopGO.BP,  topNodes = 20)
+  BP_Res$Class = "Biological_Process"
+  for (x in 1:nrow(BP_Res)){
+    BP_Res[x,8] <- str_c(BP_ANOTATION[[BP_Res[x,1]]],collapse = ",")
+  }
+  
+  CC_Res <- GenTable(GOdata_CC, classicFisher = resultTopGO.CC,  topNodes =  20)
+  CC_Res$Class = "Cellular_component"
+  for (x in 1:nrow(CC_Res)){
+    CC_Res[x,8] <- str_c(CC_ANOTATION[[CC_Res[x,1]]],collapse = ",")
+  }
+
+  MF_Res <- GenTable(GOdata_MF, classicFisher = resultTopGO.MF,  topNodes =  20)
+  MF_Res$Class = "Molecular_function"
+  for (x in 1:nrow(MF_Res)){
+    MF_Res[x,8] <- str_c(MF_ANOTATION[[MF_Res[x,1]]],collapse = ",")
+  }
+
+  #Combine three types of GO for output
+  GO_combine <- rbind(MF_Res,CC_Res,BP_Res)
+  GO_combine$classicFisher <- as.numeric(GO_combine$classicFisher)
+  
+  ### filter enriched term using adjusted P-value
+  GO_combine <- GO_combine[GO_combine$classicFisher < 0.05 ,] 
+  names(GO_combine)[8] = "GeneList"
+}
+
+GO_combine
+```
+
