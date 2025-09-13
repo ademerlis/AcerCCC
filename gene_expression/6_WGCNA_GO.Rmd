@@ -5,14 +5,17 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-Following https://rpubs.com/LeonYu/995707 and https://datacatz.wordpress.com/2018/01/19/gene-set-enrichment-analysis-with-topgo-part-1/ 
+Following https://rpubs.com/LeonYu/995707 and [Dr Chrstine Roper's GitHub](https://github.com/ChristineRoper/Mangrove-coral-thermotolerance-retained/blob/main/RNA%20Seq/4-Functional_annotation/Functional_annotation.R).
 
 # install libraries
 ```{r}
-BiocManager::install("Rgraphviz")
-BiocManager::install("topGO")
-BiocManager::install("clusterProfiler")
-BiocManager::install("GOplot")
+# BiocManager::install("Rgraphviz")
+# BiocManager::install("topGO")
+# BiocManager::install("clusterProfiler")
+# BiocManager::install("GOplot")
+# BiocManager::install("GSEABase")
+# BiocManager::install("GO.db")
+# BiocManager::install("rrvgo")
 ```
 
 # load libraries and R Data files
@@ -25,9 +28,9 @@ library(topGO)
 library(plyr)
 library(tidyr)
 library(scales)
-library(clusterProfiler)
-library(GOplot)
 library(stringr)
+library(GSEABase)
+library(rrvgo)
 
 load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
 load("Rdata_files/realModels_Acer.RData")
@@ -47,7 +50,6 @@ allgenes <- names(geneID2GO)
 
 # Make a list of genes and modules
 ```{r}
-
 # Path to your folder containing the CSV files
 module_gene_lists_subfolder <- "4_WGCNA/module_gene_lists"
 
@@ -80,11 +82,14 @@ allgenes <- unique(all_genes$gene)
 # List of modules to iterate over
 modules <- unique(all_genes$module)
 
+# Initialize results container
+GO_results <- list()
+
 # Loop through each module
 for(mod in modules) {
   
   # Genes in this specific module
-  module_genes <- all_genes$genes[all_genes$module == mod]
+  module_genes <- all_genes$gene[all_genes$module == mod]
   
   # Build geneList for topGO (0/1 factor)
   geneList <- factor(as.integer(allgenes %in% module_genes),
@@ -101,49 +106,153 @@ for(mod in modules) {
   GOdata_MF <- new("topGOdata", ontology = "MF", allGenes = geneList,
                     annot = annFUN.gene2GO, gene2GO = geneID2GO, nodeSize=5)
   
-  #Perform enrichemnt analysis 
-  resultTopGO.BP <- runTest(GOdata_BP, algorithm = "classic", statistic = "fisher")
-  resultTopGO.CC <- runTest(GOdata_CC, algorithm = "classic", statistic = "fisher" )
-  resultTopGO.MF <- runTest(GOdata_MF, algorithm = "classic", statistic = "fisher" )
+  #Perform enrichment analysis 
+  
+  # run weighted algorithm as classic doesnt take into consideration GO hierarchy so could overrepresent enrichment
+  resultTopGO.BP <- runTest(GOdata_BP, algorithm = "weight01", statistic = "fisher")
+  resultTopGO.CC <- runTest(GOdata_CC, algorithm = "weight01", statistic = "fisher" )
+  resultTopGO.MF <- runTest(GOdata_MF, algorithm = "weight01", statistic = "fisher" )
   
   allBPGO = genesInTerm(GOdata_BP)
   allCCGO = genesInTerm(GOdata_CC)
   allMFGO = genesInTerm(GOdata_MF)
   
   ### Load function for extracting genes associated with a GO ID
-  BP_ANOTATION = lapply(allBPGO,function(x) x[x %in% module_genes])
-  CC_ANOTATION = lapply(allCCGO,function(x) x[x %in% module_genes])
-  MF_ANOTATION = lapply(allMFGO,function(x) x[x %in% module_genes])
-  
+  BP_ANNOTATION = lapply(allBPGO,function(x) x[x %in% module_genes])
+  CC_ANNOTATION = lapply(allCCGO,function(x) x[x %in% module_genes])
+  MF_ANNOTATION = lapply(allMFGO,function(x) x[x %in% module_genes])
   
   #Transform data and save into csv
-  BP_Res <- GenTable(GOdata_BP, classicFisher = resultTopGO.BP,  topNodes = 20)
+  BP_Res <- GenTable(GOdata_BP, weightFisher = resultTopGO.BP,  topNodes = length(allBPGO))
   BP_Res$Class = "Biological_Process"
-  for (x in 1:nrow(BP_Res)){
-    BP_Res[x,8] <- str_c(BP_ANOTATION[[BP_Res[x,1]]],collapse = ",")
-  }
+  BP_Res$GeneList <- vapply(BP_Res$GO.ID, function(go) {
+    str_c(BP_ANNOTATION[[go]], collapse=",")
+  }, character(1))
   
-  CC_Res <- GenTable(GOdata_CC, classicFisher = resultTopGO.CC,  topNodes =  20)
-  CC_Res$Class = "Cellular_component"
-  for (x in 1:nrow(CC_Res)){
-    CC_Res[x,8] <- str_c(CC_ANOTATION[[CC_Res[x,1]]],collapse = ",")
-  }
+  CC_Res <- GenTable(GOdata_CC, weightFisher = resultTopGO.CC,  topNodes =  length(allCCGO))
+  CC_Res$Class = "Cellular_Component"
+  CC_Res$GeneList <- vapply(CC_Res$GO.ID, function(go) {
+    str_c(CC_ANNOTATION[[go]], collapse=",")
+  }, character(1))
 
-  MF_Res <- GenTable(GOdata_MF, classicFisher = resultTopGO.MF,  topNodes =  20)
-  MF_Res$Class = "Molecular_function"
-  for (x in 1:nrow(MF_Res)){
-    MF_Res[x,8] <- str_c(MF_ANOTATION[[MF_Res[x,1]]],collapse = ",")
-  }
+  MF_Res <- GenTable(GOdata_MF, weightFisher = resultTopGO.MF,  topNodes =  length(allMFGO))
+  MF_Res$Class = "Molecular_Function"
+  MF_Res$GeneList <- vapply(MF_Res$GO.ID, function(go) {
+    str_c(MF_ANNOTATION[[go]], collapse=",")
+  }, character(1))
 
-  #Combine three types of GO for output
-  GO_combine <- rbind(MF_Res,CC_Res,BP_Res)
-  GO_combine$classicFisher <- as.numeric(GO_combine$classicFisher)
+  GO_combine <- bind_rows(MF_Res, CC_Res, BP_Res)
+  GO_combine$weightFisher <- as.numeric(GO_combine$weightFisher)
+  GO_combine <- GO_combine[GO_combine$weightFisher < 0.01, ]
+  GO_combine$module <- mod
   
-  ### filter enriched term using adjusted P-value
-  GO_combine <- GO_combine[GO_combine$classicFisher < 0.05 ,] 
-  names(GO_combine)[8] = "GeneList"
+  GO_results[[mod]] <- GO_combine
 }
 
-GO_combine
+str(GO_results)
+
+write_csv(GO_results, "4_WGCNA/GO_enrichment_all_modules_allterms.csv")
 ```
+
+
+GOslim
+```{r}
+#change Class types to ontology so it matches GOslim
+GO_results %>% 
+  mutate(Ontology = case_when(
+    Class == "Biological_Process" ~ "BP",
+    Class == "Molecular_Function" ~ "MF",
+    Class == "Cellular_Component" ~ "CC"
+  )) -> GO_results
+
+# Load the GO Slim file
+slim <- getOBOCollection("goslim_generic.obo") #download here (https://release.geneontology.org/2024-09-08/ontology/subsets/index.html#:~:text=281%20KB-,goslim_generic.obo,-117%20KB)
+
+slim_ids <- GSEABase::ids(slim) # gets slim IDs
+
+# Helper function: map slim → detailed terms → genes
+goWide <- function(slim, genes, GO_ontology) {
+    GOTERM <- getAnnMap("TERM", "GO")
+    terms <- mget(slim_ids, GOTERM, ifnotfound = NA)
+    terms <- terms[vapply(terms, Ontology, character(1)) == GO_ontology]
+    slim_ids_o <- names(terms)
+
+    OFFSPRING <- switch(GO_ontology,
+        MF = getAnnMap("MFOFFSPRING", "GO"),
+        BP = getAnnMap("BPOFFSPRING", "GO"),
+        CC = getAnnMap("CCOFFSPRING", "GO"),
+        stop("GO_ontology must be 'MF', 'BP', or 'CC'")
+    )
+
+    slim_to_gene <- mget(slim_ids_o, OFFSPRING, ifnotfound = NA)
+    slim_to_gene <- slim_to_gene[!is.na(slim_to_gene)]
+    gene_to_slim <- revmap(slim_to_gene)[genes]
+    gene_to_slim <- gene_to_slim[!vapply(gene_to_slim, is.null, logical(1))]
+
+    if (length(gene_to_slim) == 0) {
+        return(c())
+    }
+
+    return(names(gene_to_slim)[sapply(gene_to_slim, function(x) any(grepl(slim, unlist(x))))])
+}
+
+all_slim_results <- list()
+
+# Loop through modules in GO_results
+for (mod in unique(GO_results$module)) {
+    message("Processing module: ", mod)
+
+    # Subset one module’s enriched GO terms
+    module_df <- GO_results %>% filter(module == mod)
+    GO_IDs <- module_df$GO.ID
+    GO_child_term <- module_df$Term
+
+    # Wrap in GOCollection
+    collection <- GOCollection(GO_IDs)
+
+    # Run GOslim for each ontology
+    for (ontology in c("BP", "MF", "CC")) {
+          tmp <- goSlim(GOCollection(module_df$GO.ID), slim, ontology) %>%
+            rownames_to_column("GO") %>%
+            mutate(
+                module = mod,
+                Ontology = ontology
+            ) %>%
+            rowwise() %>%
+                mutate(GOTerms = paste(goWide(GO, GO_IDs, ontology), collapse = ", ")) %>% # adding new column for the GO terms
+            filter(Count > 0)
+
+        all_slim_results[[paste(mod, ontology, sep = "_")]] <- tmp
+
+    }
+}
+
+# Combine everything into one tibble
+all_slim_results <- bind_rows(all_slim_results)
+# save to csv
+write_csv(all_slim_results, "4_WGCNA/GOslim_enrichment_all_modules.csv")
+
+```
+
+
+```{r}
+GO_results <- read_csv("4_WGCNA/GO_enrichment_all_modules_allterms.csv")
+GO_slim <- read_csv("4_WGCNA/GOslim_enrichment_all_modules.csv")
+
+GO_slim %>% 
+  dplyr::rename(ParentTerm = GO) %>% 
+  separate_rows(GOTerms, sep = ",\\s*") %>%
+  mutate(GOTerms = ifelse(is.na(GOTerms) | GOTerms == "", ParentTerm, GOTerms)) %>%
+  dplyr::rename(ChildTerm = GOTerms) -> GO_slim_edited
+
+# Merge GO_results with GO_slim to add GOTerms column
+GO_slim_edited %>%
+  full_join(GO_results, by = c("module", "ChildTerm" = "GO.ID")) %>% 
+  dplyr::rename(GO_slim_term = ParentTerm, GO_slim_term_description = Term.x, GO_child_term_description = Term.y) -> merged_results
+
+write_csv(merged_results, "4_WGCNA/GO_enrichment_all_modules_allterms_withGOslim.csv")
+```
+
+
+
 

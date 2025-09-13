@@ -158,6 +158,13 @@ darkmagentagenes %>%
   left_join(., design, by = c("Sample_ID", "Location")) -> darkmagentagenes_annot_counts
 
 #write_csv(darkmagentagenes_annot_counts, "darkmagentagenes_annot_counts_vstnormalized.csv")
+
+
+darkmagentagenes %>% 
+  left_join(., gene_annot, by = "gene") %>% 
+  drop_na(annot) %>% 
+  left_join(allgenesl2fc, by = "gene") %>% 
+  write_csv("darkmagentagenes_annot_l2fc.csv")
 ```
 
 ### DEGs of interest in module
@@ -263,6 +270,12 @@ mediumpurple3genes %>%
   left_join(., design, by = c("Sample_ID", "Location")) -> mediumpurple3genes_annot_counts
 
 #write_csv(mediumpurple3genes_annot_counts, "mediumpurple3genes_annot_counts_vstnormalized.csv")
+
+mediumpurple3genes %>% 
+  left_join(., gene_annot, by = "gene") %>% 
+  drop_na(annot) %>% 
+  left_join(allgenesl2fc, by = "gene") %>% 
+  write_csv("mediumpurple3genes_annot_l2fc.csv")
 
 mediumpurple3genes_annot_counts %>% 
   arrange(desc(log2FoldChange))

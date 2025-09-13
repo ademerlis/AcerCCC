@@ -1,0 +1,188 @@
+GO,Count,Percent,Term,module,Ontology,GOTerms
+GO:0000278,1,3.8461538461538463,mitotic cell cycle,black,BP,GO:1900087
+GO:0003013,1,3.8461538461538463,circulatory system process,black,BP,GO:0008217
+GO:0003014,1,3.8461538461538463,renal system process,black,BP,GO:0003091
+GO:0006281,2,7.6923076923076925,DNA repair,black,BP,"GO:0006283, GO:0036297"
+GO:0006351,1,3.8461538461538463,DNA-templated transcription,black,BP,GO:0006368
+GO:0006629,2,7.6923076923076925,lipid metabolic process,black,BP,"GO:0046339, GO:0019372"
+GO:0016071,1,3.8461538461538463,mRNA metabolic process,black,BP,GO:0006370
+GO:0022414,3,11.538461538461538,reproductive process,black,BP,"GO:1900195, GO:0007619, GO:0060282"
+GO:0023052,2,7.6923076923076925,signaling,black,BP,"GO:0045880, GO:0007214"
+GO:0030154,3,11.538461538461538,cell differentiation,black,BP,"GO:1900195, GO:0060282, GO:0003198"
+GO:0048856,7,26.923076923076923,anatomical structure development,black,BP,"GO:0060539, GO:0035912, GO:1900195, GO:0060538, GO:0060282, GO:0003198, GO:0048382"
+GO:0055086,2,7.6923076923076925,nucleobase-containing small molecule metabolic process,black,BP,"GO:0034032, GO:0033875"
+GO:0003824,3,33.333333333333336,catalytic activity,black,MF,"GO:0008238, GO:0004190, GO:0070568"
+GO:0005215,1,11.11111111111111,transporter activity,black,MF,GO:0005251
+GO:0016740,1,11.11111111111111,transferase activity,black,MF,GO:0070568
+GO:0016787,2,22.22222222222222,hydrolase activity,black,MF,"GO:0008238, GO:0004190"
+GO:0140096,2,22.22222222222222,"catalytic activity, acting on a protein",black,MF,"GO:0008238, GO:0004190"
+GO:0005634,2,22.22222222222222,nucleus,black,CC,"GO:0016605, GO:0005665"
+GO:0005654,2,22.22222222222222,nucleoplasm,black,CC,"GO:0016605, GO:0005665"
+GO:0005886,1,11.11111111111111,plasma membrane,black,CC,GO:0008076
+GO:0005929,1,11.11111111111111,cilium,black,CC,GO:0097546
+GO:0043226,3,33.333333333333336,organelle,black,CC,"GO:0097546, GO:0016605, GO:0005665"
+GO:0002376,2,5,immune system process,brown,BP,"GO:0045088, GO:0002363"
+GO:0006351,1,2.5,DNA-templated transcription,brown,BP,GO:0006357
+GO:0006355,1,2.5,regulation of DNA-templated transcription,brown,BP,GO:0006357
+GO:0007010,4,10,cytoskeleton organization,brown,BP,"GO:0007026, GO:0035082, GO:0030036, GO:0001578"
+GO:0007018,2,5,microtubule-based movement,brown,BP,"GO:0072383, GO:0003341"
+GO:0007163,1,2.5,establishment or maintenance of cell polarity,brown,BP,GO:0045199
+GO:0016192,2,5,vesicle-mediated transport,brown,BP,"GO:0006893, GO:0016197"
+GO:0022414,1,2.5,reproductive process,brown,BP,GO:0007298
+GO:0023052,6,15,signaling,brown,BP,"GO:0030510, GO:1900273, GO:2000463, GO:0090090, GO:0035329, GO:0032012"
+GO:0030154,6,15,cell differentiation,brown,BP,"GO:0048699, GO:0045664, GO:0007298, GO:0060581, GO:0002363, GO:0050767"
+GO:0042060,1,2.5,wound healing,brown,BP,GO:0090303
+GO:0044782,1,2.5,cilium organization,brown,BP,GO:0035082
+GO:0048856,9,22.5,anatomical structure development,brown,BP,"GO:0048699, GO:0045664, GO:0007298, GO:0007435, GO:0060560, GO:0060581, GO:0002363, GO:0050767, GO:0007476"
+GO:0048870,1,2.5,cell motility,brown,BP,GO:0007298
+GO:0050877,1,2.5,nervous system process,brown,BP,GO:2000463
+GO:0098542,1,2.5,defense response to other organism,brown,BP,GO:0045088
+GO:0003774,1,8.333333333333334,cytoskeletal motor activity,brown,MF,GO:0008574
+GO:0003824,2,16.666666666666668,catalytic activity,brown,MF,"GO:0016887, GO:0004177"
+GO:0008092,1,8.333333333333334,cytoskeletal protein binding,brown,MF,GO:0008017
+GO:0008289,1,8.333333333333334,lipid binding,brown,MF,GO:0005547
+GO:0016787,2,16.666666666666668,hydrolase activity,brown,MF,"GO:0016887, GO:0004177"
+GO:0060090,1,8.333333333333334,molecular adaptor activity,brown,MF,GO:0003714
+GO:0140096,1,8.333333333333334,"catalytic activity, acting on a protein",brown,MF,GO:0004177
+GO:0140110,1,8.333333333333334,transcription regulator activity,brown,MF,GO:0003714
+GO:0140657,2,16.666666666666668,ATP-dependent activity,brown,MF,"GO:0016887, GO:0008574"
+GO:0000228,1,2.5,nuclear chromosome,brown,CC,
+GO:0005634,3,7.5,nucleus,brown,CC,"GO:0016607, GO:0005730, GO:0000228"
+GO:0005654,1,2.5,nucleoplasm,brown,CC,GO:0016607
+GO:0005694,3,7.5,chromosome,brown,CC,"GO:0000792, GO:0005700, GO:0000228"
+GO:0005730,1,2.5,nucleolus,brown,CC,
+GO:0005768,2,5,endosome,brown,CC,"GO:0005769, GO:0055038"
+GO:0005815,1,2.5,microtubule organizing center,brown,CC,GO:0036064
+GO:0005840,1,2.5,ribosome,brown,CC,
+GO:0005856,4,10,cytoskeleton,brown,CC,"GO:0005871, GO:0045111, GO:0036064, GO:0051233"
+GO:0005886,3,7.5,plasma membrane,brown,CC,"GO:0016324, GO:0031234, GO:0098797"
+GO:0005929,3,7.5,cilium,brown,CC,"GO:0001750, GO:0097542, GO:0036064"
+GO:0031410,2,5,cytoplasmic vesicle,brown,CC,"GO:0005769, GO:0055038"
+GO:0043226,15,37.5,organelle,brown,CC,"GO:0005871, GO:0000792, GO:0016607, GO:0014069, GO:0005700, GO:0001750, GO:0005840, GO:0005730, GO:0005769, GO:0097542, GO:0000228, GO:0045111, GO:0036064, GO:0055038, GO:0051233"
+GO:0000278,2,4,mitotic cell cycle,darkmagenta,BP,"GO:0046604, GO:0045977"
+GO:0002376,2,4,immune system process,darkmagenta,BP,"GO:0048538, GO:1903707"
+GO:0006629,1,2,lipid metabolic process,darkmagenta,BP,GO:0006663
+GO:0006913,1,2,nucleocytoplasmic transport,darkmagenta,BP,GO:0006405
+GO:0007010,1,2,cytoskeleton organization,darkmagenta,BP,GO:0046604
+GO:0023052,2,4,signaling,darkmagenta,BP,"GO:0046331, GO:0030513"
+GO:0030154,15,30,cell differentiation,darkmagenta,BP,"GO:0055001, GO:0009912, GO:0061309, GO:2000737, GO:0021879, GO:0046331, GO:0002328, GO:0035886, GO:0048667, GO:0045602, GO:0045607, GO:0003310, GO:0048505, GO:0048664, GO:1903707"
+GO:0048856,24,48,anatomical structure development,darkmagenta,BP,"GO:0055001, GO:0060412, GO:0009912, GO:0031100, GO:0048538, GO:0061309, GO:0021879, GO:0072012, GO:0040024, GO:0035909, GO:0007390, GO:0002328, GO:0035886, GO:0021575, GO:0048667, GO:0045602, GO:0045607, GO:0072050, GO:0045977, GO:0003310, GO:0048664, GO:0032525, GO:0060017, GO:1903707"
+GO:0050877,1,2,nervous system process,darkmagenta,BP,GO:0007606
+GO:0140014,1,2,mitotic nuclear division,darkmagenta,BP,GO:0046604
+GO:0003723,1,33.333333333333336,RNA binding,darkmagenta,MF,GO:0008097
+GO:0005215,2,66.66666666666667,transporter activity,darkmagenta,MF,"GO:0055056, GO:0005351"
+GO:0005811,1,50,lipid droplet,darkmagenta,CC,
+GO:0043226,1,50,organelle,darkmagenta,CC,GO:0005811
+GO:0016073,1,50,snRNA metabolic process,darkolivegreen,BP,GO:0016180
+GO:0050877,1,50,nervous system process,darkolivegreen,BP,GO:0007606
+GO:0003824,2,28.571428571428573,catalytic activity,darkolivegreen,MF,"GO:0010485, GO:0016638"
+GO:0005215,1,14.285714285714286,transporter activity,darkolivegreen,MF,GO:0015101
+GO:0016491,1,14.285714285714286,oxidoreductase activity,darkolivegreen,MF,GO:0016638
+GO:0016740,1,14.285714285714286,transferase activity,darkolivegreen,MF,GO:0010485
+GO:0060089,1,14.285714285714286,molecular transducer activity,darkolivegreen,MF,GO:0038187
+GO:0140096,1,14.285714285714286,"catalytic activity, acting on a protein",darkolivegreen,MF,GO:0010485
+GO:0005634,1,33.333333333333336,nucleus,darkolivegreen,CC,GO:0005675
+GO:0005654,1,33.333333333333336,nucleoplasm,darkolivegreen,CC,GO:0005675
+GO:0043226,1,33.333333333333336,organelle,darkolivegreen,CC,GO:0005675
+GO:0002376,1,12.5,immune system process,darkturquoise,BP,GO:0002553
+GO:0006520,1,12.5,amino acid metabolic process,darkturquoise,BP,GO:0006564
+GO:0006575,1,12.5,cellular modified amino acid metabolic process,darkturquoise,BP,GO:0046655
+GO:0006766,1,12.5,vitamin metabolic process,darkturquoise,BP,GO:0046655
+GO:0006954,1,12.5,inflammatory response,darkturquoise,BP,GO:0002553
+GO:0016192,1,12.5,vesicle-mediated transport,darkturquoise,BP,GO:0002553
+GO:0023052,1,12.5,signaling,darkturquoise,BP,GO:0002553
+GO:0048856,1,12.5,anatomical structure development,darkturquoise,BP,GO:0048036
+GO:0003824,1,33.333333333333336,catalytic activity,darkturquoise,MF,GO:0003724
+GO:0140098,1,33.333333333333336,"catalytic activity, acting on RNA",darkturquoise,MF,GO:0003724
+GO:0140657,1,33.333333333333336,ATP-dependent activity,darkturquoise,MF,GO:0003724
+GO:0005777,1,50,peroxisome,darkturquoise,CC,GO:0005782
+GO:0043226,1,50,organelle,darkturquoise,CC,GO:0005782
+GO:0002376,2,15.384615384615385,immune system process,grey,BP,"GO:0034162, GO:0002726"
+GO:0006914,1,7.6923076923076925,autophagy,grey,BP,GO:0044804
+GO:0023052,2,15.384615384615385,signaling,grey,BP,"GO:0034162, GO:0051386"
+GO:0030154,2,15.384615384615385,cell differentiation,grey,BP,"GO:0048671, GO:0022010"
+GO:0048856,5,38.46153846153846,anatomical structure development,grey,BP,"GO:0022038, GO:0060463, GO:0048671, GO:0022010, GO:0060670"
+GO:0098542,1,7.6923076923076925,defense response to other organism,grey,BP,GO:0034162
+GO:0003824,1,25,catalytic activity,grey,MF,GO:0004181
+GO:0008289,1,25,lipid binding,grey,MF,GO:0010314
+GO:0016787,1,25,hydrolase activity,grey,MF,GO:0004181
+GO:0140096,1,25,"catalytic activity, acting on a protein",grey,MF,GO:0004181
+GO:0005794,1,25,Golgi apparatus,grey,CC,
+GO:0005811,1,25,lipid droplet,grey,CC,
+GO:0043226,2,50,organelle,grey,CC,"GO:0005811, GO:0005794"
+GO:0002376,1,8.333333333333334,immune system process,mediumpurple3,BP,GO:2000510
+GO:0006399,1,8.333333333333334,tRNA metabolic process,mediumpurple3,BP,GO:0006388
+GO:0006457,1,8.333333333333334,protein folding,mediumpurple3,BP,GO:0022417
+GO:0016071,1,8.333333333333334,mRNA metabolic process,mediumpurple3,BP,GO:0006402
+GO:0023052,1,8.333333333333334,signaling,mediumpurple3,BP,GO:0007187
+GO:0030154,2,16.666666666666668,cell differentiation,mediumpurple3,BP,"GO:0048665, GO:1902033"
+GO:0048856,2,16.666666666666668,anatomical structure development,mediumpurple3,BP,"GO:0048665, GO:1902033"
+GO:0048870,1,8.333333333333334,cell motility,mediumpurple3,BP,GO:2000510
+GO:0050877,1,8.333333333333334,nervous system process,mediumpurple3,BP,GO:0051930
+GO:0051604,1,8.333333333333334,protein maturation,mediumpurple3,BP,GO:0022417
+GO:0003824,1,33.333333333333336,catalytic activity,mediumpurple3,MF,GO:0004535
+GO:0016787,1,33.333333333333336,hydrolase activity,mediumpurple3,MF,GO:0004535
+GO:0140098,1,33.333333333333336,"catalytic activity, acting on RNA",mediumpurple3,MF,GO:0004535
+GO:0002376,2,20,immune system process,orangered4,BP,"GO:0002227, GO:0002553"
+GO:0006954,1,10,inflammatory response,orangered4,BP,GO:0002553
+GO:0016071,2,20,mRNA metabolic process,orangered4,BP,"GO:1900153, GO:0061158"
+GO:0016192,1,10,vesicle-mediated transport,orangered4,BP,GO:0002553
+GO:0023052,1,10,signaling,orangered4,BP,GO:0002553
+GO:0030198,1,10,extracellular matrix organization,orangered4,BP,GO:0071711
+GO:0098542,2,20,defense response to other organism,orangered4,BP,"GO:0050829, GO:0002227"
+GO:0003723,1,50,RNA binding,orangered4,MF,GO:0035925
+GO:0008289,1,50,lipid binding,orangered4,MF,GO:0036041
+GO:0005634,1,12.5,nucleus,orangered4,CC,GO:0042405
+GO:0005777,1,12.5,peroxisome,orangered4,CC,GO:0005782
+GO:0031410,2,25,cytoplasmic vesicle,orangered4,CC,"GO:0042589, GO:0030127"
+GO:0043226,4,50,organelle,orangered4,CC,"GO:0042589, GO:0030127, GO:0042405, GO:0005782"
+GO:0022414,1,33.333333333333336,reproductive process,plum1,BP,GO:0007279
+GO:0030154,1,33.333333333333336,cell differentiation,plum1,BP,GO:0007279
+GO:0048856,1,33.333333333333336,anatomical structure development,plum1,BP,GO:0007279
+GO:0060089,1,100,molecular transducer activity,plum1,MF,GO:0042813
+GO:0000278,1,1.3157894736842106,mitotic cell cycle,red,BP,GO:0031536
+GO:0002181,1,1.3157894736842106,cytoplasmic translation,red,BP,
+GO:0002376,4,5.2631578947368425,immune system process,red,BP,"GO:2000516, GO:0043312, GO:0019731, GO:0030218"
+GO:0005975,2,2.6315789473684212,carbohydrate metabolic process,red,BP,"GO:0046364, GO:0046365"
+GO:0006091,1,1.3157894736842106,generation of precursor metabolites and energy,red,BP,GO:0006120
+GO:0006486,1,1.3157894736842106,protein glycosylation,red,BP,GO:0018279
+GO:0006575,1,1.3157894736842106,cellular modified amino acid metabolic process,red,BP,GO:0006749
+GO:0006629,4,5.2631578947368425,lipid metabolic process,red,BP,"GO:0030497, GO:0030148, GO:2000304, GO:0006678"
+GO:0006790,1,1.3157894736842106,sulfur compound metabolic process,red,BP,GO:0006749
+GO:0006886,2,2.6315789473684212,intracellular protein transport,red,BP,GO:0006616
+GO:0006914,1,1.3157894736842106,autophagy,red,BP,
+GO:0007010,3,3.9473684210526314,cytoskeleton organization,red,BP,"GO:0071689, GO:0034314, GO:0014866"
+GO:0007059,1,1.3157894736842106,chromosome segregation,red,BP,GO:0000819
+GO:0007155,1,1.3157894736842106,cell adhesion,red,BP,GO:2000516
+GO:0016071,1,1.3157894736842106,mRNA metabolic process,red,BP,GO:0000184
+GO:0016192,1,1.3157894736842106,vesicle-mediated transport,red,BP,GO:0043312
+GO:0030154,5,6.578947368421052,cell differentiation,red,BP,"GO:0071689, GO:0021860, GO:0014866, GO:0045314, GO:0030218"
+GO:0042060,1,1.3157894736842106,wound healing,red,BP,GO:0060055
+GO:0042254,1,1.3157894736842106,ribosome biogenesis,red,BP,GO:0000028
+GO:0048856,18,23.68421052631579,anatomical structure development,red,BP,"GO:0071689, GO:0043009, GO:0035209, GO:0021591, GO:0045498, GO:0007509, GO:0008360, GO:0007475, GO:0001889, GO:0021860, GO:0001890, GO:0048755, GO:0014866, GO:0007386, GO:0045314, GO:0060055, GO:0021680, GO:0030218"
+GO:0048870,2,2.6315789473684212,cell motility,red,BP,"GO:0007509, GO:0006930"
+GO:0050877,1,1.3157894736842106,nervous system process,red,BP,GO:0050882
+GO:0055085,3,3.9473684210526314,transmembrane transport,red,BP,"GO:0015985, GO:0051279, GO:0006616"
+GO:0055086,8,10.526315789473685,nucleobase-containing small molecule metabolic process,red,BP,"GO:0009167, GO:0006048, GO:0046039, GO:0046034, GO:0009225, GO:1901068, GO:0034030, GO:0034033"
+GO:0065003,1,1.3157894736842106,protein-containing complex assembly,red,BP,GO:0000028
+GO:0098542,1,1.3157894736842106,defense response to other organism,red,BP,GO:0019731
+GO:0140014,1,1.3157894736842106,mitotic nuclear division,red,BP,GO:0031536
+GO:1901135,8,10.526315789473685,carbohydrate derivative metabolic process,red,BP,"GO:0018279, GO:0006048, GO:0046039, GO:0046034, GO:0046390, GO:0009225, GO:1901068, GO:0006678"
+GO:0003723,2,11.11111111111111,RNA binding,red,MF,GO:0070181
+GO:0003824,4,22.22222222222222,catalytic activity,red,MF,"GO:0046933, GO:0016811, GO:0008137, GO:0050136"
+GO:0005198,2,11.11111111111111,structural molecule activity,red,MF,"GO:0003735, GO:0005200"
+GO:0005215,3,16.666666666666668,transporter activity,red,MF,"GO:0019829, GO:0046933, GO:0008137"
+GO:0008289,2,11.11111111111111,lipid binding,red,MF,"GO:0051861, GO:0046625"
+GO:0016491,2,11.11111111111111,oxidoreductase activity,red,MF,"GO:0008137, GO:0050136"
+GO:0016787,1,5.555555555555555,hydrolase activity,red,MF,GO:0016811
+GO:0016874,1,5.555555555555555,ligase activity,red,MF,GO:0046933
+GO:0140657,1,5.555555555555555,ATP-dependent activity,red,MF,GO:0019829
+GO:0005739,2,8.333333333333334,mitochondrion,red,CC,"GO:0098800, GO:0005759"
+GO:0005764,1,4.166666666666667,lysosome,red,CC,GO:0035578
+GO:0005773,1,4.166666666666667,vacuole,red,CC,GO:0035578
+GO:0005783,3,12.5,endoplasmic reticulum,red,CC,"GO:0098556, GO:0008250"
+GO:0005829,2,8.333333333333334,cytosol,red,CC,"GO:0022625, GO:0022627"
+GO:0005840,2,8.333333333333334,ribosome,red,CC,"GO:0022625, GO:0022627"
+GO:0005856,1,4.166666666666667,cytoskeleton,red,CC,GO:0005885
+GO:0031410,2,8.333333333333334,cytoplasmic vesicle,red,CC,"GO:0035578, GO:1904813"
+GO:0043226,10,41.666666666666664,organelle,red,CC,"GO:0022625, GO:0022627, GO:0098556, GO:0098800, GO:0008250, GO:0005759, GO:0005783, GO:0005885, GO:0035578, GO:1904813"
