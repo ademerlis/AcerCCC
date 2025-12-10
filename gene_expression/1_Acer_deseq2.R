@@ -89,6 +89,7 @@ design$Location <- factor(design$Location, levels = c("nursery","CCC")) #make th
 
 str(design)
 
+#check that they match each other
 colnames(countData)
 rownames(design)
 
@@ -104,6 +105,8 @@ dds = DESeqDataSetFromMatrix(countData=countData, colData=design, design=~ Genot
 
 # for large datasets, rlog may take too much time, especially for an unfiltered dataframe
 # vsd is much faster and still works for outlier detection
+Vsd=varianceStabilizingTransformation(dds)
+
 Vsd=varianceStabilizingTransformation(dds)
 
 colnames(Vsd)
