@@ -10,7 +10,7 @@ library(EnhancedVolcano)
 library(tidyverse)
 ```
 
-
+# Acer host volcano plot
 ```{r}
 load("Rdata_files/pvals.RData")
 ```
@@ -19,13 +19,16 @@ load("Rdata_files/pvals.RData")
 ```{r}
 resLFC_Location_CCC_vs_nursery_annotated <- as.data.frame(resLFC) %>%
   rownames_to_column(var="gene") %>% 
-  left_join(read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
+  left_join(read.table(file = "1_bioinformatics/Acervicornis_iso2geneName.tab",
                        sep = "\t",
                        quote="", fill=FALSE) %>%
               mutate(gene = V1,
                      annot = V2) %>%
               dplyr::select(-V1, -V2), by = c("gene" = "gene"))
 str(resLFC_Location_CCC_vs_nursery_annotated) #21814 x 7
+
+resLFC_Location_CCC_vs_nursery_annotated %>% 
+  filter(padj < 0.05 & log2FoldChange >= 1) 
 
   keyvals <- ifelse(
     resLFC_Location_CCC_vs_nursery_annotated$log2FoldChange < -1 & resLFC_Location_CCC_vs_nursery_annotated$padj < 0.05, 'royalblue',
@@ -61,3 +64,48 @@ pdf(file="volcanoplot_colorcoded.pdf", width = 12, height = 6)
     colAlpha = 0.5) 
 ```
 
+
+# Symbiont volcano plot
+```{r}
+# first re_run 1_Sym_deseq2.R because you didn't save any of the Rdata files 
+resLFC_Location_CCC_vs_nursery_annotated <- as.data.frame(resLFC) %>%
+  rownames_to_column(var="gene") %>% 
+  left_join(read.table(file = "1_bioinformatics/Symbiodinium_iso2geneName.tab",
+                       sep = "\t",
+                       quote="", fill=FALSE) %>%
+              mutate(gene = V1,
+                     annot = V2) %>%
+              dplyr::select(-V1, -V2), by = c("gene" = "gene"))
+str(resLFC_Location_CCC_vs_nursery_annotated) #31202 x 7
+
+resLFC_Location_CCC_vs_nursery_annotated %>% 
+  filter(padj < 0.05 & log2FoldChange <= -1) 
+```
+
+
+
+```{r}
+keyvals <- ifelse(
+    resLFC_Location_CCC_vs_nursery_annotated$log2FoldChange < -1 & resLFC_Location_CCC_vs_nursery_annotated$padj < 0.05, 'darkblue',
+      ifelse(resLFC_Location_CCC_vs_nursery_annotated$log2FoldChange > 1 & resLFC_Location_CCC_vs_nursery_annotated$padj < 0.05, 'orange',
+        'grey'))
+  keyvals[is.na(keyvals)] <- 'grey'
+  names(keyvals)[keyvals == 'orange'] <- 'upregulated in CCC (Lf2C>1,padj<0.05)'
+  names(keyvals)[keyvals == 'grey'] <- 'L2FC=0 and padj > 0.05'
+  names(keyvals)[keyvals == 'darkblue'] <- 'upregulated in Nursery (Lf2C<-1,padj<0.05)'
+
+pdf(file="volcanoplot_colorcoded.pdf", width = 12, height = 6)  
+  EnhancedVolcano(resLFC_Location_CCC_vs_nursery_annotated,
+    lab = NA,
+    title = "CCC vs. Nursery",
+    x = 'log2FoldChange',
+    y = 'padj',
+    ylab = bquote(~-Log[10]~ 'FDR P-adjusted'),
+    legendPosition = 'right',
+    pCutoff = 10e-3,
+    FCcutoff = 1,
+    legendIconSize = 5.0,
+    labSize = 6.0,
+    colCustom = keyvals,
+    colAlpha = 0.5) 
+```

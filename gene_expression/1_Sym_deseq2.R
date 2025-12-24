@@ -39,10 +39,10 @@ nrow(countData_sym) #31,202
 ncol(countData_sym) #15
 
 # for WCGNA: removing all genes with counts of <10 in more than 90 % of samples
-# counts4wgcna = Acer_counts[apply(Acer_counts,1,function(x) sum(x<10))<ncol(Acer_counts)*0.9,]
-# nrow(counts4wgcna) #18192
-# ncol(counts4wgcna) #15
-#write.csv(counts4wgcna, file="Acer_counts4wgcna.csv")
+counts4wgcna = Sym_counts[apply(Sym_counts,1,function(x) sum(x<10))<ncol(Sym_counts)*0.9,]
+nrow(counts4wgcna) #24296
+ncol(counts4wgcna) #15
+#write.csv(counts4wgcna, file="Sym_counts4wgcna.csv")
 
 # importing a design .csv file
 design = readxl::read_xlsx("sample_metadata.xlsx")
@@ -106,17 +106,14 @@ arrayQualityMetrics(e,intgroup=c("Location", "Genotype"),force=T)
 # if there were outliers:
 outs=c(6,8) #these numbers were taken from the index.html report from arrayQualityMetrics Figure 2 "Outlier detection"
 countData=countData_sym[,-outs]
-#counts4wgcna=counts4wgcna[,-outs]
+counts4wgcna=counts4wgcna[,-outs]
 Vsd=Vsd_sym[,-outs]
 design=design[-outs,]
 
-#str(counts4wgcna) #12 samples now
+str(counts4wgcna) #13 samples now
 
 # remaking model with outliers removed from dataset
 dds = DESeqDataSetFromMatrix(countData=countData, colData=design, design=~ Genotype + Location)
-
-# save all these dataframes as an Rdata package so you don't need to rerun each time
-#save(dds,design,countData,Vsd,file="initial_fullddsdesigncountsVsdcounts.RData")
 
 # generating normalized variance-stabilized data for PCoA, heatmaps, etc
 vsd=assay(Vsd)
@@ -128,15 +125,11 @@ snames #i.e.
 # renames the column names
 colnames(vsd)=snames
 
-#save(vsd,design,file="vsd.RData")
-
-#load("Rdata_files/vsd.RData")
-
 str(design)
 
 # more reduced stabilized dataset for WGCNA
-#wg = DESeqDataSetFromMatrix(countData=counts4wgcna, colData=design, design=~ Genotype + Location)
-#vsd.wg=assay(varianceStabilizingTransformation(wg), blind=FALSE) #blind=TRUE is the default, and it is a fully unsupervised transformation. However, the creator of DESeq2,
+wg = DESeqDataSetFromMatrix(countData=counts4wgcna, colData=design, design=~ Genotype + Location)
+vsd.wg=assay(varianceStabilizingTransformation(wg), blind=FALSE) #blind=TRUE is the default, and it is a fully unsupervised transformation. However, the creator of DESeq2,
 #Michael Love, recommends using blind=FALSE for downstream analyses because when transforming data, the full use of the design information should be made. If many genes have
 #large differences in counts due to experimental design, then blind=FALSE will account for that.
 
@@ -144,13 +137,10 @@ str(design)
 # colnames(vsd.wg)=snames
 # colnames(vsd.wg)
 # colnames(vsd)
-# save(vsd.wg,design,file="data4wgcna.RData")
-
 
 #### DESEQ ####
 
 # with multi-factor, multi-level design
-#load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
 library(DESeq2)
 library(BiocParallel)
 
@@ -166,12 +156,8 @@ dds=DESeq(dds, parallel=TRUE)
 SF.data <- estimateSizeFactors(dds)
 print(sizeFactors(SF.data)) # everything is less than 4, so I can use vst
 
-# saving all models
-#save(dds,file="realModels_Acer.RData")
-
 #### DEGs and CONTRASTS ####
 
-#load("Rdata_files/realModels_Acer.RData")
 library(DESeq2)
 library(tidyverse)
 
@@ -204,8 +190,6 @@ length(degs_Location_CCC_vs_nursery_lfcshrink) #307
 degs_Location_CCC_vs_nursery=row.names(Location_CCC_vs_nursery)[Location_CCC_vs_nursery$padj<0.05 & !(is.na(Location_CCC_vs_nursery$padj))]
 length(degs_Location_CCC_vs_nursery) #307
 
-#save(Location_CCC_vs_nursery, resLFC, degs_Location_CCC_vs_nursery, degs_Location_CCC_vs_nursery_lfcshrink, file="pvals.RData")
-
 Location_CCC_vs_nursery %>% 
   as.data.frame() %>% 
   rownames_to_column(var = "gene") %>% 
@@ -227,65 +211,29 @@ resLFC %>%
   write_csv("resLFCLocation_CCC_vs_nursery_annotDGEs_Symbiodinium_padj05.csv")
 
 
-#### GO/KOG EXPORT ####
-
-# load("RData_files/realModels_Acer.RData")
-# load("RData_files/pvals.RData")
-
-# fold change (fc) can only be used for binary factors, such as control/treatment, or specific contrasts comparing two factor levels
-# log p value (lpv) is for multi-level factors, including binary factors
-
-# log2 fold changes:
-#use shrunk ones 
-source=resLFC[!is.na(resLFC$padj),]
-Location_CCC_vs_nursery.fc=data.frame("gene"=row.names(source))
-Location_C CC_vs_nursery.fc$lfc=source[,"log2FoldChange"]
-head(Location_CCC_vs_nursery.fc)
-#write.csv(Location_CCC_vs_nursery.fc,file="CCC_vs_nursery_fc_lfcshrink.csv",row.names=F,quote=F)
-#save(Location_CCC_vs_nursery.fc,file="Rdata_files/Location_CCC_vs_nursery_fc_lfcshrink.RData")
-
-# signed log FDR-adjusted p-values: -log(p-adj)* direction:
-CCC_vs_nursery.p=data.frame("gene"=row.names(source))
-CCC_vs_nursery.p$lpv=-log(source[,"padj"],10)
-CCC_vs_nursery.p$lpv[source$stat<0]=CCC_vs_nursery.p$lpv[source$stat<0]*-1
-head(CCC_vs_nursery.p)
-#write.csv(CCC_vs_nursery.p,file="CCC_vs_nursery_lpv.csv",row.names=F,quote=F)
-#save(CCC_vs_nursery.p,file="Rdata_files/CCC_vs_nursery_lpv.RData")
-
-
 #### ANNOTATING DGES ####
-# load("RData_files/realModels_Acer.RData")
-# load("RData_files/pvals.RData")
+
 
 library(tidyverse)
 # 
-# Location_CCC_vs_nursery %>% 
-#   as.data.frame() %>% 
-#   rownames_to_column(var="gene") %>% 
+# Location_CCC_vs_nursery %>%
+#   as.data.frame() %>%
+#   rownames_to_column(var="gene") %>%
 #   mutate(lpv = -log(padj, base = 10)) %>%
-#   mutate(lpv = if_else(stat < 0, lpv * -1, lpv)) %>% 
-#   filter(abs(lpv) >= 1.3) %>% 
-#   left_join(read.table(file = "bioinformatics/Acervicornis_iso2geneName.tab",
+#   mutate(lpv = if_else(stat < 0, lpv * -1, lpv)) %>%
+#   filter(abs(lpv) >= 1.3) %>%
+#   left_join(read.table(file = "1_bioinformatics/Symbiodinium_iso2geneName.tab",
 #                        sep = "\t",
 #                        quote="", fill=FALSE) %>%
 #               mutate(gene = V1,
 #                      annot = V2) %>%
-#               dplyr::select(-V1, -V2), by = c("gene" = "gene")) %>% str() #830 genes 
-#   
-#   write_csv("Location_CCC_vs_nursery_annotatedDGEs_lpv.csv") 
+#               dplyr::select(-V1, -V2), by = c("gene" = "gene")) %>%  #307 genes
+#   write_csv("Sym_Location_CCC_vs_nursery_annotatedDGEs_lpv.csv")
 
 #### PCOA and PERMANOVA ####
 
-# heatmap and hierarchical clustering:
-#load("Rdata_files/vsd.RData")
-library(pheatmap)
-# similarity among samples
-pheatmap(cor(vsd))
-dev.off()
-
 # Principal coordinates analysis
 library(vegan)
-# library(rgl)
 library(ape)
 
 conditions=design
@@ -324,7 +272,7 @@ dev.off()
 #manually save as pdf
 
 # plotting PCoA by location
-plot(scores[,1], scores[,2],col=c("orange","darkblue")[as.numeric(as.factor(conditions$Location))], xlab="Coordinate 1", ylab="Coordinate 2", main="Location")
+plot(scores[,1], scores[,2],col=c("orange","darkblue")[as.numeric(as.factor(conditions$Location))], xlab="Coordinate 1: 41.3%", ylab="Coordinate 2: 9.9%", main="Location")
 ordispider(scores, conditions$Location, label=F, col=c("orange","darkblue"))
 legend("topright", legend=c("CCC", "Nursery"), fill = c("orange","darkblue"), bty="n")
 dev.off()
@@ -335,5 +283,5 @@ dev.off()
 ad=adonis2(t(vsd)~Genotype + Location,data=design,method="manhattan",permutations=1e6)
 ad # not significant
 summary(ad)
-#as.data.frame(ad) %>% write_csv("permanova_results.csv")
+#as.data.frame(ad) %>% write_csv("permanova_results_symbiont.csv")
 

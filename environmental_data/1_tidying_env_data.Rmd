@@ -160,17 +160,20 @@ all_KB_data %>%
 ```{r}
 all_KB_data %>% 
   full_join(., CCC_temp_2021_06_01) %>% 
-  filter(Date < "2021-12-01" & Date > "2021-06-01") %>% 
-  ggplot(., aes(x=Date, y=Temperature, color = site)) +
+  group_by(Date, site) %>% 
+  summarise(mean_daily_temp = mean(Temperature), sd_daily_temp = sd(Temperature), daily_range = (max(Temperature)-min(Temperature))) %>% 
+  filter(Date < "2021-11-03" & Date > "2021-06-20") %>% 
+  ggplot(., aes(x=Date, y=mean_daily_temp, color = site)) +
+  geom_ribbon(aes(ymin = mean_daily_temp - sd_daily_temp, ymax = mean_daily_temp + sd_daily_temp, fill = site), alpha = 0.3, color = NA) +
   geom_line() +
-  theme_bw() +
+  theme_bw(base_size = 14) +
   labs(x="Date", y = "Temp (ºC)") +
   scale_color_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
+  scale_fill_manual(values = c("CCC" = "orange", "Nursery" = "darkblue")) +
   scale_x_date(date_labels = "%b %Y",  # Customize the date format
                      date_breaks = "1 month") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  geom_vline(xintercept=as.POSIXct(as.Date("2021-06-23")))
-#ggsave("CCCvsnursery_temp.pdf", width=10, height = 7)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("CCCvsnursery_temp_v2.pdf", width=8, height = 7)
 ```
 
 # save tidied dataset
