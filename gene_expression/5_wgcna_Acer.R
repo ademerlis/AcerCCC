@@ -458,6 +458,20 @@ design %>%
    scale_fill_manual(values = c("darkblue", "orange"))
 #ggsave("ME_expression_location.pdf")
  
+ # stats
+ MEs %>%
+   tibble::rownames_to_column("accession_code") %>%
+   dplyr::inner_join(design %>%
+                       dplyr::select(Sample_ID, Location),
+                     by = c("accession_code" = "Sample_ID")) %>% 
+   select(accession_code, MEdarkmagenta, MEmediumpurple3, Location) -> ME_stats
+ 
+ # Darkmagenta module
+ t_test_dark <- t.test(ME_stats$MEdarkmagenta ~ ME_stats$Location)
+ 
+ # Mediumpurple3 module  
+ t_test_purple <- t.test(ME_stats$MEmediumpurple3 ~ ME_stats$Location)
+ 
 
  design %>% 
    dplyr::rename(site = Location) -> design
@@ -703,7 +717,5 @@ hubgenes %>%
 hubgenes
 
 write.csv(hubgenes, file="hubgenes.csv")
-
-
 
 
