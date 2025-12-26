@@ -1,0 +1,273 @@
+---
+title: "WGCNA_GO"
+author: "Allyson"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Following https://rpubs.com/LeonYu/995707 and [Dr Chrstine Roper's GitHub](https://github.com/ChristineRoper/Mangrove-coral-thermotolerance-retained/blob/main/RNA%20Seq/4-Functional_annotation/Functional_annotation.R).
+
+# Acer host DEGs
+
+# install libraries
+```{r}
+# BiocManager::install("Rgraphviz")
+# BiocManager::install("topGO")
+# BiocManager::install("clusterProfiler")
+# BiocManager::install("GOplot")
+# BiocManager::install("GSEABase")
+# BiocManager::install("GO.db")
+# BiocManager::install("rrvgo")
+```
+
+# load libraries and R Data files
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(topGO)
+library(plyr)
+library(tidyr)
+library(scales)
+library(stringr)
+library(GSEABase)
+library(rrvgo)
+
+load("Rdata_files/initial_fullddsdesigncountsVsdcounts.RData")
+load("Rdata_files/realModels_Acer.RData")
+load("Rdata_files/vsd.RData")
+load("Rdata_files/pvals.RData")
+
+geneID2GO <- read.delim("~/OneDrive - University of Miami/PhD/NOAA AOML Coral Program/chapter2_UrbanCorals/Acropora_iso2go.tab", header = FALSE, stringsAsFactors = FALSE)
+colnames(geneID2GO) <- c("gene", "GO")
+length(geneID2GO) #7995
+
+# Split on semicolon
+geneID2GO <- setNames(strsplit(geneID2GO$GO, ";"), geneID2GO$gene)
+
+# Background = all genes from the mapping
+allgenes <- names(geneID2GO)
+```
+
+
+import gene list
+```{r}
+Acer_host_DEGs <- read_csv("results/Acer_host_LFCshrink_annotDGEs_padj05.csv")
+
+Acer_host_DEGs %>% 
+  dplyr::select(gene) -> Acer_host_DEGs
+```
+
+
+```{r}
+## Background universe
+allgenes <- rownames(dds)  # or equivalent
+
+## DEG list
+DEG_genes <- unique(Acer_host_DEGs$gene)
+
+## Build topGO geneList
+geneList <- as.integer(allgenes %in% DEG_genes)
+names(geneList) <- allgenes
+str(geneList)
+sum(names(geneList) %in% names(geneID2GO)) #7417
+
+## Build topGOdata objects
+GOdata_BP <- new("topGOdata",
+                 ontology = "BP",
+                 allGenes = geneList,
+                 geneSelectionFun = function(x) x == 1,
+                 annot = annFUN.gene2GO,
+                 gene2GO = geneID2GO,
+                 nodeSize = 5)
+
+GOdata_CC <- new("topGOdata",
+                 ontology = "CC",
+                 allGenes = geneList,
+                 geneSelectionFun = function(x) x == 1,
+                 annot = annFUN.gene2GO,
+                 gene2GO = geneID2GO,
+                 nodeSize = 5)
+
+GOdata_MF <- new("topGOdata",
+                 ontology = "MF",
+                 allGenes = geneList,
+                 geneSelectionFun = function(x) x == 1,
+                 annot = annFUN.gene2GO,
+                 gene2GO = geneID2GO,
+                 nodeSize = 5)
+
+
+## Run enrichment tests
+resultTopGO.BP <- runTest(GOdata_BP,
+                          algorithm = "weight01",
+                          statistic = "fisher")
+
+resultTopGO.CC <- runTest(GOdata_CC,
+                          algorithm = "weight01",
+                          statistic = "fisher")
+
+resultTopGO.MF <- runTest(GOdata_MF,
+                          algorithm = "weight01",
+                          statistic = "fisher")
+
+
+## Extract genes per GO term
+allBPGO <- genesInTerm(GOdata_BP)
+allCCGO <- genesInTerm(GOdata_CC)
+allMFGO <- genesInTerm(GOdata_MF)
+
+BP_ANNOTATION <- lapply(allBPGO, function(x) x[x %in% DEG_genes])
+CC_ANNOTATION <- lapply(allCCGO, function(x) x[x %in% DEG_genes])
+MF_ANNOTATION <- lapply(allMFGO, function(x) x[x %in% DEG_genes])
+
+
+# Create results tables (numChar parameter controls term description length)
+BP_Res <- GenTable(GOdata_BP, weightFisher = resultTopGO.BP, topNodes = length(allBPGO), numChar = 1000)
+BP_Res$Class <- "Biological_Process"
+BP_Res$GeneList <- vapply(BP_Res$GO.ID, function(go) {
+  str_c(BP_ANNOTATION[[go]], collapse = ",")
+}, character(1))
+
+CC_Res <- GenTable(GOdata_CC, weightFisher = resultTopGO.CC, topNodes = length(allCCGO), numChar = 1000)
+CC_Res$Class <- "Cellular_Component"
+CC_Res$GeneList <- vapply(CC_Res$GO.ID, function(go) {
+  str_c(CC_ANNOTATION[[go]], collapse = ",")
+}, character(1))
+
+MF_Res <- GenTable(GOdata_MF, weightFisher = resultTopGO.MF, topNodes = length(allMFGO), numChar = 1000)
+MF_Res$Class <- "Molecular_Function"
+MF_Res$GeneList <- vapply(MF_Res$GO.ID, function(go) {
+  str_c(MF_ANNOTATION[[go]], collapse = ",")
+}, character(1))
+
+
+## Combine and filter results
+GO_results <- bind_rows(MF_Res, CC_Res, BP_Res)
+GO_results$weightFisher <- as.numeric(GO_results$weightFisher)
+GO_results <- GO_results[GO_results$weightFisher < 0.01, ]
+
+str(GO_results)
+
+#write_csv(GO_results, "GO_enrichment_Acer_host.csv")
+```
+
+
+GOslim
+```{r}
+#change Class types to ontology so it matches GOslim
+GO_results %>% 
+  mutate(Ontology = case_when(
+    Class == "Biological_Process" ~ "BP",
+    Class == "Molecular_Function" ~ "MF",
+    Class == "Cellular_Component" ~ "CC"
+  )) -> GO_results
+
+# Load the GO Slim file
+slim <- getOBOCollection("goslim_generic.obo") #download here (https://release.geneontology.org/2024-09-08/ontology/subsets/index.html#:~:text=281%20KB-,goslim_generic.obo,-117%20KB)
+
+slim_ids <- GSEABase::ids(slim) # gets slim IDs
+
+# Helper function: map slim → detailed GO terms
+goWide <- function(slim_id, enriched_go_terms, GO_ontology) {
+  GOTERM <- getAnnMap("TERM", "GO")
+  terms <- mget(slim_ids, GOTERM, ifnotfound = NA)
+  terms <- terms[vapply(terms, Ontology, character(1)) == GO_ontology]
+  slim_ids_o <- names(terms)
+  
+  OFFSPRING <- switch(GO_ontology,
+    MF = getAnnMap("MFOFFSPRING", "GO"),
+    BP = getAnnMap("BPOFFSPRING", "GO"),
+    CC = getAnnMap("CCOFFSPRING", "GO"),
+    stop("GO_ontology must be 'MF', 'BP', or 'CC'")
+  )
+  
+  # Get all offspring (detailed terms) of this slim term
+  offspring <- mget(slim_id, OFFSPRING, ifnotfound = NA)[[1]]
+  
+  if (is.na(offspring[1])) {
+    return(character(0))
+  }
+  
+  # Find which of the enriched GO terms are offspring of this slim term
+  # Include the slim term itself if it's in the enriched list
+  matching_terms <- enriched_go_terms[enriched_go_terms %in% c(slim_id, offspring)]
+  
+  return(matching_terms)
+}
+
+# Run GOslim for each ontology
+all_slim_results <- list()
+GO_IDs <- GO_results$GO.ID
+GOTERM <- getAnnMap("TERM", "GO")
+
+for (ontology in c("BP", "MF", "CC")) {
+  message("Processing ontology: ", ontology)
+  
+  ontology_terms <- GO_results %>% filter(Ontology == ontology)
+  
+  if (nrow(ontology_terms) > 0) {
+    tmp <- goSlim(GOCollection(ontology_terms$GO.ID), slim, ontology) %>%
+      rownames_to_column("SlimID") %>%
+      mutate(Ontology = ontology) %>%
+      filter(Count > 0)
+    
+    # Add enriched GO terms that map to each slim category
+    tmp$EnrichedGOIDs <- sapply(tmp$SlimID, function(id) {
+      terms <- goWide(id, ontology_terms$GO.ID, ontology)
+      paste(terms, collapse = ", ")
+    })
+    
+    # Add the descriptions of those enriched GO terms
+    tmp$EnrichedGOTerms <- sapply(tmp$SlimID, function(id) {
+      go_ids <- goWide(id, ontology_terms$GO.ID, ontology)
+      if (length(go_ids) == 0) return("")
+      
+      descriptions <- sapply(go_ids, function(goid) {
+        # Get the term description from your GO_results
+        term_desc <- ontology_terms$Term[ontology_terms$GO.ID == goid]
+        if (length(term_desc) > 0) return(term_desc[1])
+        return(goid)
+      })
+      paste(descriptions, collapse = "; ")
+    })
+    
+    all_slim_results[[ontology]] <- tmp
+  }
+}
+
+
+# Combine all GOslim results
+slim_results <- bind_rows(all_slim_results)
+
+# View results
+head(slim_results)
+
+#write_csv(slim_results, "GOslim_enrichment_Acer_host.csv")
+```
+
+
+```{r}
+slim_results %>% 
+  dplyr::rename(ParentTermID = SlimID, ParentTermDescription = Term) %>% 
+  dplyr::select(!EnrichedGOTerms) %>% 
+  separate_rows(EnrichedGOIDs, sep = ", ") -> GO_slim_edited
+
+# Merge GO_results with GO_slim to add GOTerms column
+GO_slim_edited %>%
+  full_join(GO_results, by = c("EnrichedGOIDs" = "GO.ID", "Ontology")) %>%
+  write_csv("GO_enrichment_Acer_host_allterms_withGOslim.csv")
+```
+
+
+# bubble plot
+
+```{r}
+
+```
+
+
+
+
+

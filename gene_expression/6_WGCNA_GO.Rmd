@@ -70,7 +70,7 @@ all_genes <- file_list %>%
 head(all_genes)
 
 all_genes %>% 
-  select(gene, module) -> all_genes
+  dplyr::select(gene, module) -> all_genes
 ```
 
 
@@ -123,23 +123,24 @@ for(mod in modules) {
   MF_ANNOTATION = lapply(allMFGO,function(x) x[x %in% module_genes])
   
   #Transform data and save into csv
-  BP_Res <- GenTable(GOdata_BP, weightFisher = resultTopGO.BP,  topNodes = length(allBPGO))
-  BP_Res$Class = "Biological_Process"
-  BP_Res$GeneList <- vapply(BP_Res$GO.ID, function(go) {
-    str_c(BP_ANNOTATION[[go]], collapse=",")
-  }, character(1))
-  
-  CC_Res <- GenTable(GOdata_CC, weightFisher = resultTopGO.CC,  topNodes =  length(allCCGO))
-  CC_Res$Class = "Cellular_Component"
-  CC_Res$GeneList <- vapply(CC_Res$GO.ID, function(go) {
-    str_c(CC_ANNOTATION[[go]], collapse=",")
-  }, character(1))
+  # Create results tables (numChar parameter controls term description length)
+BP_Res <- GenTable(GOdata_BP, weightFisher = resultTopGO.BP, topNodes = length(allBPGO), numChar = 1000)
+BP_Res$Class <- "Biological_Process"
+BP_Res$GeneList <- vapply(BP_Res$GO.ID, function(go) {
+  str_c(BP_ANNOTATION[[go]], collapse = ",")
+}, character(1))
 
-  MF_Res <- GenTable(GOdata_MF, weightFisher = resultTopGO.MF,  topNodes =  length(allMFGO))
-  MF_Res$Class = "Molecular_Function"
-  MF_Res$GeneList <- vapply(MF_Res$GO.ID, function(go) {
-    str_c(MF_ANNOTATION[[go]], collapse=",")
-  }, character(1))
+CC_Res <- GenTable(GOdata_CC, weightFisher = resultTopGO.CC, topNodes = length(allCCGO), numChar = 1000)
+CC_Res$Class <- "Cellular_Component"
+CC_Res$GeneList <- vapply(CC_Res$GO.ID, function(go) {
+  str_c(CC_ANNOTATION[[go]], collapse = ",")
+}, character(1))
+
+MF_Res <- GenTable(GOdata_MF, weightFisher = resultTopGO.MF, topNodes = length(allMFGO), numChar = 1000)
+MF_Res$Class <- "Molecular_Function"
+MF_Res$GeneList <- vapply(MF_Res$GO.ID, function(go) {
+  str_c(MF_ANNOTATION[[go]], collapse = ",")
+}, character(1))
 
   GO_combine <- bind_rows(MF_Res, CC_Res, BP_Res)
   GO_combine$weightFisher <- as.numeric(GO_combine$weightFisher)
@@ -150,6 +151,10 @@ for(mod in modules) {
 }
 
 str(GO_results)
+
+GO_results$darkmagenta
+
+GO_results$mediumpurple3
 
 write_csv(GO_results, "4_WGCNA/GO_enrichment_all_modules_allterms.csv")
 ```

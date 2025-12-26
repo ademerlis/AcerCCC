@@ -1,0 +1,25 @@
+SlimID,Count,Percent,Term,Ontology,EnrichedGOIDs,EnrichedGOTerms
+GO:0005975,1,3.5714285714285716,carbohydrate metabolic process,BP,GO:0006071,glycerol metabolic process
+GO:0006325,1,3.5714285714285716,chromatin organization,BP,GO:1905269,positive regulation of chromatin organization
+GO:0006351,4,14.285714285714286,DNA-templated transcription,BP,"GO:0000122, GO:1902895, GO:2000144, GO:0045944",negative regulation of transcription by RNA polymerase II; positive regulation of miRNA transcription; positive regulation of DNA-templated transcription initiation; positive regulation of transcription by RNA polymerase II
+GO:0006355,4,14.285714285714286,regulation of DNA-templated transcription,BP,"GO:0000122, GO:1902895, GO:2000144, GO:0045944",negative regulation of transcription by RNA polymerase II; positive regulation of miRNA transcription; positive regulation of DNA-templated transcription initiation; positive regulation of transcription by RNA polymerase II
+GO:0006457,1,3.5714285714285716,protein folding,BP,GO:0051085,chaperone cofactor-dependent protein refolding
+GO:0012501,2,7.142857142857143,programmed cell death,BP,"GO:0010667, GO:1902043",negative regulation of cardiac muscle cell apoptotic process; positive regulation of extrinsic apoptotic signaling pathway via death domain receptors
+GO:0023052,3,10.714285714285714,signaling,BP,"GO:1902043, GO:0045879, GO:0040037",positive regulation of extrinsic apoptotic signaling pathway via death domain receptors; negative regulation of smoothened signaling pathway; negative regulation of fibroblast growth factor receptor signaling pathway
+GO:0030154,4,14.285714285714286,cell differentiation,BP,"GO:0045167, GO:0061005, GO:0060563, GO:0045600",asymmetric protein localization involved in cell fate determination; cell differentiation involved in kidney development; neuroepithelial cell differentiation; positive regulation of fat cell differentiation
+GO:0031047,1,3.5714285714285716,regulatory ncRNA-mediated gene silencing,BP,GO:0043628,regulatory ncRNA 3'-end processing
+GO:0048856,5,17.857142857142858,anatomical structure development,BP,"GO:0060562, GO:0046529, GO:1903671, GO:0061005, GO:0060563","epithelial tube morphogenesis; imaginal disc fusion, thorax closure; negative regulation of sprouting angiogenesis; cell differentiation involved in kidney development; neuroepithelial cell differentiation"
+GO:0051604,1,3.5714285714285716,protein maturation,BP,GO:0051085,chaperone cofactor-dependent protein refolding
+GO:0055086,1,3.5714285714285716,nucleobase-containing small molecule metabolic process,BP,GO:0006116,NADH oxidation
+GO:0003677,1,16.666666666666668,DNA binding,MF,GO:0035497,cAMP response element binding
+GO:0003824,1,16.666666666666668,catalytic activity,MF,GO:0004745,all-trans-retinol dehydrogenase (NAD+) activity
+GO:0005198,1,16.666666666666668,structural molecule activity,MF,GO:0003735,structural constituent of ribosome
+GO:0016491,1,16.666666666666668,oxidoreductase activity,MF,GO:0004745,all-trans-retinol dehydrogenase (NAD+) activity
+GO:0140110,2,33.333333333333336,transcription regulator activity,MF,"GO:0001228, GO:0001227","DNA-binding transcription activator activity, RNA polymerase II-specific; DNA-binding transcription repressor activity, RNA polymerase II-specific"
+GO:0005634,1,7.6923076923076925,nucleus,CC,GO:0031080,nuclear pore outer ring
+GO:0005635,1,7.6923076923076925,nuclear envelope,CC,GO:0031080,nuclear pore outer ring
+GO:0005694,1,7.6923076923076925,chromosome,CC,GO:0000791,euchromatin
+GO:0005829,2,15.384615384615385,cytosol,CC,"GO:0099524, GO:0022627",postsynaptic cytosol; cytosolic small ribosomal subunit
+GO:0005840,1,7.6923076923076925,ribosome,CC,GO:0022627,cytosolic small ribosomal subunit
+GO:0031410,2,15.384615384615385,cytoplasmic vesicle,CC,"GO:0071682, GO:0060205",endocytic vesicle lumen; cytoplasmic vesicle lumen
+GO:0043226,5,38.46153846153846,organelle,CC,"GO:0000791, GO:0031080, GO:0071682, GO:0060205, GO:0022627",euchromatin; nuclear pore outer ring; endocytic vesicle lumen; cytoplasmic vesicle lumen; cytosolic small ribosomal subunit
