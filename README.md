@@ -25,7 +25,7 @@ These repository contains all data and code used to study the physiological impa
 * In the subfolder **results_csv**, there are tables and plots for the temperature data comparisons between sites.
 
 #### gene_expression:
-* The raw sequence .fastq files will be made publicly available on the National Center for Biotechnology Information (NCBI) Sequence Read Archive (SRA) under BioProject ____, upon publication.
+* The raw sequence .fastq files will be made publicly available on the National Center for Biotechnology Information (NCBI) Sequence Read Archive (SRA) under BioProject PRJNA1333470, upon publication.
 * The file **readcounts_rawtrimmedaligned_summary.csv** has a description of the raw, trimmed, and aligned reads for *A. cervicornis*.
 * The file **sample_metadata.csv** has the sample metadata, including date sampled, genotype, and location.
 * Subfolders:
