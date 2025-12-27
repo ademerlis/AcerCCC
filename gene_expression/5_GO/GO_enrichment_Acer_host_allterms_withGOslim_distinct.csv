@@ -1,0 +1,25 @@
+ParentTermID,Count,Percent,ParentTermDescription,Ontology
+GO:0005975,1,3.5714285714285716,carbohydrate metabolic process,BP
+GO:0006325,1,3.5714285714285716,chromatin organization,BP
+GO:0006351,4,14.285714285714286,DNA-templated transcription,BP
+GO:0006355,4,14.285714285714286,regulation of DNA-templated transcription,BP
+GO:0006457,1,3.5714285714285716,protein folding,BP
+GO:0012501,2,7.142857142857143,programmed cell death,BP
+GO:0023052,3,10.714285714285714,signaling,BP
+GO:0030154,4,14.285714285714286,cell differentiation,BP
+GO:0031047,1,3.5714285714285716,regulatory ncRNA-mediated gene silencing,BP
+GO:0048856,5,17.857142857142858,anatomical structure development,BP
+GO:0051604,1,3.5714285714285716,protein maturation,BP
+GO:0055086,1,3.5714285714285716,nucleobase-containing small molecule metabolic process,BP
+GO:0003677,1,16.666666666666668,DNA binding,MF
+GO:0003824,1,16.666666666666668,catalytic activity,MF
+GO:0005198,1,16.666666666666668,structural molecule activity,MF
+GO:0016491,1,16.666666666666668,oxidoreductase activity,MF
+GO:0140110,2,33.333333333333336,transcription regulator activity,MF
+GO:0005634,1,7.6923076923076925,nucleus,CC
+GO:0005635,1,7.6923076923076925,nuclear envelope,CC
+GO:0005694,1,7.6923076923076925,chromosome,CC
+GO:0005829,2,15.384615384615383,cytosol,CC
+GO:0005840,1,7.6923076923076925,ribosome,CC
+GO:0031410,2,15.384615384615383,cytoplasmic vesicle,CC
+GO:0043226,5,38.46153846153846,organelle,CC

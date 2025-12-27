@@ -1,0 +1,28 @@
+GO_slim_term,Count,Percent,GO_slim_term_description,module,Ontology
+GO:0000278,2,4,mitotic cell cycle,darkmagenta,BP
+GO:0002376,2,4,immune system process,darkmagenta,BP
+GO:0006629,1,2,lipid metabolic process,darkmagenta,BP
+GO:0006913,1,2,nucleocytoplasmic transport,darkmagenta,BP
+GO:0007010,1,2,cytoskeleton organization,darkmagenta,BP
+GO:0023052,2,4,signaling,darkmagenta,BP
+GO:0030154,15,30,cell differentiation,darkmagenta,BP
+GO:0048856,24,48,anatomical structure development,darkmagenta,BP
+GO:0050877,1,2,nervous system process,darkmagenta,BP
+GO:0140014,1,2,mitotic nuclear division,darkmagenta,BP
+GO:0003723,1,33.333333333333336,RNA binding,darkmagenta,MF
+GO:0005215,2,66.66666666666667,transporter activity,darkmagenta,MF
+GO:0005811,1,50,lipid droplet,darkmagenta,CC
+GO:0043226,1,50,organelle,darkmagenta,CC
+GO:0002376,1,8.333333333333334,immune system process,mediumpurple3,BP
+GO:0006399,1,8.333333333333334,tRNA metabolic process,mediumpurple3,BP
+GO:0006457,1,8.333333333333334,protein folding,mediumpurple3,BP
+GO:0016071,1,8.333333333333334,mRNA metabolic process,mediumpurple3,BP
+GO:0023052,1,8.333333333333334,signaling,mediumpurple3,BP
+GO:0030154,2,16.666666666666668,cell differentiation,mediumpurple3,BP
+GO:0048856,2,16.666666666666668,anatomical structure development,mediumpurple3,BP
+GO:0048870,1,8.333333333333334,cell motility,mediumpurple3,BP
+GO:0050877,1,8.333333333333334,nervous system process,mediumpurple3,BP
+GO:0051604,1,8.333333333333334,protein maturation,mediumpurple3,BP
+GO:0003824,1,33.333333333333336,catalytic activity,mediumpurple3,MF
+GO:0016787,1,33.333333333333336,hydrolase activity,mediumpurple3,MF
+GO:0140098,1,33.333333333333336,"catalytic activity, acting on RNA",mediumpurple3,MF

@@ -252,12 +252,92 @@ GO_slim %>%
 
 # Merge GO_results with GO_slim to add GOTerms column
 GO_slim_edited %>%
-  full_join(GO_results, by = c("module", "ChildTerm" = "GO.ID")) %>% 
+  full_join(GO_results, by = c("module", "ChildTerm" = "GO.ID", "Ontology")) %>% 
   dplyr::rename(GO_slim_term = ParentTerm, GO_slim_term_description = Term.x, GO_child_term_description = Term.y) -> merged_results
 
 write_csv(merged_results, "4_WGCNA/GO_enrichment_all_modules_allterms_withGOslim.csv")
 ```
 
+```{r}
+GO_results %>% 
+  filter(module == "darkmagenta" | module == "mediumpurple3") %>%
+  group_by(Ontology, module) %>%
+  summarise(total_genes = sum(Significant))
+```
 
+
+
+# bubble plots for significant modules
+```{r}
+merged_results %>% 
+  filter(module == "darkmagenta" | module == "mediumpurple3") -> sig_wgcna_modules
+
+sig_wgcna_modules %>% 
+  drop_na() %>% 
+  dplyr::select(GO_slim_term:Ontology) %>% 
+  distinct() %>% 
+  write_csv("4_WGCNA/GO_slim_terms_sig_modules.csv")
+```
+
+
+```{r}
+sig_wgcna_modules %>% 
+  drop_na() %>% 
+  dplyr::select(GO_slim_term:Ontology) %>% 
+  distinct() %>% 
+ggplot(., aes(x = fct_reorder(GO_slim_term_description, Count), y = Count, fill = Ontology)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("BP" = "#8DD3C7",
+                                "MF" = "#FFFFB3",
+                                "CC" = "#BEBADA")) +
+  labs(x = "Parent GO Term",
+       y = "Count",
+       fill = "Ontology") +
+  theme_bw() +
+  theme(
+    axis.text.y = element_text(size = 9),
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~module, scales = "free") +
+  coord_flip()
+#ggsave("4_WGCNA/GO_slim_barplot_sig_modules.pdf", width = 10, height = 6)
+```
+
+
+```{r}
+# Prepare data: select top terms per ontology
+top_terms <- GO_results %>%
+  filter(module == "darkmagenta" | module == "mediumpurple3") %>%
+  group_by(Ontology, module) %>%
+  arrange(weightFisher) %>%
+  slice_head(n = 10) %>%  # Top 10 per ontology
+  ungroup() %>%
+  mutate(
+    GeneRatio = Significant / Annotated,  # Calculate gene ratio
+    NegLog10P = -log10(weightFisher),
+    Term = fct_reorder(Term, NegLog10P)  # Order by significance
+  )
+
+# Create dot plot
+top_terms %>% 
+  filter(Ontology!="CC") %>% 
+ggplot(., aes(x = GeneRatio, y = fct_reorder(Term, GeneRatio))) +
+  geom_point(aes(size = Significant, color = NegLog10P)) +
+  scale_color_gradient(low = "blue", high = "red", 
+                       name = "-log10(P-value)") +
+  scale_size_continuous(name = "Gene Count", range = c(1, 8)) +
+  facet_grid(Ontology ~ module, scales = "free_y", space = "free_y") +
+  labs(x = "Gene Ratio",
+       y = "") +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14),
+    panel.grid.major.y = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    legend.position = "top"
+  ) 
+ggsave("4_WGCNA/GO_dotplot_sig_modules.pdf", width = 13, height = 8)
+```
 
 

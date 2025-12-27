@@ -17,7 +17,7 @@ column_to_rownames(Sym_counts, var ="X") -> Sym_counts
 
 Sym_counts %>% 
   rename_with(~sub("^X(.+)_trimmed$", "Acer_\\1", .)) %>% 
-  select(!X.1) -> Sym_counts
+  dplyr::select(!X.1) -> Sym_counts
  
 # how many genes we have total?
 nrow(Sym_counts) #35, 066
@@ -27,7 +27,7 @@ ncol(Sym_counts) #20 samples
 #Acer_1087, Acer_1088, Acer_1096, Acer_2264, Acer_2383
 
 Sym_counts %>% 
-  select(!c("Acer_1087", "Acer_1088", "Acer_1096", "Acer_2264", "Acer_2383")) -> Sym_counts
+  dplyr::select(!c("Acer_1087", "Acer_1088", "Acer_1096", "Acer_2264", "Acer_2383")) -> Sym_counts
 
 nrow(Sym_counts) #35, 066
 ncol(Sym_counts) #15 samples
@@ -39,9 +39,9 @@ nrow(countData_sym) #31,202
 ncol(countData_sym) #15
 
 # for WCGNA: removing all genes with counts of <10 in more than 90 % of samples
-counts4wgcna = Sym_counts[apply(Sym_counts,1,function(x) sum(x<10))<ncol(Sym_counts)*0.9,]
-nrow(counts4wgcna) #24296
-ncol(counts4wgcna) #15
+# counts4wgcna = Sym_counts[apply(Sym_counts,1,function(x) sum(x<10))<ncol(Sym_counts)*0.9,]
+# nrow(counts4wgcna) #24296
+# ncol(counts4wgcna) #15
 #write.csv(counts4wgcna, file="Sym_counts4wgcna.csv")
 
 # importing a design .csv file

@@ -249,6 +249,9 @@ head(slim_results)
 
 
 ```{r}
+GO_results <- read_csv("5_GO/GO_enrichment_Acer_host.csv")
+slim_results<-read_csv("5_GO/GOslim_enrichment_Acer_host.csv")
+
 slim_results %>% 
   dplyr::rename(ParentTermID = SlimID, ParentTermDescription = Term) %>% 
   dplyr::select(!EnrichedGOTerms) %>% 
@@ -256,18 +259,203 @@ slim_results %>%
 
 # Merge GO_results with GO_slim to add GOTerms column
 GO_slim_edited %>%
-  full_join(GO_results, by = c("EnrichedGOIDs" = "GO.ID", "Ontology")) %>%
-  write_csv("GO_enrichment_Acer_host_allterms_withGOslim.csv")
+  full_join(GO_results, by = c("EnrichedGOIDs" = "GO.ID")) -> GO_terms_Acer_host
+  #write_csv("GO_enrichment_Acer_host_allterms_withGOslim.csv")
+
+GO_results %>%
+  filter(Class == "Cellular_Component") %>%
+  summarise(genes = sum(Significant))
 ```
 
 
 # bubble plot
 
 ```{r}
+# GO_terms_Acer_host %>% 
+#   drop_na() %>% 
+#   dplyr::select(ParentTermID:Ontology) %>% 
+#   distinct() %>% 
+#   write_csv("GO_enrichment_Acer_host_allterms_withGOslim_distinct.csv")
 
+GO_terms_Acer_host %>% 
+  drop_na() %>% 
+  dplyr::select(ParentTermID:Ontology) %>% 
+  distinct() %>% 
+ggplot(., aes(x = fct_reorder(ParentTermDescription, Count), y = Count, fill = Ontology)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("BP" = "#8DD3C7",
+                                "MF" = "#FFFFB3",
+                                "CC" = "#BEBADA")) +
+  labs(x = "Parent GO Term",
+       y = "Count",
+       fill = "Ontology") +
+  theme_bw() +
+  theme(
+    axis.text.y = element_text(size = 9),
+    legend.position = "bottom"
+  ) +
+  coord_flip()
 ```
 
 
 
+```{r}
+# Prepare data: select top terms per ontology
+top_terms <- GO_results %>%
+  group_by(Class) %>%
+  arrange(weightFisher) %>%
+  slice_head(n = 10) %>%  # Top 10 per ontology
+  ungroup() %>%
+  mutate(
+    GeneRatio = Significant / Annotated,  # Calculate gene ratio
+    NegLog10P = -log10(weightFisher),
+    Term = fct_reorder(Term, NegLog10P)  # Order by significance
+  )
 
+# Create dot plot
+top_terms %>% 
+    mutate(Ontology = case_when(
+    Class == "Biological_Process" ~ "BP",
+    Class == "Molecular_Function" ~ "MF",
+    Class == "Cellular_Component" ~ "CC"
+  )) %>% 
+ggplot(., aes(x = GeneRatio, y = fct_reorder(Term, GeneRatio))) +
+  geom_point(aes(size = Significant, color = NegLog10P)) +
+  scale_color_gradient(low = "blue", high = "red", 
+                       name = "-log10(P-value)") +
+  scale_size_continuous(name = "Gene Count", range = c(1, 8)) +
+  facet_grid(Ontology ~ ., scales = "free_y", space = "free_y") +
+  labs(x = "Gene Ratio",
+       y = "") +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14),
+    panel.grid.major.y = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    legend.position = "top"
+  ) 
+
+ggsave("GO_dotplot_Acer_host_DEGs.pdf", width = 10, height = 8)
+```
+
+
+# Symbiont DEGs
+
+```{r}
+geneID2GO <- read.delim("~/OneDrive - University of Miami/PhD/NOAA AOML Coral Program/Omics/Symbiodinium/Symbiodinium_iso2go.tab", header = FALSE, stringsAsFactors = FALSE)
+colnames(geneID2GO) <- c("gene", "GO")
+str(geneID2GO) #3929
+
+# Split on semicolon
+geneID2GO <- setNames(strsplit(geneID2GO$GO, ";"), geneID2GO$gene)
+
+# Background = all genes from the mapping
+allgenes <- names(geneID2GO)
+```
+
+
+import gene list
+```{r}
+sym_DEGs <- read_csv("results/Symbiont_LFCshrink_annotDGEs_padj05.csv")
+
+sym_DEGs %>% 
+  dplyr::select(gene) -> sym_DEGs
+```
+
+
+```{r}
+# open 1_Sym_deseq2.R and get the dds object from that, up to line 154
+
+## Background universe
+allgenes <- rownames(dds)  # or equivalent
+
+## DEG list
+DEG_genes <- unique(sym_DEGs$gene)
+
+## Build topGO geneList
+geneList <- as.integer(allgenes %in% DEG_genes)
+names(geneList) <- allgenes
+str(geneList)
+sum(names(geneList) %in% names(geneID2GO)) #2576
+
+## Build topGOdata objects
+GOdata_BP <- new("topGOdata",
+                 ontology = "BP",
+                 allGenes = geneList,
+                 geneSelectionFun = function(x) x == 1,
+                 annot = annFUN.gene2GO,
+                 gene2GO = geneID2GO,
+                 nodeSize = 5)
+
+GOdata_CC <- new("topGOdata",
+                 ontology = "CC",
+                 allGenes = geneList,
+                 geneSelectionFun = function(x) x == 1,
+                 annot = annFUN.gene2GO,
+                 gene2GO = geneID2GO,
+                 nodeSize = 5)
+
+GOdata_MF <- new("topGOdata",
+                 ontology = "MF",
+                 allGenes = geneList,
+                 geneSelectionFun = function(x) x == 1,
+                 annot = annFUN.gene2GO,
+                 gene2GO = geneID2GO,
+                 nodeSize = 5)
+
+
+## Run enrichment tests
+resultTopGO.BP <- runTest(GOdata_BP,
+                          algorithm = "weight01",
+                          statistic = "fisher")
+
+resultTopGO.CC <- runTest(GOdata_CC,
+                          algorithm = "weight01",
+                          statistic = "fisher")
+
+resultTopGO.MF <- runTest(GOdata_MF,
+                          algorithm = "weight01",
+                          statistic = "fisher")
+
+
+## Extract genes per GO term
+allBPGO <- genesInTerm(GOdata_BP)
+allCCGO <- genesInTerm(GOdata_CC)
+allMFGO <- genesInTerm(GOdata_MF)
+
+BP_ANNOTATION <- lapply(allBPGO, function(x) x[x %in% DEG_genes])
+CC_ANNOTATION <- lapply(allCCGO, function(x) x[x %in% DEG_genes])
+MF_ANNOTATION <- lapply(allMFGO, function(x) x[x %in% DEG_genes])
+
+
+# Create results tables (numChar parameter controls term description length)
+BP_Res <- GenTable(GOdata_BP, weightFisher = resultTopGO.BP, topNodes = length(allBPGO), numChar = 1000)
+BP_Res$Class <- "Biological_Process"
+BP_Res$GeneList <- vapply(BP_Res$GO.ID, function(go) {
+  str_c(BP_ANNOTATION[[go]], collapse = ",")
+}, character(1))
+
+CC_Res <- GenTable(GOdata_CC, weightFisher = resultTopGO.CC, topNodes = length(allCCGO), numChar = 1000)
+CC_Res$Class <- "Cellular_Component"
+CC_Res$GeneList <- vapply(CC_Res$GO.ID, function(go) {
+  str_c(CC_ANNOTATION[[go]], collapse = ",")
+}, character(1))
+
+MF_Res <- GenTable(GOdata_MF, weightFisher = resultTopGO.MF, topNodes = length(allMFGO), numChar = 1000)
+MF_Res$Class <- "Molecular_Function"
+MF_Res$GeneList <- vapply(MF_Res$GO.ID, function(go) {
+  str_c(MF_ANNOTATION[[go]], collapse = ",")
+}, character(1))
+
+
+## Combine and filter results
+GO_results <- bind_rows(MF_Res, CC_Res, BP_Res)
+GO_results$weightFisher <- as.numeric(GO_results$weightFisher)
+GO_results <- GO_results[GO_results$weightFisher < 0.01, ]
+
+str(GO_results)
+
+#write_csv(GO_results, "GO_enrichment_Acer_host.csv")
+```
 
