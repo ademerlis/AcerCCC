@@ -31,8 +31,9 @@ These repository contains all data and code used to study the physiological impa
 * Subfolders:
     * **1_bioinformatics** subfolder contains the scripts needed to process raw 3' RNA-Seq sequences on the UM HPC, [Pegasus](https://acs-docs.readthedocs.io/pegasus/README.html), which uses an LSF resource manager. The bioinformatics pipeline outlined in this folder includes: FastQC > Cutadapt > bowtie2 > samtools
     * **2_OutlierDetection_Acer** subfolder contains results of *ArrayQualityMetrics* for filtering outliers before DESeq2 analysis for the _A. cervicornis_ host genes.
-    * **2_OutlierDetection_Sym** subfolder contains results of *ArrayQualityMetrics* for filtering outliers before DESeq2 analysis for the symbiont genes (_S. fitti_).
-    * **3_WGCNA** subfolder contains results following the weighted gene co-expression network analysis (WGCNA)
+    * **3_OutlierDetection_Sym** subfolder contains results of *ArrayQualityMetrics* for filtering outliers before DESeq2 analysis for the symbiont genes (_S. fitti_).
+    * **4_WGCNA** subfolder contains results following the weighted gene co-expression network analysis (WGCNA)
+    * **5_GO** subfolder contains results from GO analysis on _A. cervicornis_ host DEGs.
 * R code:
     * **1_Acer_deseq2.R**: R file for analyzing *A. cervicornis* host differential gene expression.
     * **1_Sym_deseq2.R**: R file for analyzing *S. fitti* symbiont differential gene expression.
@@ -40,7 +41,8 @@ These repository contains all data and code used to study the physiological impa
     * **3_VolcanoPlots.Rmd** Code for making volcano plots.
     * **4_specific_gene_expression.Rmd** Code for making boxplots of specific gene expression patterns.
     * **5_wgcna_Acer.R** Code for running weighted gene co-expression network analysis (WGCNA).
-    * **6_wgcna_GO.Rmd** Code for running TopGO on significant WGCNA modules.
+    * **6_wgcna_GO.Rmd** Code for running TopGO/GOSlim on significant WGCNA modules.
+    * **7_DEGs_GO.Rmd** Code for running TopGO/GOSlim on significant host DEGs.
  
 #### Figures:
 * This folder contains all the manuscript figures.
