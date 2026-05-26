@@ -7,7 +7,8 @@ This repository contains data and analysis scripts for the manuscript:
 3. Atlantic Oceanographic and Meteorological Laboratory, Ocean Chemistry and Ecosystems Division, U.S. National Oceanic and Atmospheric Administration, Miami, FL, USA
 4. Coral Morphologic, Miami, FL, USA
 
-#### **Journal:** 
+#### **Journal (paper link):** 
+[Frontiers in Marine Science](https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2026.1796814/full)
 
 -----
 
