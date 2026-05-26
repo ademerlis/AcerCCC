@@ -13,7 +13,7 @@ This repository contains data and analysis scripts for the manuscript:
 -----
 
 ### Description:
-These repository contains all data and code used to study the physiological impact of translocation of _Acropora cervicornis_ to an urbanized environment in the Port of Miami.
+This repository contains all data and code used to study the physiological impact of translocation of _Acropora cervicornis_ to an urbanized environment in the Port of Miami.
 
 ### Contents:
 
